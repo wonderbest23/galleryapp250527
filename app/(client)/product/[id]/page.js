@@ -280,7 +280,7 @@ export default function App() {
                     <Image
                       src={img}
                       alt={`제품 이미지 ${idx + 1}`}
-                      className="object-cover w-full h-full rounded-bl-3xl"
+                      className="object-contain w-full h-full rounded-bl-3xl"
                       fill
                       priority
                       unoptimized
@@ -344,7 +344,7 @@ export default function App() {
               <Image
                 src={product?.artist_id?.avatar_url}
                 alt="아티스트 이미지"
-                className=" rounded-full object-cover"
+                className=" rounded-full object-contain"
                 fill
                 priority
                 unoptimized
