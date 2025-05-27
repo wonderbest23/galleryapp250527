@@ -154,6 +154,7 @@ export default function PaymentPage() {
                 value={quantity}
                 onChange={handleQuantityChange}
                 min={1}
+                isReadOnly={true}
               />
             </div>
 

@@ -149,11 +149,15 @@ export default function MyArtworks({ user, profile }) {
             onPress={() => {
               if (profile?.artist_credit === 0) {
                 addToast({
-                  title: "알림",
+                  title: "알림", 
                   description: "결제 후 신규작품을 등록해주세요.",
                   color: "danger"
                 });
-                return;
+
+                setTimeout(() => {
+                  router.push("/payment");
+                }, 2000);
+                return
               }
               router.push("/addProduct");
             }}

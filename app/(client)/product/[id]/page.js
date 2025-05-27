@@ -29,6 +29,9 @@ import { cn } from "@/utils/cn";
 import { LuWallet } from "react-icons/lu";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa6";
 import { motion } from "framer-motion";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 // 리뷰 컴포넌트 추가
 
@@ -153,18 +156,17 @@ export default function App() {
   const productImages =
     product?.image?.length > 0 ? product.image : ["/noimage.jpg"];
 
-  // 다음 이미지로 이동
-  const nextImage = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === productImages.length - 1 ? 0 : prevIndex + 1
-    );
-  };
-
-  // 이전 이미지로 이동
-  const prevImage = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === 0 ? productImages.length - 1 : prevIndex - 1
-    );
+  // react-slick 슬라이더 설정
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: false, // chevron 숨김
+    cssEase: "linear",
+    variableWidth: false,
+    adaptiveHeight: true,
   };
 
   // 북마크 토글 함수
@@ -258,19 +260,35 @@ export default function App() {
             <h2 className="text-lg font-medium"></h2>
           </div>
 
-          {/* 이미지 슬라이더 - 커스텀 구현 */}
-
-          <div className="relative w-full h-[40vh] mx-auto">
-            <Image
-              src={productImages[currentImageIndex]}
-              alt={`제품 이미지 ${currentImageIndex + 1}`}
-              className="object-contain rounded-bl-3xl"
-              fill
-              priority
-              unoptimized
-            />
-
-            {/* 네비게이션 화살표 */}
+          {/* 이미지 슬라이더 - 이미지가 2개 이상일 때만 슬라이더 사용 */}
+          <div className="relative w-full h-[40vh] mx-auto overflow-hidden">
+            {productImages.length === 1 ? (
+              <div className="relative w-full h-[40vh] overflow-hidden">
+                <Image
+                  src={productImages[0]}
+                  alt="제품 이미지"
+                  className="object-cover w-full h-full rounded-bl-3xl"
+                  fill
+                  priority
+                  unoptimized
+                />
+              </div>
+            ) : (
+              <Slider {...sliderSettings}>
+                {productImages.map((img, idx) => (
+                  <div key={idx} className="relative w-full h-[40vh] overflow-hidden">
+                    <Image
+                      src={img}
+                      alt={`제품 이미지 ${idx + 1}`}
+                      className="object-cover w-full h-full rounded-bl-3xl"
+                      fill
+                      priority
+                      unoptimized
+                    />
+                  </div>
+                ))}
+              </Slider>
+            )}
           </div>
 
           <div className="w-[90%] h-full mt-4">
@@ -378,6 +396,53 @@ export default function App() {
           </div>
         </motion.div>
       )}
+      <style jsx global>{`
+        .slick-dots {
+          position: absolute !important;
+          bottom: 16px;
+          left: 0;
+          width: 100%;
+          display: flex !important;
+          justify-content: center;
+          z-index: 10;
+          padding: 0;
+          margin: 0;
+        }
+        .slick-dots li {
+          margin: 0 4px;
+        }
+        .slick-dots li button:before {
+          font-size: 12px;
+          color: white;
+          opacity: 1;
+        }
+        .slick-dots li.slick-active button:before {
+          color: #007AFF !important;
+          opacity: 1;
+        }
+        .slick-list{
+          margin:0 !important;
+          padding:0 !important;
+          gap:0 !important;
+        }
+        .slick-track {
+          display: flex !important;
+          gap: 0 !important;
+          margin: 0 !important;
+        }
+        .slick-slide {
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+        .slick-slide > div {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        .slick-slider {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+      `}</style>
     </div>
   );
 }
