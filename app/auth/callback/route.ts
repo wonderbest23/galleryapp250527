@@ -15,8 +15,37 @@ export async function GET(request: Request) {
   
   if (code) {
     const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
     console.log("인증 코드 교환 완료");
+    
+    if (sessionError) {
+      console.log("세션 교환 중 오류:", sessionError);
+      return NextResponse.redirect(`${origin}/mypage`);
+    }
+
+    // 세션이 성공적으로 생성된 경우 사용자 role 확인
+    if (sessionData?.session?.user) {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', sessionData.session.user.id)
+        .single();
+
+      if (profileError) {
+        console.log("프로필 조회 중 오류:", profileError);
+        return NextResponse.redirect(`${origin}/mypage`);
+      }
+
+      // role이 'client'가 아닌 경우 로그인 페이지로 리다이렉트
+      if (!profile || profile.role !== 'client') {
+        console.log("클라이언트 권한이 아님, 로그인 페이지로 리다이렉트");
+        // 세션 삭제
+        await supabase.auth.signOut();
+        return NextResponse.redirect(`${origin}/mypage`);
+      }
+
+      console.log("클라이언트 권한 확인됨");
+    }
   }
   
   // 리다이렉트 경로가 있는 경우 해당 경로로 이동

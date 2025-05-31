@@ -138,7 +138,7 @@ export default function Navbar() {
 
       {/* 검색 결과 배너 */}
       {search && ( // 검색어가 있을 때 항상 검색 결과 배너 표시
-        <div className="absolute w-full bg-white shadow-md rounded-b-lg p-4 z-10">
+        <div className="absolute w-full bg-white shadow-md rounded-b-lg p-4 z-50">
           <div className="mb-3">
             <h3 className="text-sm font-semibold text-gray-600 mb-2">갤러리</h3>
             {gallery.length > 0 ? (

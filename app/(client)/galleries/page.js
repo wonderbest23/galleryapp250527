@@ -3,7 +3,7 @@ import React, { Suspense } from "react";
 import { GalleryCards } from "./components/gallery-cards";
 import { GallerySlider } from "./components/gallery-slider";
 import { GalleryBanner } from "./components/gallery-banner";
-import { Tabs, Tab, Button, Select, SelectItem, Spinner, Checkbox, addToast, Skeleton, Divider } from "@heroui/react";
+import { Tabs, Tab, Button, Select, SelectItem, Spinner, Checkbox, addToast, Skeleton, Divider, Pagination } from "@heroui/react";
 import { FaChevronLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { FaPlusCircle } from "react-icons/fa";
@@ -26,8 +26,9 @@ function GalleryListContent() {
   const [featuredGalleries, setFeaturedGalleries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingFeatured, setLoadingFeatured] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedRegion, setSelectedRegion] = useState("");
   const [isBookmark, setIsBookmark] = useState(false);
   const [bookmarks, setBookmarks] = useState([]);
@@ -36,6 +37,8 @@ function GalleryListContent() {
   const [highRatingGalleries, setHighRatingGalleries] = useState([]);
   const [tabLoading, setTabLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
+
+  const ITEMS_PER_PAGE = 5;
 
   // 애니메이션 설정
   const fadeIn = {
@@ -66,12 +69,18 @@ function GalleryListContent() {
   // 탭이 변경될 때 갤러리 데이터 초기화
   useEffect(() => {
     if (initialized) {
-      setPage(1);
-      setGalleries([]);
+      setCurrentPage(1);
       setTabLoading(true);
       fetchGalleries(1);
     }
   }, [selectedTab, isBookmark, selectedRegion, initialized]);
+
+  // 페이지가 변경될 때 갤러리 데이터 로드
+  useEffect(() => {
+    if (initialized && currentPage > 1) {
+      fetchGalleries(currentPage);
+    }
+  }, [currentPage]);
 
   // 추천 갤러리와 별점 높은 갤러리 동시에 가져오기
   useEffect(() => {
@@ -142,14 +151,15 @@ function GalleryListContent() {
   }, [user]);
 
   // 갤러리 데이터 가져오기
-  const fetchGalleries = async (pageNum = page) => {
+  const fetchGalleries = async (pageNum = currentPage) => {
     setLoading(true);
     
     try {
       // 북마크 필터가 활성화되어 있지만 사용자가 로그인하지 않은 경우
       if (isBookmark && !user) {
         setGalleries([]);
-        setHasMore(false);
+        setTotalPages(1);
+        setTotalCount(0);
         setLoading(false);
         setTabLoading(false);
         return;
@@ -189,7 +199,8 @@ function GalleryListContent() {
         if (bookmarkedIds.length === 0) {
           // 북마크가 없거나 모두 null인 경우 빈 결과 반환
           setGalleries([]);
-          setHasMore(false);
+          setTotalPages(1);
+          setTotalCount(0);
           setLoading(false);
           setTabLoading(false);
           return;
@@ -198,18 +209,15 @@ function GalleryListContent() {
         query = query.in('id', bookmarkedIds);
       }
       
-      const { data, error } = await query
-        .range((pageNum - 1) * 5, pageNum * 5 - 1);
+      const { data, error, count } = await query
+        .range((pageNum - 1) * ITEMS_PER_PAGE, pageNum * ITEMS_PER_PAGE - 1);
       
       if (error) throw error;
       
-      if (pageNum === 1) {
-        setGalleries(data);
-      } else {
-        setGalleries((prevGalleries) => [...prevGalleries, ...data]);
-      }
+      setGalleries(data || []);
+      setTotalCount(count || 0);
+      setTotalPages(Math.ceil((count || 0) / ITEMS_PER_PAGE));
       
-      setHasMore(data.length === 5);
     } catch (error) {
       console.log("갤러리 데이터를 가져오는 중 오류:", error);
     } finally {
@@ -218,17 +226,9 @@ function GalleryListContent() {
     }
   };
 
-  // 페이지가 바뀔 때 새 데이터 로드
-  useEffect(() => {
-    if (page > 1 && initialized) {
-      fetchGalleries();
-    }
-  }, [page]);
-
-  const loadMore = () => {
-    if (!loading) {
-      setPage((prevPage) => prevPage + 1);
-    }
+  // 페이지 변경 핸들러
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
   
   // 북마크 상태 확인하는 함수
@@ -461,22 +461,23 @@ function GalleryListContent() {
               </motion.div>
             </AnimatePresence>
             
-            {hasMore ? (
-              <div className="flex justify-center items-center mt-4">
-                {loading ? (
-                  <Spinner variant="wave" size="sm" color="primary" />
-                ) : (
-                  <FiPlusCircle 
-                    className="text-gray-500 text-2xl font-bold hover:cursor-pointer" 
-                    onClick={loadMore}
-                  />
-                )}
+            {/* 페이지네이션 */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center mt-6">
+                <Pagination
+                  total={totalPages}
+                  page={currentPage}
+                  onChange={handlePageChange}
+                  showControls
+                  size="sm"
+                  color="primary"
+                  variant="light"
+                />
               </div>
-            ) : galleries.length > 0 ? (
-              <div className="flex justify-center items-center">
-                <p className="text-gray-500 my-4">모든 갤러리를 불러왔습니다</p>
-              </div>
-            ) : (
+            )}
+            
+            {/* 데이터가 없을 때 메시지 */}
+            {galleries.length === 0 && !loading && !tabLoading && (
               <div className="flex justify-center items-center h-40">
                 <p className="text-gray-500">갤러리가 없습니다</p>
               </div>

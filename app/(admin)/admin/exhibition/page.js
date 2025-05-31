@@ -28,24 +28,49 @@ export default function Exhibition() {
   const [refreshToggle, setRefreshToggle] = useState(0);
   const [refreshFunction, setRefreshFunction] = useState(null);
 
-  // 전시회 선택 시 호출되는 함수
+  // 전시회 선택 시 호출되는 함수 - 개선된 버전
   const handleSelectExhibition = (exhibition) => {
-    setSelectedExhibition(exhibition);
+    console.log('부모 컴포넌트 - handleSelectExhibition 호출됨:', exhibition);
+    
+    // 새로운 객체로 복사하여 참조 변경을 확실히 함
+    const newSelectedExhibition = {
+      ...exhibition,
+      // 중첩된 객체도 새로 복사
+      naver_gallery_url: exhibition.naver_gallery_url ? {
+        ...exhibition.naver_gallery_url
+      } : null
+    };
+    
+    console.log('새로 선택된 전시회:', newSelectedExhibition);
+    setSelectedExhibition(newSelectedExhibition);
   };
 
   // 전시회 업데이트 시 호출되는 함수
   const handleUpdateExhibition = (updatedExhibition) => {
-    setSelectedExhibition(updatedExhibition);
+    console.log('전시회 업데이트:', updatedExhibition);
+    
+    // 업데이트된 전시회도 새로운 객체로 복사
+    const newUpdatedExhibition = {
+      ...updatedExhibition,
+      naver_gallery_url: updatedExhibition.naver_gallery_url ? {
+        ...updatedExhibition.naver_gallery_url
+      } : null
+    };
+    
+    setSelectedExhibition(newUpdatedExhibition);
   };
 
   // 신규 전시회 등록 시 호출되는 함수
   const handleCreateExhibition = () => {
+    console.log('신규 전시회 등록 모드');
+    
     // 새 전시회 객체 생성 (빈 값으로 초기화)
     const newExhibition = {
       name: "",
       contents: "",
       photo: "",
-      date: "",
+      start_date: "",
+      end_date: "",
       working_hour: "",
       off_date: "",
       add_info: "",
@@ -54,8 +79,10 @@ export default function Exhibition() {
       isRecommended: false,
       review_count: 0,
       review_average: 0,
-      naver_gallery_url: "",
+      naver_gallery_url: null,
       price: 0,
+      isSale: false,
+      pick: false,
     };
 
     setSelectedExhibition(newExhibition);
@@ -66,6 +93,11 @@ export default function Exhibition() {
   const handleSetRefreshFunction = (refreshFunc) => {
     setRefreshFunction(refreshFunc);
   };
+
+  // selectedExhibition 변경 로그
+  useEffect(() => {
+    console.log('selectedExhibition 상태 변경됨:', selectedExhibition);
+  }, [selectedExhibition]);
 
   return (
     <div className="w-full h-full p-4 space-y-8 py-20">
@@ -89,6 +121,7 @@ export default function Exhibition() {
           <section className="bg-content2 rounded-lg p-4">
             {selectedExhibition ? (
               <ExhibitionDetail
+                key={selectedExhibition.id || 'new'} // key prop 추가로 강제 리렌더링
                 exhibition={selectedExhibition}
                 onUpdate={handleUpdateExhibition}
                 selectedKeys={selectedKeys}

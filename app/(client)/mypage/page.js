@@ -23,12 +23,28 @@ function MyPageContent() {
         } = await supabase.auth.getSession();
 
         if (session) {
-          // 로그인 정보가 있으면 returnUrl로 리다이렉트 (없으면 success 페이지로)
-          console.log("이미 로그인 되어있음, 리다이렉트 경로:", returnUrl);
-          router.push(returnUrl);
+          // 세션이 있으면 profiles 테이블에서 사용자 정보 확인
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileError) {
+            console.log("프로필 조회 중 오류:", profileError);
+            return;
+          }
+
+          // role이 'client'인 경우에만 로그인 성공으로 처리
+          if (profile && profile.role === 'client') {
+            console.log("클라이언트 권한 확인됨, 리다이렉트 경로:", returnUrl);
+            router.push(returnUrl);
+          } else {
+            console.log("클라이언트 권한이 아님, 로그인 화면 유지");
+          }
         }
       } catch (error) {
-        console.error("로그인 상태 확인 중 오류 발생:", error);
+        console.log("로그인 상태 확인 중 오류 발생:", error);
       } finally {
         setLoading(false);
       }

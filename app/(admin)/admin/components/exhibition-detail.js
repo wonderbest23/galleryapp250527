@@ -7,6 +7,8 @@ import { useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { QRCodeSVG } from "qrcode.react";
 import Froala from "./Froala";
+import RichTextEditor from "./RichTextEditor/RichTextEditor";
+
 export function ExhibitionDetail({
   exhibition,
   onUpdate,
@@ -36,17 +38,18 @@ export function ExhibitionDetail({
   const qrRef = useRef(null);
 
   useEffect(() => {
-    // exhibition.id가 바뀔 때만 초기화 (동일 id면 유지)
-    if (prevExhibitionIdRef.current !== exhibition.id) {
-      setEditedExhibition(exhibition);
-      setPreviewUrl(exhibition.photo || '');
-      prevExhibitionIdRef.current = exhibition.id;
-    }
+    console.log('ExhibitionDetail: exhibition prop 변경됨:', exhibition);
+    
+    // exhibition이 변경될 때마다 editedExhibition 업데이트
+    setEditedExhibition({...exhibition}); // 새로운 객체로 복사
+    setPreviewUrl(exhibition.photo || '');
 
     // 새 전시회이거나 다른 전시회로 전환된 경우에만 편집 모드 설정
     if (!exhibition.id) {
+      console.log('신규 전시회 모드로 설정');
       setIsEditing(true); // 신규 등록 모드
-    } else {
+    } else if (prevExhibitionIdRef.current !== exhibition.id) {
+      console.log('다른 전시회로 전환됨, 조회 모드로 설정');
       setIsEditing(false); // 기존 전시회 조회 모드
     }
 
@@ -59,12 +62,13 @@ export function ExhibitionDetail({
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
       setBaseUrl(origin);
       setQrValue(`${origin}/review/exhibition/${exhibition.id}`);
+    } else {
+      setQrValue("");
     }
-  }, [exhibition, exhibition.photo]);
+  }, [exhibition, exhibition.id]); // exhibition.id도 의존성에 추가
 
   // add_info 값 변경 감지
   useEffect(() => {
-    console.log("editedExhibition.add_info 값 변경됨:", editedExhibition.add_info);
   }, [editedExhibition.add_info]);
 
   const handleImageChange = (e) => {
@@ -826,11 +830,18 @@ export function ExhibitionDetail({
           className="col-span-2 md:col-span-1"
         />
         <h1>추가 정보</h1>
-        <Froala
+        {/* <Froala
           label="추가 정보"
           value={editedExhibition.add_info}
           onChange={(value) => {
-            console.log("Froala 값 변경됨:", value);
+            setEditedExhibition({ ...editedExhibition, add_info: value });
+          }}
+          className="col-span-2 w-full"
+        /> */}
+                <RichTextEditor
+          contents={editedExhibition.add_info}
+          setContents={(value) => {
+            
             setEditedExhibition({ ...editedExhibition, add_info: value });
           }}
           className="col-span-2 w-full"

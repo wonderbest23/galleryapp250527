@@ -13,6 +13,7 @@ import {
   addToast,
   Skeleton,
   Divider,
+  Pagination,
 } from "@heroui/react";
 import { FaChevronLeft, FaPlus } from "react-icons/fa";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -61,7 +62,8 @@ function ExhibitionListContent() {
   const [exhibitions, setExhibitions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedRegion, setSelectedRegion] = useState("");
   const [isBookmark, setIsBookmark] = useState(initialIsBookmark);
   const [bookmarks, setBookmarks] = useState([]);
@@ -73,6 +75,7 @@ function ExhibitionListContent() {
   const [loadingHighRating, setLoadingHighRating] = useState(true);
   const [tabLoading, setTabLoading] = useState(false);
 
+  const ITEMS_PER_PAGE = 5; // 페이지당 항목 수
   const supabase = createClient();
 
   useEffect(() => {
@@ -151,7 +154,8 @@ function ExhibitionListContent() {
         if (isBookmark && !user) {
           console.log("북마크 필터 활성화됨, 로그인 필요");
           setExhibitions([]);
-          setHasMore(false);
+          setTotalPages(1);
+          setTotalCount(0);
           setLoading(false);
           setTabLoading(false);
           return;
@@ -165,7 +169,7 @@ function ExhibitionListContent() {
 
         let query = supabase
           .from("exhibition")
-          .select("*,gallery:naver_gallery_url(*)")
+          .select("*,gallery:naver_gallery_url(*)", { count: 'exact' })
           .not("gallery", "is", null)
           .order("review_count", { ascending: false })
           .gte("end_date", new Date().toISOString());
@@ -197,7 +201,8 @@ function ExhibitionListContent() {
             // 북마크가 없거나 모두 null인 경우 빈 결과 반환
             console.log("북마크된 전시회 없음");
             setExhibitions([]);
-            setHasMore(false);
+            setTotalPages(1);
+            setTotalCount(0);
             setLoading(false);
             setTabLoading(false);
             return;
@@ -206,19 +211,20 @@ function ExhibitionListContent() {
           query = query.in("id", bookmarkedIds);
         }
 
-        const { data, error } = await query.range((page - 1) * 5, page * 5 - 1);
+        const { data, error, count } = await query.range(
+          (page - 1) * ITEMS_PER_PAGE, 
+          page * ITEMS_PER_PAGE - 1
+        );
 
         if (error) throw error;
 
         console.log("가져온 전시회 데이터:", data.length);
+        console.log("총 데이터 개수:", count);
 
-        if (page === 1) {
-          setExhibitions(data);
-        } else {
-          setExhibitions((prevExhibitions) => [...prevExhibitions, ...data]);
-        }
+        setExhibitions(data);
+        setTotalCount(count || 0);
+        setTotalPages(Math.ceil((count || 0) / ITEMS_PER_PAGE));
 
-        setHasMore(data.length === 5);
       } catch (error) {
         console.log("전시회 데이터를 가져오는 중 오류 발생:", error);
       } finally {
@@ -238,8 +244,11 @@ function ExhibitionListContent() {
     loadingBookmarks,
   ]);
 
-  const loadMore = () => {
-    setPage((prevPage) => prevPage + 1);
+  // 페이지 변경 핸들러
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    // 페이지 변경 시 스크롤을 맨 위로 이동
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // 사용자 정보 가져오기
@@ -554,17 +563,18 @@ function ExhibitionListContent() {
           </motion.div>
         )}
 
-        {!tabLoading && exhibitions.length > 0 && hasMore ? (
-          <div className="flex justify-center items-center mt-4">
-            <FiPlusCircle
-              className="text-gray-500 text-2xl font-bold hover:cursor-pointer"
-              onClick={loadMore}
-              aria-label="더 보기"
+        {/* 페이지네이션 */}
+        {!tabLoading && exhibitions.length > 0 && totalPages > 1 && (
+          <div className="flex justify-center items-center mt-6">
+            <Pagination
+              total={totalPages}
+              page={page}
+              onChange={handlePageChange}
+              showControls
+              color="primary"
+              size="sm"
+              className="gap-2"
             />
-          </div>
-        ) : !tabLoading && exhibitions.length > 0 && (
-          <div className="flex justify-center items-center">
-            <p className="text-gray-500 my-4">모든 전시회를 불러왔습니다</p>
           </div>
         )}
         
@@ -573,6 +583,8 @@ function ExhibitionListContent() {
             <p className="text-gray-500">표시할 전시회가 없습니다</p>
           </div>
         )}
+
+
       </div>
 
       <Divider

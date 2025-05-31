@@ -644,8 +644,9 @@ export default function App() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
                   key="home-tab"
+                  className="w-full"
                 >
-                  <Card className="my-4 p-2 w-full max-w-[430px]">
+                  <Card className="my-4 p-2 w-full">
                     <CardBody className="p-2">
                       <h3 className="text-lg font-bold mb-2">전시회 안내</h3>
                       <div 
@@ -668,6 +669,7 @@ export default function App() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
                   key="gallery-tab"
+                  className="w-full"
                 >
                   {notice && notice.length > 0 ? (
                     <motion.div
@@ -733,6 +735,7 @@ export default function App() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
                   key="reviews-tab"
+                  className="w-full"
                 >
                   <motion.div 
                     className="flex flex-col items-center gap-2 mx-2"
@@ -743,7 +746,7 @@ export default function App() {
                     {reviews
                       .slice(0, displayedReviewCount)
                       .map((review, index) => (
-                        <motion.div key={index} variants={itemVariants}>
+                        <motion.div className="w-full" key={index} variants={itemVariants}>
                           <CardReview
                             review={review}
                             content={review.description}

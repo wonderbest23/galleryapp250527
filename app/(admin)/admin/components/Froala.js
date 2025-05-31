@@ -84,7 +84,7 @@ const FroalaEditorComponent = ({
   }, [editorRef.current]);
 
   const handleModelChange = (model) => {
-    console.log("Froala 에디터 내용 변경됨:", model);
+
     setEditorContent(model);
     if (onChange) {
       onChange(model);
@@ -298,7 +298,7 @@ const FroalaEditorComponent = ({
   };
 
   return (
-     <div className="froala-editor-container col-span-2 w-full md:max-w-[390px] mx-auto">
+     <div className="froala-editor-container col-span-2 w-full w-full">
       {froalaError ? (
         <p>에디터를 불러오는 데 실패했습니다. 새로고침 해주세요.</p>
       ) : editorReady && FroalaEditor && typeof FroalaEditor === 'function' ? (

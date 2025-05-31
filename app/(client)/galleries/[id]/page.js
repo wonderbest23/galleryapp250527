@@ -575,7 +575,15 @@ export default function App() {
                   <Card className="my-4 mx-2 p-2">
                     <CardBody>
                       <h3 className="text-lg font-bold mb-2">시설 안내</h3>
-                      <p className="whitespace-pre-line">{gallery?.add_info}</p>
+                      <div 
+                        className="fr-element text-[15px] sm:text-[14px] md:text-base whitespace-pre-line"
+                        style={{ 
+                          lineHeight: 1.6,
+                          wordBreak: 'keep-all',
+                          letterSpacing: '-0.3px'
+                        }}
+                        dangerouslySetInnerHTML={{ __html: gallery?.add_info }}
+                      />
                     </CardBody>
                   </Card>
                 </motion.div>

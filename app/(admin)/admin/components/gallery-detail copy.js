@@ -3,7 +3,7 @@ import React from "react";
 import { Input, Button, Textarea, Checkbox, addToast } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { QRCodeSVG } from "qrcode.react";
-import RichTextEditor from "./RichTextEditor/RichTextEditor";
+import Froala from "./Froala";
 
 import { useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -782,10 +782,10 @@ export function GalleryDetail({
           
         />
         <h1>추가 정보</h1>
-        <RichTextEditor
-          contents={editedGallery.add_info}
-          setContents={(value) => {
-            
+        <Froala
+          label="추가 정보"
+          value={editedGallery.add_info}
+          onValueChange={(value) => {
             setEditedGallery({ ...editedGallery, add_info: value });
           }}
           className="col-span-2 w-full"

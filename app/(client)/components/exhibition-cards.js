@@ -7,13 +7,13 @@ import {
   Skeleton,
   Spinner,
   addToast,
+  Pagination,
 } from "@heroui/react";
 import { FaRegCalendar } from "react-icons/fa";
 import { IoMdPin } from "react-icons/io";
 import { FaRegStar } from "react-icons/fa";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa6";
 import Link from "next/link";
-import { FaPlusCircle } from "react-icons/fa";
 import { createClient } from "@/utils/supabase/client";
 import useBookmarkStore from "./bookmarkStore";
 import Image from "next/image";
@@ -107,8 +107,9 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [exhibitions, setExhibitions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [loadingBookmarks, setLoadingBookmarks] = useState(false);
   const router = useRouter();
   const PAGE_SIZE = 5;
@@ -232,7 +233,7 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
   }, [user]);
 
   const getExhibitions = useCallback(
-    async (pageNum = 1, append = false) => {
+    async (pageNum = 1) => {
       try {
         setLoading(true);
 
@@ -263,21 +264,13 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
           return;
         }
 
-        // 더 불러올 데이터가 있는지 확인
-        setHasMore(count > from + data.length);
+        // 전체 페이지 수 계산
+        const calculatedTotalPages = Math.ceil((count || 0) / PAGE_SIZE);
+        setTotalPages(calculatedTotalPages);
+        setTotalCount(count || 0);
 
-        // 데이터 설정 (추가 또는 덮어쓰기)
-        if (append) {
-          setExhibitions((prev) => {
-            const merged = [...prev, ...(data || [])];
-            const uniq = Array.from(
-              merged.reduce((m, ex) => m.set(ex.id, ex), new Map()).values()
-            );
-            return uniq;
-          });
-        } else {
-          setExhibitions(data || []);
-        }
+        // 데이터 설정
+        setExhibitions(data || []);
       } finally {
         setLoading(false);
       }
@@ -285,18 +278,16 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
     [exhibitionCategory, supabase, PAGE_SIZE]
   );
 
-  // 더 많은 데이터 로드하는 함수
-  const loadMore = useCallback(() => {
-    if (loading || !hasMore) return;
-
-    const nextPage = page + 1;
-    setPage(nextPage);
-    getExhibitions(nextPage, true);
-  }, [loading, hasMore, page, getExhibitions]);
+  // 페이지 변경 핸들러
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    setLoading(true); // 페이지 변경 시 로딩 상태로 설정
+    getExhibitions(page);
+  };
 
   useEffect(() => {
     // 카테고리가 변경되면 페이지를 1로 리셋하고 데이터를 다시 불러옵니다
-    setPage(1);
+    setCurrentPage(1);
     getExhibitions(1);
   }, [getExhibitions]);
 
@@ -309,27 +300,33 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
     >
       <div className="flex flex-col items-center gap-4 w-[90%] justify-center">
         <div className="w-full flex flex-col justify-center items-center gap-y-4">
-          <AnimatePresence mode="wait">
-            {loading && page === 1 ? (
-              // 스켈레톤 UI
-              <div
-                key="skeletons"
+          {/* 스켈레톤과 실제 컨텐츠를 같은 레이아웃으로 유지 */}
+          <div className="w-full">
+            {loading ? (
+              // 스켈레톤 UI - 레이아웃 유지
+              <motion.div
+                key={`skeleton-${currentPage}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
                 className="w-full flex flex-col gap-4 justify-center items-center"
               >
-                {Array(5).fill().map((_, index) => (
-                  <SkeletonCard key={index} index={index} />
+                {Array(PAGE_SIZE).fill().map((_, index) => (
+                  <SkeletonCard key={`skeleton-${currentPage}-${index}`} index={index} />
                 ))}
-              </div>
+              </motion.div>
             ) : (
               // 실제 전시회 목록
               <motion.div
-                key="exhibitions"
-                className="w-full"
+                key={`exhibitions-${currentPage}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ 
                   duration: 0.5
                 }}
+                className="w-full"
               >
                 {exhibitions.map((exhibition, index) => (
                   <ExhibitionCard
@@ -342,32 +339,31 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
                 ))}
               </motion.div>
             )}
-          </AnimatePresence>
-
-          {/* 추가 데이터 로딩 중 표시 */}
-          {loading && page > 1 && (
-            <div className="flex justify-center w-full py-4">
-              <Spinner variant="wave" size="lg" color="primary" />
-            </div>
-          )}
+          </div>
         </div>
         
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          {hasMore && !loading ? (
-            <FaPlusCircle
-              className="text-gray-500 text-2xl font-bold hover:cursor-pointer mb-4 hover:scale-110 transition-transform"
-              onClick={loadMore}
+        {/* Pagination 컴포넌트 */}
+        {totalPages > 1 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="flex justify-center w-full"
+          >
+            <Pagination
+              total={totalPages}
+              page={currentPage}
+              onChange={handlePageChange}
+              showControls
+              showShadow
+              color="primary"
+              size="lg"
+              className="gap-2"
+              isDisabled={loading}
             />
-          ) : (
-            <div className="text-gray-500 text-sm mb-8">
-              모든 전시회를 불러왔습니다
-            </div>
-          )}
-        </motion.div>
+          </motion.div>
+        )}
+
       </div>
     </motion.div>
   );

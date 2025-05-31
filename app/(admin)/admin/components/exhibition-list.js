@@ -132,12 +132,36 @@ export function ExhibitionList({
 
   // 전시회 선택 처리
   const handleSelectionChange = (keys) => {
+    console.log('ExhibitionList - handleSelectionChange 호출됨:', keys);
+    console.log('keys 타입:', typeof keys, 'keys 값:', Array.from(keys));
+    
     onSelectionChange(keys);
     const selectedKey = Array.from(keys)[0];
+    console.log('selectedKey:', selectedKey, '타입:', typeof selectedKey);
 
     if (selectedKey) {
-      const exhibition = exhibitions.find((e) => e.id === Number(selectedKey));
-      if (exhibition) onSelectExhibition(exhibition);
+      // selectedKey가 문자열이므로 숫자로 변환하여 비교
+      const selectedId = parseInt(selectedKey);
+      const exhibition = exhibitions.find((e) => e.id === selectedId);
+      console.log('찾은 exhibition:', exhibition);
+      console.log('전체 exhibitions:', exhibitions.map(e => ({id: e.id, contents: e.contents})));
+      
+      if (exhibition) {
+        console.log('ExhibitionList - onSelectExhibition 호출:', exhibition);
+        // 새로운 객체로 복사하여 전달
+        const exhibitionCopy = {
+          ...exhibition,
+          naver_gallery_url: exhibition.naver_gallery_url ? {
+            ...exhibition.naver_gallery_url
+          } : null
+        };
+        onSelectExhibition(exhibitionCopy);
+      } else {
+        console.log('exhibition을 찾지 못함. selectedId:', selectedId);
+        console.log('exhibitions IDs:', exhibitions.map(e => e.id));
+      }
+    } else {
+      console.log('선택된 키가 없음');
     }
   };
 

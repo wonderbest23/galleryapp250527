@@ -160,7 +160,14 @@ export default function App() {
           {/* 단일 이미지 */}
           <div className="relative w-full flex justify-center items-center">
             
-                <div className="w-full relative">
+                <div 
+                  className="w-full relative cursor-pointer"
+                  onClick={() => {
+                    if (selectedProduct) {
+                      router.push(`/product/${selectedProduct.id}`);
+                    }
+                  }}
+                >
                   <Image
                     src={productImage}
                     alt="작품 이미지"
@@ -168,6 +175,7 @@ export default function App() {
                     width={800}
                     height={600}
                     priority
+                    
                   />
                 </div>
             

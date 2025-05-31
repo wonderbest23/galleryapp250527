@@ -34,7 +34,7 @@ const Review = React.forwardRef(
           <div className="flex flex-col w-full ml-4">
             <p className="text-[13px] font-bold">{review?.exhibition_id?.contents}</p>
             <p className="text-[12px] text-default-400">
-              {review.name}님의 실제 방문 리뷰
+              {review.name.replace(/(.+?)(.{2})(?=@)/, (_, p1, p2) => p1.slice(0, -2) + '**')}님의 실제 방문 리뷰
             </p>
             <p className="text-[12px] text-default-400 text-end">
               {new Date(createdAt).toLocaleDateString('ko-KR').replace(/\./g, '년').slice(0,-1) + '일'}
