@@ -23,6 +23,7 @@ async function processPayment(orderId, amount, paymentKey, userId, quantity) {
       cache: 'no-store'
     });
 
+    
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || '결제 처리 중 오류가 발생했습니다.');
