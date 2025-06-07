@@ -114,7 +114,7 @@ export function MagazineCarousel() {
             onClick={() => setSelected("michelin")}
           >
             <span className={`${selected === "michelin" ? "relative" : ""}`}>
-              미슐랭매거진
+              전시나그네 매거진
             </span>
           </button>
         </div>
