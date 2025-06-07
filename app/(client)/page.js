@@ -96,12 +96,11 @@ export default function Home() {
           <div className="w-1/6"></div>
           <div className="flex w-2/3">
             <button
-              className={`text-[12px] flex-1 py-3 text-center font-medium ${exhibitionCategory === "recommended" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-              onClick={() => setExhibitionCategory("recommended")}
+              className={`text-[12px] flex-1 py-3 text-center font-medium ${exhibitionCategory === "all" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
+              onClick={() => setExhibitionCategory("all")}
             >
-              추천전시
+              전체전시
             </button>
-
             <button
               className={`text-[12px] flex-1 py-3 text-center font-medium ${exhibitionCategory === "free" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
               onClick={() => setExhibitionCategory("free")}
@@ -109,10 +108,10 @@ export default function Home() {
               무료전시
             </button>
             <button
-              className={`text-[12px] flex-1 py-3 text-center font-medium ${exhibitionCategory === "all" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-              onClick={() => setExhibitionCategory("all")}
+              className={`text-[12px] flex-1 py-3 text-center font-medium ${exhibitionCategory === "recommended" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
+              onClick={() => setExhibitionCategory("recommended")}
             >
-              전체전시
+              추천전시
             </button>
           </div>
           <div className="w-1/6"></div>
