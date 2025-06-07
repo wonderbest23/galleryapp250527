@@ -110,9 +110,9 @@ export default function ArtistList() {
                     />
                   </div>
                  <div className="flex flex-col items-center justify-center my-2">
-                    <p className="text-[14px] font-medium line-clamp-1 text-[#606060] text-center">
-                      {artist.full_name || artist.username || '이름 없음'}
-                    </p>
+                    <div className="text-base font-semibold">
+                      {artist.artist_name || '이름 없음'}
+                    </div>
                  </div>
                 </CardBody>
               </Card>
