@@ -82,7 +82,12 @@ export function ExhibitionCards({
                     <div className="flex flex-col col-span-5">
                       <div className="flex flex-row justify-between items-start">
                         <div className="flex flex-col">
-                          <div className="text-[10px]">{exhibition.name||'없음'}</div>
+                          <div className="text-[10px] text-gray-500">
+                            {exhibition.naver_gallery_url?.name || exhibition.gallery?.name || '미등록'}
+                          </div>
+                          <div className="text-base font-semibold">
+                            {exhibition.name}
+                          </div>
                           <div className="text-[12px] font-bold">
                             {exhibition.contents}
                           </div>
