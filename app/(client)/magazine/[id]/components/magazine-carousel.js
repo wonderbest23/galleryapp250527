@@ -15,6 +15,12 @@ export default function MagazineCarousel({magazine}) {
   };
 
   const handleTouchMove = (e) => {
+    const deltaX = Math.abs(e.touches[0].clientX - touchStart);
+    const deltaY = Math.abs(e.touches[0].clientY - (touchEnd?.clientY || 0));
+    // 좌우 이동이 상하 이동보다 크면 상하 스크롤 방지
+    if (deltaX > deltaY) {
+      e.preventDefault();
+    }
     setTouchEnd(e.touches[0].clientX);
   };
 
@@ -67,12 +73,12 @@ export default function MagazineCarousel({magazine}) {
           </CardBody>
         </Card>
       )}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 p-1">
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 p-1">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+            className={`w-2 h-2 rounded-full transition-colors duration-300 ${
               currentSlide === index
                 ? "bg-red-500"
                 : "bg-white border border-gray-300"
