@@ -51,18 +51,19 @@ export default function page({params}) {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white flex items-center w-[100%] justify-between"
+        className="bg-white flex items-center w-full h-12"
       >
-        <Button
-          isIconOnly
-          variant="light"
-          className="mr-2"
-          onPress={() => router.back()}
-        >
-          <FaArrowLeft className="text-xl" />
-        </Button>
-        <h2 className="text-lg font-bold text-center flex-grow">매거진</h2>
-        
+        <div className="w-12 flex justify-start items-center">
+          <Button
+            isIconOnly
+            variant="light"
+            onPress={() => router.back()}
+          >
+            <FaArrowLeft className="text-xl" />
+          </Button>
+        </div>
+        <h2 className="flex-1 text-lg font-bold text-center">매거진</h2>
+        <div className="w-12" />
       </motion.div>
       <motion.div 
         initial={{ opacity: 0 }}
