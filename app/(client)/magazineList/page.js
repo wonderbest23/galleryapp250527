@@ -119,7 +119,7 @@ export default function MagazineList() {
                         {item.photo?.[0]?.url && (
                           <Image
                             alt="Card thumbnail"
-                            className="object-cover w-24 h-24 rounded-3xl"
+                            className="object-cover w-[96px] h-[96px] min-w-[96px] min-h-[96px] rounded-2xl"
                             src={item.photo[0].url}
                           />
                         )}
