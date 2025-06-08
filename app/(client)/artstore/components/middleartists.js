@@ -346,7 +346,7 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
         <img
           src={imageUrl}
           alt={altText}
-          className="w-full aspect-[335/148] object-cover rounded-xl"
+          className="w-full aspect-[335/148] object-contain bg-white rounded-xl"
         />
       </div>
     );
@@ -378,7 +378,7 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
                   <Image 
                     src={artist.avatar_url || "/noimage.jpg"} 
                     alt="아티스트 이미지" 
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-contain bg-white" 
                     fill 
                   />
                 </CardBody>
@@ -433,7 +433,7 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
                 >
                   <CardBody className="flex flex-row justify-center items-center ">
                     <div className="w-[80px] h-[80px] relative">
-                      <Image src={product.image[0] || "/noimage.jpg"} alt="product image" className="w-full h-full object-cover " fill />
+                      <Image src={product.image[0] || "/noimage.jpg"} alt="product image" className="w-full h-full object-contain bg-white" fill />
                     </div>
                     <div className="flex flex-col flex-grow ml-2">
                       <p className="text-[14px] font-medium line-clamp-1 text-[#606060]">{product.name}</p>

@@ -257,7 +257,7 @@ export default function TopArts() {
                     <Image
                       src={item.image[0] || "/noimage.jpg"} 
                       alt="image"
-                      className=" object-cover rounded-lg"
+                      className="object-contain bg-white rounded-lg"
                       fill
                       quality={30}
                       priority={false}

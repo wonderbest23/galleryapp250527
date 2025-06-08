@@ -161,7 +161,7 @@ const Artists = () => {
             src={artist.avatar_url || "/noimage.jpg"}
             alt="artist"
             fill
-            className="object-cover rounded-lg w-full h-full"
+            className="object-contain rounded-lg w-full h-full bg-white"
             draggable="false"
           />
         </div>
@@ -201,7 +201,7 @@ const Artists = () => {
                   src={work.image[0] || "/noimage.jpg"}
                   alt="works"
                   fill
-                  className="object-cover rounded-lg"
+                  className="object-contain rounded-lg bg-white"
                   draggable="false"
                 />
               </div>
@@ -223,7 +223,7 @@ const Artists = () => {
                 src={work.image[0] || "/noimage.jpg"}
                 alt="bestofweek"
                 fill
-                className="object-cover rounded-lg"
+                className="object-contain rounded-lg bg-white"
                 draggable="false"
               />
             </>

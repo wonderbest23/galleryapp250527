@@ -129,7 +129,7 @@ export default function LowerCarousel() {
                 <Image
                   src={item.image[0]}
                   alt={item.name}
-                  className="w-full h-full object-cover rounded-2xl"
+                  className="w-full h-full object-contain bg-white rounded-2xl"
                   fill
                 />
               </div>
