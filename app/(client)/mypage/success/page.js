@@ -180,7 +180,7 @@ const Success = () => {
               width={96}
               height={96}
               alt="프로필 이미지"
-              className="rounded-full"
+              className="rounded-full object-contain"
             />
           )}
         </div>
