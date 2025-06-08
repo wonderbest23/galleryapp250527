@@ -235,27 +235,20 @@ export default function TopArts() {
           </Button>
         ))}
       </div>
-      <div className="w-full grid grid-cols-2 gap-6 mt-4 justify-items-center">
-        {loading ? (
-          <>
-            <Skeleton className="h-[200px] w-full rounded-lg" />
-            <Skeleton className="h-[200px] w-full rounded-lg" />
-            <Skeleton className="h-[200px] w-full rounded-lg" />
-            <Skeleton className="h-[200px] w-full rounded-lg" />
-          </>
-        ) : artItems.length > 0 ? (
-          <motion.div 
-            className="w-full grid grid-cols-2 gap-6 col-span-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            {artItems.map((item) => (
-              <motion.div key={item.id}>
-                <Card className="rounded-lg overflow-hidden w-full cursor-pointer" shadow="none">
+      {/* 1열 슬라이드(가로 스크롤) 카드 섹션 */}
+      <div className="w-full mt-4 overflow-x-auto">
+        <div className="flex flex-row gap-6 min-w-max">
+          {loading ? (
+            Array.from({ length: 4 }).map((_, idx) => (
+              <Skeleton key={idx} className="h-[200px] w-[157px] rounded-lg" />
+            ))
+          ) : artItems.length > 0 ? (
+            artItems.slice(0, 10).map((item) => (
+              <motion.div key={item.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+                <Card className="rounded-lg overflow-hidden w-[157px] cursor-pointer" shadow="none">
                   <div className="relative w-full aspect-[157/200]" onClick={() => navigateToProduct(item.id)}>
                     <Image
-                      src={item.image[0] || "/noimage.jpg"} 
+                      src={item.image[0] || "/noimage.jpg"}
                       alt="image"
                       className="object-contain bg-white rounded-lg"
                       fill
@@ -265,23 +258,26 @@ export default function TopArts() {
                       blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4="
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
-                    <BookmarkIcon 
-                      isBookmarked={!!bookmarks[item.id]} 
-                      onClick={(e) => handleBookmarkClick(e, item.id)} 
+                    <BookmarkIcon
+                      isBookmarked={!!bookmarks[item.id]}
+                      onClick={(e) => handleBookmarkClick(e, item.id)}
                     />
                   </div>
                   <CardBody className="p-0 mt-2" onClick={() => navigateToProduct(item.id)}>
-                    <p className="text-[14px] font-medium line-clamp-1 text-[#606060]">{item.title}</p>
-                    <p className="text-[10px] text-[#606060]">{item.artist_id?.name || "알 수 없음"}</p>
+                    <p className="text-[14px] font-medium line-clamp-1 text-[#606060]">{item.title || item.name || "작품명 없음"}</p>
+                    {/* artist_id?.name이 있을 때만 렌더링 */}
+                    {item.artist_id?.name && (
+                      <p className="text-[10px] text-[#606060]">{item.artist_id.name}</p>
+                    )}
                     <p className="text-[14px] text-black font-bold mt-1">₩{item.price?.toLocaleString()}</p>
                   </CardBody>
                 </Card>
               </motion.div>
-            ))}
-          </motion.div>
-        ) : (
-          <p className="col-span-2 text-center">표시할 상품이 없습니다.</p>
-        )}
+            ))
+          ) : (
+            <p className="text-center">표시할 상품이 없습니다.</p>
+          )}
+        </div>
       </div>
     </div>
   );
