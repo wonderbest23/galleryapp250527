@@ -378,7 +378,7 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
                   <Image 
                     src={artist.avatar_url || "/noimage.jpg"} 
                     alt="아티스트 이미지" 
-                    className="w-full h-full object-contain bg-white" 
+                    className="w-full h-full object-cover bg-white" 
                     fill 
                   />
                 </CardBody>
