@@ -64,6 +64,7 @@ const Artists = () => {
           .from("profiles")
           .select("*")
           .eq("isArtist", true)
+          .eq("isArtistApproval", true)
           .order("created_at", { ascending: false });
 
         if (artistsError) throw artistsError;

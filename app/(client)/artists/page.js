@@ -24,7 +24,8 @@ export default function ArtistList() {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('isArtist', true);
+        .eq('isArtist', true)
+        .eq('isArtistApproval', true);
       
       if (error) {
         console.error('아티스트 데이터를 불러오는 중 오류 발생:', error);
