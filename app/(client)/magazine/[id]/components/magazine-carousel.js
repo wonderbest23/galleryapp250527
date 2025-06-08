@@ -11,6 +11,7 @@ export default function MagazineCarousel({magazine}) {
 
   const handleTouchStart = (e) => {
     setTouchStart(e.touches[0].clientX);
+    setTouchEnd(e.touches[0].clientX);
   };
 
   const handleTouchMove = (e) => {
@@ -18,12 +19,11 @@ export default function MagazineCarousel({magazine}) {
   };
 
   const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 75) {
+    const distance = touchStart - touchEnd;
+    if (distance > 50) {
       // 왼쪽으로 스와이프
       setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
-    }
-
-    if (touchStart - touchEnd < -75) {
+    } else if (distance < -50) {
       // 오른쪽으로 스와이프
       setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
     }
@@ -32,7 +32,8 @@ export default function MagazineCarousel({magazine}) {
   return (
     
     <div
-      className="relative pt-2 pb-4" 
+      className="relative pt-2 pb-4"
+      style={{ touchAction: 'pan-y' }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -66,12 +67,12 @@ export default function MagazineCarousel({magazine}) {
           </CardBody>
         </Card>
       )}
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex space-x-2">
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 p-1">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+            className={`w-3 h-3 rounded-full transition-colors duration-300 ${
               currentSlide === index
                 ? "bg-red-500"
                 : "bg-white border border-gray-300"
