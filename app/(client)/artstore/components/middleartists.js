@@ -395,23 +395,6 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
           )}
         </div>
         
-        {/* 캐러셀 섹션 */}
-        <div className="w-full relative p-1">
-          {/* react-slick 슬라이더 */}
-          <div className="product-slider">
-            {bannersLoading ? (
-              <div className="w-full aspect-[335/148]">
-                <Skeleton className="w-full h-full rounded-xl" />
-              </div>
-            ) : (
-              <Slider {...sliderSettings}>
-                {carouselItems.map((item, index) => (
-                  <SimpleCarouselItem key={`carousel-${index}`} item={item} />
-                ))}
-              </Slider>
-            )}
-          </div>
-        </div>
         <Divider orientation="horizontal" className="my-4" />
         <div className="w-full">
           {productsLoading ? (
