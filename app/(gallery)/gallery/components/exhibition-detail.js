@@ -202,7 +202,7 @@ export function ExhibitionDetail({
             {(!isNew || step === 2) && (
               <Button color="primary" onPress={handleSave} isLoading={isSaving}>
                 <Icon icon="lucide:save" className="text-lg mr-1" />
-                {isNew ? "추가" : "저장"}
+                {isNew ? "등록" : "수정한내용저장"}
               </Button>
             )}
             {!isNew && (
@@ -460,7 +460,7 @@ export function ExhibitionDetail({
             />
             <div className="flex justify-end gap-2 mt-4">
               <Button onClick={() => setStep(1)} variant="outline">이전</Button>
-              <Button color="primary" onClick={handleSave} isLoading={isSaving}>저장</Button>
+              <Button color="primary" onClick={handleSave} isLoading={isSaving}>수정한내용저장</Button>
             </div>
           </div>
         )

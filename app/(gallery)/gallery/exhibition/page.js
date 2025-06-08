@@ -12,6 +12,11 @@ import useUserInfoStore from "../store/userInfo";
 import dynamic from "next/dynamic";
 
 import { v4 as uuidv4 } from "uuid";
+import DatePicker from "react-datepicker";
+import { CalendarIcon } from "lucide-react";
+import { format, parse } from "date-fns";
+import { ko } from "date-fns/locale";
+
 const FroalaEditor = dynamic(
   () => import("@/app/(admin)/admin/components/Froala"),
   {
@@ -75,6 +80,15 @@ export default function Exhibition() {
   const [isLoading, setIsLoading] = useState(false);
   const [galleryInfo, setGalleryInfo] = useState(null);
   const itemsPerPage = 5;
+  const [startDate, setStartDate] = useState(() => {
+    const s = selectedExhibition?.start_date;
+    return s ? parse(s, "yyyyMMdd", new Date()) : null;
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const e = selectedExhibition?.end_date;
+    return e ? parse(e, "yyyyMMdd", new Date()) : null;
+  });
+  const [price, setPrice] = useState(selectedExhibition?.price || 0);
 
   useEffect(() => {
     setGalleryInfo(null); // userInfo가 바뀌면 galleryInfo 초기화
@@ -460,6 +474,15 @@ export default function Exhibition() {
     }, 0);
   };
 
+  // selectedExhibition이 바뀔 때마다 state 초기화
+  useEffect(() => {
+    if (selectedExhibition) {
+      setStartDate(selectedExhibition.start_date ? parse(selectedExhibition.start_date, "yyyyMMdd", new Date()) : null);
+      setEndDate(selectedExhibition.end_date ? parse(selectedExhibition.end_date, "yyyyMMdd", new Date()) : null);
+      setPrice(selectedExhibition.price || 0);
+    }
+  }, [selectedExhibition]);
+
   console.log("userInfo:", userInfo);
   console.log("selectedExhibition:", selectedExhibition);
 
@@ -587,7 +610,7 @@ export default function Exhibition() {
                   isLoading={isLoading}
                 >
                   <Icon icon="lucide:save" className="text-lg mr-1" />
-                  저장
+                  {isCreatingNew ? "등록" : "수정한내용저장"}
                 </Button>
                 <Button
                   onClick={handleDelete}
@@ -601,7 +624,7 @@ export default function Exhibition() {
               </div>
 
               {/* 직접 편집 가능한 폼 영역 */}
-              <div className="space-y-6">
+              <form className="space-y-6 w-full lg:max-w-3xl lg:mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">
@@ -679,39 +702,97 @@ export default function Exhibition() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">
-                      시작일
+                    <label htmlFor="startDate" className="block text-sm font-medium mb-1">
+                      전시시작 *
                     </label>
-                    <Input
-                      value={selectedExhibition?.start_date || ""}
-                      onChange={(e) =>
-                        handleFieldChange("start_date", e.target.value)
-                      }
-                      className="w-full"
-                      placeholder="YYYYmmdd 형식 (예: 20240531)"
+                    <DatePicker
+                      id="startDate"
+                      locale={ko}
+                      selected={startDate}
+                      onChange={(date) => {
+                        setStartDate(date);
+                        handleFieldChange("start_date", format(date, "yyyyMMdd"));
+                      }}
+                      dateFormat="yyyy.MM.dd"
+                      placeholderText="YYYY.MM.DD"
+                      className="w-full border rounded p-2 pl-10"
+                      calendarIcon={<CalendarIcon className="absolute left-3 top-3 text-gray-500" />}
+                      renderCustomHeader={({
+                        date,
+                        decreaseMonth,
+                        increaseMonth,
+                        prevMonthButtonDisabled,
+                        nextMonthButtonDisabled,
+                      }) => (
+                        <div className="flex items-center justify-between px-2 py-1 bg-white">
+                          <button
+                            onClick={decreaseMonth}
+                            disabled={prevMonthButtonDisabled}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            ◀
+                          </button>
+                          <span className="font-medium">
+                            {format(date, "yyyy.MM", { locale: ko })}
+                          </span>
+                          <button
+                            onClick={increaseMonth}
+                            disabled={nextMonthButtonDisabled}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            ▶
+                          </button>
+                        </div>
+                      )}
+                      required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
-                      종료일 <span className="text-red-500">*</span>
+                    <label htmlFor="endDate" className="block text-sm font-medium mb-1">
+                      전시종료 *
                     </label>
-                    <Input
-                      value={selectedExhibition?.end_date || ""}
-                      onChange={(e) =>
-                        handleFieldChange("end_date", e.target.value)
-                      }
-                      className="w-full"
-                      placeholder="YYYYmmdd 형식 (예: 20240630)"
-                      color={
-                        !selectedExhibition?.end_date ? "danger" : "default"
-                      }
-                      helperText={
-                        !selectedExhibition?.end_date
-                          ? "종료일은 필수 입력 항목입니다"
-                          : ""
-                      }
+                    <DatePicker
+                      id="endDate"
+                      locale={ko}
+                      selected={endDate}
+                      onChange={(date) => {
+                        setEndDate(date);
+                        handleFieldChange("end_date", format(date, "yyyyMMdd"));
+                      }}
+                      dateFormat="yyyy.MM.dd"
+                      placeholderText="YYYY.MM.DD"
+                      className="w-full border rounded p-2 pl-10"
+                      calendarIcon={<CalendarIcon className="absolute left-3 top-3 text-gray-500" />}
+                      renderCustomHeader={({
+                        date,
+                        decreaseMonth,
+                        increaseMonth,
+                        prevMonthButtonDisabled,
+                        nextMonthButtonDisabled,
+                      }) => (
+                        <div className="flex items-center justify-between px-2 py-1 bg-white">
+                          <button
+                            onClick={decreaseMonth}
+                            disabled={prevMonthButtonDisabled}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            ◀
+                          </button>
+                          <span className="font-medium">
+                            {format(date, "yyyy.MM", { locale: ko })}
+                          </span>
+                          <button
+                            onClick={increaseMonth}
+                            disabled={nextMonthButtonDisabled}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            ▶
+                          </button>
+                        </div>
+                      )}
+                      required
                     />
                   </div>
                 </div>
@@ -743,18 +824,24 @@ export default function Exhibition() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      무료 여부
-                    </label>
-                    <Switch
-                      isSelected={selectedExhibition.isFree}
-                      onValueChange={(value) =>
-                        handleFieldChange("isFree", value)
-                      }
-                    />
-                  </div>
+                {/* 가격 입력 필드 (무료 여부 토글 대신) */}
+                <div className="space-y-1">
+                  <label htmlFor="price" className="block text-sm font-medium">
+                    가격 (₩)
+                  </label>
+                  <input
+                    id="price"
+                    type="number"
+                    value={price}
+                    onChange={(e) => {
+                      const v = Number(e.target.value) || 0;
+                      setPrice(v);
+                      handleFieldChange("price", v);
+                    }}
+                    onFocus={e => e.target.select()}
+                    className="w-full border rounded p-2"
+                    placeholder="₩0"
+                  />
                 </div>
 
                 <div>
@@ -785,7 +872,7 @@ export default function Exhibition() {
                     className="w-full"
                   />
                 </div>
-              </div>
+              </form>
             </div>
           ) : (
             <div className="text-center text-default-500 py-8">
