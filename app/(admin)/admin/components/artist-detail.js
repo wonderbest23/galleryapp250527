@@ -345,7 +345,37 @@ export function ArtistDetail({
 
       <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
 
-        
+        {/* 프로필 이미지 업로드 및 미리보기 */}
+        <div className="col-span-2 md:col-span-1 flex flex-col items-center justify-center">
+          <label className="block text-sm font-medium mb-2">프로필 이미지</label>
+          <div className="relative w-32 h-32 mb-2">
+            <img
+              src={previewUrl || "/noimage.jpg"}
+              alt="프로필 이미지 미리보기"
+              className="object-cover rounded-full w-32 h-32 border"
+              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+              style={{ cursor: 'pointer' }}
+            />
+            {previewUrl && (
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="absolute top-1 right-1 bg-white rounded-full p-1 border shadow"
+                title="이미지 삭제"
+              >
+                <Icon icon="lucide:x" className="text-lg text-gray-500" />
+              </button>
+            )}
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handleImageChange}
+          />
+          <span className="text-xs text-gray-400">이미지를 클릭해 변경하세요 (최대 5MB)</span>
+        </div>
 
         <Input
           className="col-span-2 md:col-span-1"
@@ -354,7 +384,7 @@ export function ArtistDetail({
           value={editedArtist.artist_name || ""}
           onChange={handleInputChange}
           // isRequired={true}
-          isDisabled={true}
+          isDisabled={false}
         />
 
         <Input
