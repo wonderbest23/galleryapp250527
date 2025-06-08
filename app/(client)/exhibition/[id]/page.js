@@ -447,9 +447,9 @@ export default function App() {
             <h2 className="text-lg font-medium"></h2>
           </motion.div>
 
-          {/* Hero Image Section */}
+          {/* Image section: use same settings as product page */}
           <motion.div 
-            className="relative w-full h-64"
+            className="relative w-full h-[40vh] mx-auto overflow-hidden"
             initial="hidden"
             animate="visible"
             variants={fadeInVariants}
@@ -457,8 +457,8 @@ export default function App() {
           >
             <img
               src={exhibition?.photo}
-              alt="Restaurant"
-              className="w-full h-full object-cover"
+              alt="전시 이미지"
+              className="object-contain w-full h-full"
             />
             <div className="absolute bottom-4 right-4 flex gap-2">
               <div
