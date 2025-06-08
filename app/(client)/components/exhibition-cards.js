@@ -11,7 +11,7 @@ import {
 } from "@heroui/react";
 import { FaRegCalendar } from "react-icons/fa";
 import { IoMdPin } from "react-icons/io";
-import { FaRegStar } from "react-icons/fa";
+import { FaRegStar, FaStar } from "react-icons/fa";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa6";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
@@ -94,7 +94,7 @@ const ExhibitionCard = ({ exhibition, index, isBookmarked, toggleBookmark }) => 
                 {exhibition.price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} 원
               </div>
               <div className="flex flex-row gap-1 text-[10px]">
-                <FaRegStar className="text-[#007AFF] w-[12px] h-[12px] align-middle relative top-[1px]" />
+                <FaStar className="text-[#007AFF] w-[12px] h-[12px] align-middle relative top-[1px]" />
                 {exhibition.review_average === 0 ? "1.0" : exhibition.review_average?.toFixed(1) || "1.0"} ({exhibition.review_count || 0})
               </div>
             </div>
