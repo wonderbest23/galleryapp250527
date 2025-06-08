@@ -55,6 +55,7 @@ export default function App() {
   const [userData, setUserData] = useState(null);
   const supabase = createClient();
   const clientKey = process.env.NEXT_PUBLIC_TOSSPAYMENTS_API_KEY;
+  const [isFreeSoldOut, setIsFreeSoldOut] = useState(false);
 
   // 애니메이션 변수 추가
   const fadeInVariants = {
@@ -458,6 +459,33 @@ export default function App() {
     router.push(`/mypage/order-detail?order_id=free&exhibition_id=${exhibition.id}&user_id=${userData.id}&people_count=1&amount=0&created_at=${encodeURIComponent(new Date().toISOString())}`);
   };
 
+  // 무료티켓 발급 가능 여부(매진 체크)
+  useEffect(() => {
+    // 무료티켓 조건일 때만 매진 여부 체크
+    const checkFreeSoldOut = async () => {
+      if (!exhibition || !isFreeTicket) return;
+      // 무료티켓 발급 총합 조회
+      const { data: tickets, error } = await supabase
+        .from("payment_ticket")
+        .select("id, people_count")
+        .eq("exhibition_id", exhibition.id)
+        .eq("amount", 0);
+      if (error) {
+        console.log("무료티켓 매진 체크 오류:", error);
+        setIsFreeSoldOut(false);
+        return;
+      }
+      // 총 발급 수량 합산
+      const totalIssued = (tickets || []).reduce((sum, t) => sum + (t.people_count || 1), 0);
+      if (exhibition.free_ticket_limit !== undefined && Number(exhibition.free_ticket_limit) > 0) {
+        setIsFreeSoldOut(totalIssued >= Number(exhibition.free_ticket_limit));
+      } else {
+        setIsFreeSoldOut(false);
+      }
+    };
+    checkFreeSoldOut();
+  }, [exhibition, isFreeTicket]);
+
   // 구매/무료발급 버튼 분기 렌더링
   function PurchaseSection() {
     if (!exhibition?.isSale) return (
@@ -471,8 +499,9 @@ export default function App() {
           className="w-full mt-4 bg-[#004BFE] text-white text-[13px] font-bold"
           size="lg"
           onPress={handleFreeIssue}
+          disabled={isFreeSoldOut}
         >
-          무료티켓 발급받기
+          {isFreeSoldOut ? "무료티켓 매진" : "무료티켓 발급받기"}
         </Button>
       );
     }
