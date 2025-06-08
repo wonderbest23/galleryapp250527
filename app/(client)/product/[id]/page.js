@@ -502,7 +502,7 @@ export default function App() {
                       <img src={item.image?.[0] || "/noimage.jpg"} alt={item.name} className="object-cover w-full h-full" />
                     </div>
                     <div className="text-[15px] font-bold line-clamp-1 mb-1">{item.name}</div>
-                    <div className="text-[13px] text-gray-500 italic mb-1">{item.make_date || "-"}</div>
+                    <div className="text-[13px] text-gray-500 mb-1">{item.size || ""}</div>
                     <div className="text-[14px] text-black font-bold">₩{item.price?.toLocaleString()}</div>
                   </div>
                 ))}
