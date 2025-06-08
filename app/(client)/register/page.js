@@ -60,6 +60,7 @@ export default function MagazineList() {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
+        .eq('isArtistApproval', true)
         .single();
 
       if (profileError) {
