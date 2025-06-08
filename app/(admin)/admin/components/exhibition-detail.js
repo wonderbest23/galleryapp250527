@@ -23,7 +23,10 @@ export function ExhibitionDetail({
   // 전시회 ID가 없으면 신규 등록 모드로 간주
   const isNewExhibition = !exhibition.id;
   const [isEditing, setIsEditing] = React.useState(isNewExhibition);
-  const [editedExhibition, setEditedExhibition] = React.useState(exhibition);
+  const [editedExhibition, setEditedExhibition] = React.useState({
+    ...exhibition,
+    free_ticket_limit: exhibition.free_ticket_limit !== undefined && exhibition.free_ticket_limit !== null ? exhibition.free_ticket_limit : 0,
+  });
   // 이전 전시회 ID를 저장하는 ref
   const prevExhibitionIdRef = React.useRef(exhibition.id);
   const supabase = createClient();
@@ -196,6 +199,7 @@ export function ExhibitionDetail({
             price: editedExhibition.price,
             isSale: editedExhibition.isSale,
             pick: editedExhibition.pick,
+            free_ticket_limit: editedExhibition.free_ticket_limit,
           })
           .eq("id", editedExhibition.id);
 
@@ -374,6 +378,7 @@ export function ExhibitionDetail({
               price: editedExhibition.price,
               isSale: editedExhibition.isSale,
               pick: editedExhibition.pick,
+              free_ticket_limit: editedExhibition.free_ticket_limit,
             },
           ])
           .select();
@@ -409,6 +414,7 @@ export function ExhibitionDetail({
             price: editedExhibition.price,
             isSale: editedExhibition.isSale,
             pick: editedExhibition.pick,
+            free_ticket_limit: editedExhibition.free_ticket_limit,
           })
           .eq("id", editedExhibition.id);
 
@@ -440,7 +446,8 @@ export function ExhibitionDetail({
         naver_gallery_url:"",
         price:0,
         isSale: false,
-        pick: false
+        pick: false,
+        free_ticket_limit: 0,
       });
       // 목록 새로고침 실행
       try {
@@ -509,7 +516,8 @@ export function ExhibitionDetail({
       naver_gallery_url:"",
       price:0,
       isSale: false,
-      pick: false
+      pick: false,
+      free_ticket_limit: 0,
     });
     setSelectedExhibition(null);
   };
@@ -869,15 +877,40 @@ export function ExhibitionDetail({
             >
               추천 전시회로 표시
             </Checkbox>
-            <Checkbox
-              id="isSale"
-              isSelected={editedExhibition.isSale||false}
-              onValueChange={(value) =>
-                setEditedExhibition({ ...editedExhibition, isSale: value })
-              }
-            >
-              티켓판매로 표시
-            </Checkbox>
+            {/* 티켓판매로 표시 + 무료티켓 전체수량 UI 개선 (가로 정렬) */}
+            <div className="flex flex-row items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50 w-fit mb-2">
+              <Checkbox
+                id="isSale"
+                isSelected={editedExhibition.isSale||false}
+                onValueChange={(value) =>
+                  setEditedExhibition({
+                    ...editedExhibition,
+                    isSale: value,
+                    free_ticket_limit:
+                      value && (editedExhibition.free_ticket_limit === undefined || editedExhibition.free_ticket_limit === '' || isNaN(Number(editedExhibition.free_ticket_limit)))
+                        ? 0
+                        : editedExhibition.free_ticket_limit,
+                  })
+                }
+                className="whitespace-nowrap"
+              >
+                티켓판매로 표시
+              </Checkbox>
+              <Input
+                type="number"
+                min={1}
+                step={1}
+                size="sm"
+                label=""
+                value={editedExhibition.free_ticket_limit ?? 0}
+                onValueChange={(v) => setEditedExhibition({ ...editedExhibition, free_ticket_limit: v.replace(/[^0-9]/g, '') })}
+                isDisabled={!editedExhibition.isSale}
+                placeholder="티켓수량 (예: 100)"
+                className="w-40 border border-blue-300 bg-white px-2 py-1 rounded-md"
+                style={{minWidth:'160px'}}
+              />
+            </div>
+            <span className="text-xs text-gray-500 mt-1 ml-1 mb-2 block">무료티켓 수량을 입력하세요</span>
             <Checkbox
               id="pick"
               isSelected={editedExhibition.pick || false}
