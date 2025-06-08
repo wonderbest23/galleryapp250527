@@ -38,8 +38,7 @@ export default function MagazineCarousel({magazine}) {
   return (
     
     <div
-      className="relative pt-2 pb-4"
-      style={{ touchAction: 'pan-y' }}
+      className="relative pt-2 pb-4 [touch-action:pan-x]"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
