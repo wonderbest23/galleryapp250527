@@ -139,6 +139,27 @@ export default function BookmarkedExhibition({ user }) {
     }
   };
 
+  // 북마크 해제 함수
+  const handleUnbookmark = async (e, item) => {
+    e.preventDefault();
+    e.stopPropagation();
+    let filter = { user_id: user.id };
+    if (item.type === 'gallery') filter.gallery_id = item.id;
+    else if (item.type === 'product') filter.product_id = item.id;
+    else filter.exhibition_id = item.id;
+    try {
+      const { error } = await supabase.from('bookmark').delete().match(filter);
+      if (error) throw error;
+      setBookmarkedExhibitions(prev => prev.filter(i => {
+        if (item.type === 'gallery') return !(i.id === item.id && i.type === 'gallery');
+        if (item.type === 'product') return !(i.id === item.id && i.type === 'product');
+        return !(i.id === item.id && !i.type);
+      }));
+    } catch (err) {
+      console.log('북마크 해제 오류:', err);
+    }
+  };
+
   // 로딩 중일 때 표시할 컴포넌트
   if (isLoading) {
     return <div className="text-center py-4">
@@ -164,9 +185,13 @@ export default function BookmarkedExhibition({ user }) {
         <div className="grid gap-4 w-full justify-center items-center">
           {bookmarkedExhibitions.length > 0 ? (
             bookmarkedExhibitions.slice(0, displayCount).map((item, index) => (
-              <Card key={index} className="w-full">
+              <Card key={index} className="w-full relative">
                 <Link href={getItemUrl(item)}>
                   <CardBody className="flex gap-4 flex-row justify-center items-center">
+                    {/* 북마크 해제 버튼 */}
+                    <div className="absolute top-2 right-2 z-10" onClick={e => handleUnbookmark(e, item)}>
+                      <FaBookmark className="text-red-500 text-lg bg-gray-300 rounded-full p-1 cursor-pointer font-bold" title="즐겨찾기 해제" />
+                    </div>
                     <img
                       src={item.type === 'gallery' 
                         ? item.thumbnail 
