@@ -41,22 +41,28 @@ export default function MagazineCarousel({magazine}) {
         <Card classNames={{base: "w-full rounded-none p-0"}} className="w-full rounded-none" >
           <CardBody className="p-0">
             
-              <img
-                src={slides[currentSlide]?.url || `https://picsum.photos/800/400?random=${currentSlide}`}
-                alt={`${magazine?.title || ''} - 이미지 ${currentSlide + 1}`}
-                className="w-full h-48 object-cover"
-              />
+              <div className="relative w-full h-[40vh] md:h-[60vh] overflow-hidden">
+                <img
+                  src={slides[currentSlide]?.url || `https://picsum.photos/800/400?random=${currentSlide}`}
+                  alt={`${magazine?.title || ''} - 이미지 ${currentSlide + 1}`}
+                  className="object-contain w-full h-full"
+                  draggable={false}
+                />
+              </div>
             
           </CardBody>
         </Card>
       ) : (
         <Card className="w-full">
           <CardBody className="p-0">
-            <img
-              src={`https://picsum.photos/800/400?random=1`}
-              alt="기본 이미지"
-              className="w-full h-48 object-cover"
-            />
+            <div className="relative w-full h-[40vh] md:h-[60vh] overflow-hidden">
+              <img
+                src={`https://picsum.photos/800/400?random=1`}
+                alt="기본 이미지"
+                className="object-contain w-full h-full"
+                draggable={false}
+              />
+            </div>
           </CardBody>
         </Card>
       )}
