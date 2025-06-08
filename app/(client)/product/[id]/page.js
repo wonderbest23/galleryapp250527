@@ -74,6 +74,10 @@ export default function App() {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
 
+  // 매거진 스타일 전체보기 모달용 상태
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalIndex, setModalIndex] = useState(0);
+
   // 페이드인 애니메이션 설정
   const fadeInVariants = {
     hidden: { opacity: 0 },
@@ -234,14 +238,14 @@ export default function App() {
     }
   };
 
-  // 모달 오픈 함수
+  // 모달 오픈 함수 (매거진 스타일)
   const openImageModal = (idx) => {
-    setModalImageIndex(idx);
-    setIsImageModalOpen(true);
+    setModalIndex(idx);
+    setModalOpen(true);
   };
   // 모달 닫기 함수
   const closeImageModal = () => {
-    setIsImageModalOpen(false);
+    setModalOpen(false);
   };
 
   return (
@@ -275,7 +279,7 @@ export default function App() {
           {/* 이미지 슬라이더 - 이미지가 2개 이상일 때만 슬라이더 사용 */}
           <div className="relative w-full h-[40vh] mx-auto overflow-hidden">
             {productImages.length === 1 ? (
-              <div className="relative w-full h-[40vh] overflow-hidden cursor-pointer" onClick={() => openImageModal(0)}>
+              <div className="relative w-full h-[40vh] overflow-hidden cursor-zoom-in" onClick={() => openImageModal(0)}>
                 <Image
                   src={productImages[0]}
                   alt="제품 이미지"
@@ -288,7 +292,7 @@ export default function App() {
             ) : (
               <Slider {...sliderSettings}>
                 {productImages.map((img, idx) => (
-                  <div key={idx} className="relative w-full h-[40vh] overflow-hidden cursor-pointer" onClick={() => openImageModal(idx)}>
+                  <div key={idx} className="relative w-full h-[40vh] overflow-hidden cursor-zoom-in" onClick={() => openImageModal(idx)}>
                     <Image
                       src={img}
                       alt={`제품 이미지 ${idx + 1}`}
@@ -303,33 +307,62 @@ export default function App() {
             )}
           </div>
 
-          {/* 이미지 전체보기 모달 */}
-          {isImageModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" onClick={closeImageModal}>
-              <div className="relative w-full max-w-2xl h-[80vh] flex items-center justify-center" onClick={e => e.stopPropagation()}>
-                <button className="absolute top-2 right-2 z-10 text-white text-3xl" onClick={closeImageModal}>
-                  <IoMdClose />
-                </button>
-                <Slider
-                  {...sliderSettings}
-                  initialSlide={modalImageIndex}
-                  dots={true}
-                  arrows={true}
-                  className="w-full h-full"
+          {/* 매거진 스타일 이미지 전체보기 모달 */}
+          {modalOpen && (
+            <div
+              className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
+              onClick={closeImageModal}
+            >
+              {/* 좌측 화살표 */}
+              {productImages.length > 1 && (
+                <button
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-black/60 rounded-full w-12 h-12 flex items-center justify-center shadow-lg border-2 border-white/30 hover:bg-black/80 transition"
+                  onClick={e => {
+                    e.stopPropagation();
+                    setModalIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1));
+                  }}
+                  aria-label="이전 이미지"
                 >
-                  {productImages.map((img, idx) => (
-                    <div key={idx} className="relative w-full h-[70vh] flex items-center justify-center">
-                      <Image
-                        src={img}
-                        alt={`제품 전체 이미지 ${idx + 1}`}
-                        className="object-contain w-full h-full rounded-lg bg-white"
-                        fill
-                        priority
-                        unoptimized
-                      />
-                    </div>
-                  ))}
-                </Slider>
+                  {/* 굵은 화살표 SVG */}
+                  <svg width={32} height={32} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 8L12 16L20 24" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              )}
+              <div
+                className="max-w-full max-h-full overflow-auto"
+                onClick={e => e.stopPropagation()}
+              >
+                <img
+                  src={productImages[modalIndex]}
+                  alt="원본 이미지"
+                  className="block max-w-full max-h-[90vh] mx-auto"
+                  draggable={false}
+                  style={{ cursor: 'zoom-out' }}
+                />
+              </div>
+              {/* 우측 화살표 */}
+              {productImages.length > 1 && (
+                <button
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-black/60 rounded-full w-12 h-12 flex items-center justify-center shadow-lg border-2 border-white/30 hover:bg-black/80 transition"
+                  onClick={e => {
+                    e.stopPropagation();
+                    setModalIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1));
+                  }}
+                  aria-label="다음 이미지"
+                >
+                  {/* 굵은 화살표 SVG */}
+                  <svg width={32} height={32} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 8L20 16L12 24" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              )}
+              {/* dot 네비게이션 */}
+              <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 p-1">
+                {productImages.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={e => { e.stopPropagation(); setModalIndex(index); }}
+                    className={`w-2 h-2 rounded-full transition-colors duration-300 ${modalIndex === index ? "bg-red-500" : "bg-white border border-gray-300"}`}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
               </div>
             </div>
           )}
