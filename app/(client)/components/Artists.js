@@ -162,7 +162,7 @@ const Artists = () => {
             src={artist.avatar_url || "/noimage.jpg"}
             alt="artist"
             fill
-            className="object-contain rounded-lg w-full h-full bg-white"
+            className="object-cover rounded-lg w-full h-full bg-white"
             draggable="false"
           />
         </div>
