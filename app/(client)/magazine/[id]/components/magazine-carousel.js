@@ -2,6 +2,20 @@
 import React, { useState } from "react";
 import { Card, CardBody } from "@heroui/react";
 import Link from "next/link";
+
+// 굵은 화살표 SVG 컴포넌트
+function ThickArrow({ direction = 'left', size = 32 }) {
+  return direction === 'left' ? (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 8L12 16L20 24" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ) : (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 8L20 16L12 24" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 export default function MagazineCarousel({magazine}) {
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [touchStart, setTouchStart] = useState(0);
@@ -103,14 +117,14 @@ export default function MagazineCarousel({magazine}) {
           {/* 좌측 화살표 */}
           {slides.length > 1 && (
             <button
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-3xl z-50 bg-black/40 rounded-full w-10 h-10 flex items-center justify-center"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-black/60 rounded-full w-12 h-12 flex items-center justify-center shadow-lg border-2 border-white/30 hover:bg-black/80 transition"
               onClick={e => {
                 e.stopPropagation();
                 setModalIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
               }}
               aria-label="이전 이미지"
             >
-              &#8592;
+              <ThickArrow direction="left" size={32} />
             </button>
           )}
           <div
@@ -128,14 +142,14 @@ export default function MagazineCarousel({magazine}) {
           {/* 우측 화살표 */}
           {slides.length > 1 && (
             <button
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-3xl z-50 bg-black/40 rounded-full w-10 h-10 flex items-center justify-center"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-black/60 rounded-full w-12 h-12 flex items-center justify-center shadow-lg border-2 border-white/30 hover:bg-black/80 transition"
               onClick={e => {
                 e.stopPropagation();
                 setModalIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
               }}
               aria-label="다음 이미지"
             >
-              &#8594;
+              <ThickArrow direction="right" size={32} />
             </button>
           )}
         </div>
