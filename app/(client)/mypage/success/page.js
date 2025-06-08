@@ -121,6 +121,14 @@ const Success = () => {
   useEffect(() => {
     getPolicy();
   }, []);
+
+  // 작가 인증 계정이면 자동으로 [나의작품] 탭으로 이동
+  useEffect(() => {
+    if (profile && isArtist && profile.isArtistApproval && selectedTab !== "myArt") {
+      setSelectedTab("myArt");
+    }
+  }, [profile, isArtist]);
+
   console.log("policy", policy);
   console.log("customerService", customerService);
   console.log("isArtist", isArtist);
