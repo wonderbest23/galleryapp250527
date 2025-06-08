@@ -166,7 +166,7 @@ const Artists = () => {
           />
         </div>
         <CardBody className="flex flex-col justify-between p-3">
-          <h3 className="text-sm font-bold w-full text-center">
+          <h3 className="text-xs font-bold w-full text-center">
             {artist.artist_name}
           </h3>
         </CardBody>
@@ -231,7 +231,7 @@ const Artists = () => {
         </div>
         {size !== "normal" && (
           <div className="flex flex-col justify-between p-3">
-            <h3 className="text-[14px] w-full text-start">{work.name}</h3>
+            <h3 className="text-xs w-full text-start">{work.name}</h3>
             <p className="text-[12px] text-start font-bold">
               ₩{work.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
             </p>
