@@ -413,6 +413,80 @@ export default function App() {
     }
   };
 
+  // 무료티켓 여부 체크
+  const isFreeTicket = exhibition && exhibition.price === 0 && exhibition.isSale;
+
+  // 무료티켓 발급 핸들러
+  const handleFreeIssue = async () => {
+    if (!userData) {
+      const redirectPath = `/exhibition/${id}`;
+      router.push(`/mypage?redirect_to=${encodeURIComponent(redirectPath)}`);
+      return;
+    }
+    // 이미 발급된 적 있으면 얼럿
+    const { data: existing, error: checkError } = await supabase
+      .from("payment_ticket")
+      .select("id", { count: "exact" })
+      .eq("user_id", userData.id)
+      .eq("exhibition_id", exhibition.id)
+      .eq("amount", 0);
+    if (checkError) {
+      console.log("중복 체크 오류:", checkError);
+      alert("티켓 발급 오류");
+      return;
+    }
+    if (existing && existing.length > 0) {
+      alert("이미 무료티켓을 받으셨습니다.");
+      return;
+    }
+    // 주문 생성
+    const { error } = await supabase
+      .from("payment_ticket")
+      .insert({
+        user_id: userData.id,
+        exhibition_id: exhibition.id,
+        people_count: 1,
+        amount: 0,
+        status: "success",
+      });
+    if (error) {
+      console.log(error);
+      alert("티켓 발급 실패");
+      return;
+    }
+    // 완료 페이지 이동(주문상세)
+    router.push(`/mypage/order-detail?order_id=free&exhibition_id=${exhibition.id}&user_id=${userData.id}&people_count=1&amount=0&created_at=${encodeURIComponent(new Date().toISOString())}`);
+  };
+
+  // 구매/무료발급 버튼 분기 렌더링
+  function PurchaseSection() {
+    if (!exhibition?.isSale) return (
+      <Button className="w-full mt-4 bg-gray-400 text-white text-[13px] font-bold" size="lg" disabled>
+        웹티켓구매 미지원
+      </Button>
+    );
+    if (isFreeTicket) {
+      return (
+        <Button
+          className="w-full mt-4 bg-[#004BFE] text-white text-[13px] font-bold"
+          size="lg"
+          onPress={handleFreeIssue}
+        >
+          무료티켓 발급받기
+        </Button>
+      );
+    }
+    return (
+      <Button
+        onPress={requestPayment}
+        className="w-full mt-4 bg-[#004BFE] text-white text-[13px] font-bold"
+        size="lg"
+      >
+        {exhibition.price?.toLocaleString()}원 구매하기
+      </Button>
+    );
+  }
+
   return (
     <>
       {!allDataLoaded ? (
@@ -556,15 +630,9 @@ export default function App() {
                 </span>
               </div>
             </div>
+            {/* 구매/무료발급 버튼 분기 */}
             <div className="flex flex-row gap-2">
-              <Button
-                onPress={exhibition?.isSale ? requestPayment : undefined}
-                className={`w-full mt-4 ${exhibition?.isSale ? 'bg-[#004BFE]' : 'bg-gray-400'} text-white text-[13px] font-bold`}
-                size="lg"
-                disabled={!exhibition?.isSale}
-              >
-                {exhibition?.isSale ? '티켓구매' : '웹티켓구매 미지원'}
-              </Button>
+              <div className="w-full">{PurchaseSection()}</div>
               <Button
                 target="_blank"
                 onPress={() => router.push(exhibition?.homepage_url)}
@@ -575,7 +643,8 @@ export default function App() {
                 사이트연결
               </Button>
             </div>
-            {exhibition?.isSale && (
+            {/* 합계금액/수량조절 UI: 무료티켓이면 숨김 */}
+            {exhibition?.isSale && !isFreeTicket && (
             <div className="flex flex-row items-center justify-between mt-4 rounded-lg p-4 shadow-md">
               <div className="text-[14px] font-bold">합계금액</div>
               <div className="flex flex-row items-center gap-2">
