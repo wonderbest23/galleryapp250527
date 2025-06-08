@@ -20,7 +20,7 @@ import { useParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { FiMapPin } from "react-icons/fi";
 import { LuClock4 } from "react-icons/lu";
-import { IoMdInformationCircleOutline } from "react-icons/io";
+import { IoMdInformationCircleOutline, IoMdClose } from "react-icons/io";
 import { FaArrowLeft } from "react-icons/fa";
 import { LuSend } from "react-icons/lu";
 import { Divider } from "@heroui/react";
@@ -71,6 +71,8 @@ export default function App() {
 
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
 
   // 페이드인 애니메이션 설정
   const fadeInVariants = {
@@ -232,6 +234,16 @@ export default function App() {
     }
   };
 
+  // 모달 오픈 함수
+  const openImageModal = (idx) => {
+    setModalImageIndex(idx);
+    setIsImageModalOpen(true);
+  };
+  // 모달 닫기 함수
+  const closeImageModal = () => {
+    setIsImageModalOpen(false);
+  };
+
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen">
       {isLoading ? (
@@ -263,7 +275,7 @@ export default function App() {
           {/* 이미지 슬라이더 - 이미지가 2개 이상일 때만 슬라이더 사용 */}
           <div className="relative w-full h-[40vh] mx-auto overflow-hidden">
             {productImages.length === 1 ? (
-              <div className="relative w-full h-[40vh] overflow-hidden">
+              <div className="relative w-full h-[40vh] overflow-hidden cursor-pointer" onClick={() => openImageModal(0)}>
                 <Image
                   src={productImages[0]}
                   alt="제품 이미지"
@@ -276,7 +288,7 @@ export default function App() {
             ) : (
               <Slider {...sliderSettings}>
                 {productImages.map((img, idx) => (
-                  <div key={idx} className="relative w-full h-[40vh] overflow-hidden">
+                  <div key={idx} className="relative w-full h-[40vh] overflow-hidden cursor-pointer" onClick={() => openImageModal(idx)}>
                     <Image
                       src={img}
                       alt={`제품 이미지 ${idx + 1}`}
@@ -290,6 +302,37 @@ export default function App() {
               </Slider>
             )}
           </div>
+
+          {/* 이미지 전체보기 모달 */}
+          {isImageModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" onClick={closeImageModal}>
+              <div className="relative w-full max-w-2xl h-[80vh] flex items-center justify-center" onClick={e => e.stopPropagation()}>
+                <button className="absolute top-2 right-2 z-10 text-white text-3xl" onClick={closeImageModal}>
+                  <IoMdClose />
+                </button>
+                <Slider
+                  {...sliderSettings}
+                  initialSlide={modalImageIndex}
+                  dots={true}
+                  arrows={true}
+                  className="w-full h-full"
+                >
+                  {productImages.map((img, idx) => (
+                    <div key={idx} className="relative w-full h-[70vh] flex items-center justify-center">
+                      <Image
+                        src={img}
+                        alt={`제품 전체 이미지 ${idx + 1}`}
+                        className="object-contain w-full h-full rounded-lg bg-white"
+                        fill
+                        priority
+                        unoptimized
+                      />
+                    </div>
+                  ))}
+                </Slider>
+              </div>
+            </div>
+          )}
 
           <div className="w-[90%] h-full mt-4">
             <div className="w-full h-full">
