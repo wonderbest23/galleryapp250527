@@ -69,9 +69,6 @@ export default function MagazineList() {
               </div>
             </div>
           ))}
-
- 
-
         </div>
       ) : (
         <motion.div
@@ -92,8 +89,44 @@ export default function MagazineList() {
             <h2 className="text-lg font-bold text-center flex-grow">매거진</h2>
             <div className="w-10"></div>
           </div>
+          {/* 1. 가장 최근 매거진(대형 카드) */}
+          {magazines[0] && (
+            <motion.div
+              className="w-[90%] bg-white rounded-2xl mb-6 shadow hover:cursor-pointer mt-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              onClick={() => router.push(`/magazine/${magazines[0].id}`)}
+            >
+              {magazines[0].photo?.[0]?.url && (
+                <img
+                  src={magazines[0].photo[0].url}
+                  alt="대표 이미지"
+                  className="w-full h-64 object-cover rounded-t-2xl"
+                />
+              )}
+              <div className="p-4">
+                {/* 카테고리 있으면 */}
+                {magazines[0].category && (
+                  <div className="text-xs font-bold text-gray-500 mb-1">{magazines[0].category}</div>
+                )}
+                <div className="text-lg font-bold mb-2 text-black leading-tight line-clamp-2 break-keep">{magazines[0].title}</div>
+                {magazines[0].subtitle && (
+                  <div className="text-sm text-gray-500 mb-2">{magazines[0].subtitle}</div>
+                )}
+                <div className="text-xs text-gray-400">
+                  {new Date(magazines[0].created_at).getFullYear()}년 {new Date(magazines[0].created_at).getMonth() + 1}월 {new Date(magazines[0].created_at).getDate()}일
+                  {magazines[0].author && (
+                    <span> | by {magazines[0].author}</span>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* 2. 나머지 매거진(작은 리스트) */}
           <div className="w-full flex flex-col gap-4 justify-center items-center">
-            {magazines.slice(0, visibleCount).map((item, index) => (
+            {magazines.slice(1, visibleCount).map((item, index) => (
               <React.Fragment key={item.id}>
                 <motion.div
                   className="w-[90%]"
@@ -102,32 +135,38 @@ export default function MagazineList() {
                   transition={{ duration: 0.5 }}
                 >
                   <div className="hover:cursor-pointer" onClick={() => router.push(`/magazine/${item.id}`)}>
-                    <div className="w-full mt-6">
-                      <div className="w-full flex gap-4 flex-row justify-between">
-                        <div className="flex flex-col space-y-2">
-                          <h3 className="text-[15px] text-default-500">
-                            {item.title}
-                          </h3>
-                          <p className="text-[15px] font-medium">{item.subtitle}</p>
-                          <p className="text-[10px] text-[#494949]">
-                            작성일 :{" "}
-                            {new Date(item.created_at).getFullYear()}년{" "}
-                            {new Date(item.created_at).getMonth() + 1}월{" "}
-                            {new Date(item.created_at).getDate()}일
-                          </p>
-                        </div>
-                        {item.photo?.[0]?.url && (
-                          <Image
-                            alt="Card thumbnail"
-                            className="object-cover w-[96px] h-[96px] min-w-[96px] min-h-[96px] rounded-2xl"
-                            src={item.photo[0].url}
-                          />
+                    <div className="flex flex-row items-center gap-4 w-full">
+                      {/* 썸네일 좌측 */}
+                      {item.photo?.[0]?.url && (
+                        <Image
+                          alt="Card thumbnail"
+                          className="object-cover w-[96px] h-[96px] min-w-[96px] min-h-[96px] rounded-none border border-gray-200"
+                          src={item.photo[0].url}
+                        />
+                      )}
+                      {/* 텍스트 우측 */}
+                      <div className="flex flex-col space-y-1 flex-1 min-w-0">
+                        {item.category && (
+                          <div className="text-xs font-bold text-gray-500 mb-1 truncate">{item.category}</div>
                         )}
+                        <h3 className="text-[15px] font-bold text-black leading-tight line-clamp-2 break-keep">{item.title}</h3>
+                        <div className="flex flex-row items-center gap-2">
+                          {item.subtitle && (
+                            <span className="text-[12px] text-gray-500 truncate">{item.subtitle}</span>
+                          )}
+                          <span className="text-[12px] text-gray-400">·</span>
+                          <span className="text-[12px] text-gray-400 truncate">
+                            {new Date(item.created_at).getFullYear()}년 {new Date(item.created_at).getMonth() + 1}월 {new Date(item.created_at).getDate()}일
+                            {item.author && (
+                              <span> | by {item.author}</span>
+                            )}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </motion.div>
-                {index < visibleCount - 1 && (
+                {index < visibleCount - 2 && (
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
