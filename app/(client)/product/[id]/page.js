@@ -12,7 +12,7 @@ import {
   ToastProvider,
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { FaPlusCircle } from "react-icons/fa";
@@ -89,6 +89,9 @@ export default function App() {
       },
     },
   };
+
+  // 작가의 다른 작품 추천
+  const [otherWorks, setOtherWorks] = useState([]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -247,6 +250,21 @@ export default function App() {
   const closeImageModal = () => {
     setModalOpen(false);
   };
+
+  useEffect(() => {
+    if (!product?.artist_id?.id) return;
+    const fetchOtherWorks = async () => {
+      const { data, error } = await supabase
+        .from("product")
+        .select("*")
+        .eq("artist_id", product.artist_id.id)
+        .neq("id", product.id)
+        .order("created_at", { ascending: false })
+        .limit(4);
+      if (!error) setOtherWorks(data || []);
+    };
+    fetchOtherWorks();
+  }, [product]);
 
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen">
@@ -438,7 +456,7 @@ export default function App() {
               <p>{product?.artist_id?.artist_intro}</p>
             </div>
           </div>
-          <div className="w-[90%] flex flex-row justify-between items-center gap-x-4 my-4 h-14 mb-20">
+          <div className="w-[90%] flex flex-row justify-between items-center gap-x-4 my-4 h-14 mb-8">
             <Button
               isIconOnly
               className="bg-gray-200 w-[20%] h-full text-[20px] font-bold"
@@ -470,6 +488,27 @@ export default function App() {
               구매연결
             </Button>
           </div>
+          {/* 작가의 다른 작품 추천 섹션 */}
+          {otherWorks.length > 0 && (
+            <div className="w-full flex flex-col items-center mt-8 pb-24">
+              <div className="w-[90%] flex flex-row justify-between items-center mb-2">
+                <h2 className="text-xl font-bold">작가의 다른 작품</h2>
+                {/* 전체보기 버튼 등 필요시 추가 */}
+              </div>
+              <div className="w-[90%] grid grid-cols-2 gap-4">
+                {otherWorks.map((item) => (
+                  <div key={item.id} className="bg-white rounded-xl shadow p-2 flex flex-col cursor-pointer" onClick={() => router.push(`/product/${item.id}`)}>
+                    <div className="relative w-full aspect-[4/3] mb-2 overflow-hidden rounded-lg">
+                      <img src={item.image?.[0] || "/noimage.jpg"} alt={item.name} className="object-cover w-full h-full" />
+                    </div>
+                    <div className="text-[15px] font-bold line-clamp-1 mb-1">{item.name}</div>
+                    <div className="text-[13px] text-gray-500 italic mb-1">{item.make_date || "-"}</div>
+                    <div className="text-[14px] text-black font-bold">₩{item.price?.toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </motion.div>
       )}
       <style jsx global>{`
