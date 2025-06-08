@@ -45,7 +45,7 @@ export function ExhibitionCards({
                     <div className="flex flex-row justify-between items-start">
                       <div className="flex flex-col">
                         <div className="text-[10px]">{exhibition.name||'없음'}</div>
-                        <div className="text-[12px] font-bold">
+                        <div className="text-[12px] font-bold mb-1">
                           {exhibition.contents}
                         </div>
                       </div>
@@ -58,11 +58,11 @@ export function ExhibitionCards({
                       </div>
                     </div>
 
-                    <Divider
-                      orientation="horizontal"
-                      className=" bg-gray-300"
-                    />
                     <div className="text-xs flex flex-col mt-2">
+                      <Divider
+                        orientation="horizontal"
+                        className="bg-gray-300 my-0"
+                      />
                       <div className="flex flex-row gap-1 text-[10px]">
                         <img
                           src="/exhibition/미니달력.svg"
