@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button, Card, CardBody, Spinner } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -59,6 +59,66 @@ export default function TopArts() {
   const [user, setUser] = useState(null);
   const router = useRouter();
   const supabase = createClient();
+
+  // 드래그 스크롤 관련 ref
+  const sliderRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const isSliderClickRef = useRef(false);
+
+  // 마우스 드래그 핸들러
+  const handleMouseDown = useCallback((e) => {
+    isSliderClickRef.current = true;
+    e.preventDefault();
+    if (sliderRef.current) {
+      isDraggingRef.current = false;
+      sliderRef.current.style.cursor = "grabbing";
+      const slider = sliderRef.current;
+      const startX = e.pageX;
+      const scrollLeft = slider.scrollLeft;
+      const onMouseMove = (e) => {
+        if (!isSliderClickRef.current) return;
+        e.preventDefault();
+        isDraggingRef.current = true;
+        const x = e.pageX;
+        const walk = startX - x;
+        slider.scrollLeft = scrollLeft + walk;
+      };
+      const onMouseUp = (e) => {
+        isSliderClickRef.current = false;
+        slider.style.cursor = "grab";
+        setTimeout(() => { isDraggingRef.current = false; }, 10);
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+      };
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    }
+  }, []);
+  // 터치 드래그 핸들러
+  const handleTouchStart = useCallback((e) => {
+    isSliderClickRef.current = true;
+    if (sliderRef.current) {
+      isDraggingRef.current = false;
+      const slider = sliderRef.current;
+      const startX = e.touches[0].clientX;
+      const scrollLeft = slider.scrollLeft;
+      const onTouchMove = (e) => {
+        if (!isSliderClickRef.current) return;
+        isDraggingRef.current = true;
+        const x = e.touches[0].clientX;
+        const walk = startX - x;
+        slider.scrollLeft = scrollLeft + walk;
+      };
+      const onTouchEnd = () => {
+        isSliderClickRef.current = false;
+        setTimeout(() => { isDraggingRef.current = false; }, 10);
+        slider.removeEventListener("touchmove", onTouchMove);
+        slider.removeEventListener("touchend", onTouchEnd);
+      };
+      slider.addEventListener("touchmove", onTouchMove, { passive: false });
+      slider.addEventListener("touchend", onTouchEnd);
+    }
+  }, []);
 
   console.log('categories:', categories)
   console.log('selectedCategory:', selectedCategory)
@@ -237,7 +297,13 @@ export default function TopArts() {
       </div>
       {/* 1열 슬라이드(가로 스크롤) 카드 섹션 */}
       <div className="w-full mt-4 overflow-x-auto">
-        <div className="flex flex-row gap-6 min-w-max">
+        <div
+          className="flex flex-row gap-6 min-w-max scrollbar-hide"
+          ref={sliderRef}
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+          style={{ cursor: "grab", WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+        >
           {loading ? (
             Array.from({ length: 4 }).map((_, idx) => (
               <Skeleton key={idx} className="h-[200px] w-[157px] rounded-lg" />
