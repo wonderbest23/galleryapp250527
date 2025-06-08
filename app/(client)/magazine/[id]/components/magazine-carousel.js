@@ -6,6 +6,8 @@ export default function MagazineCarousel({magazine}) {
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalIndex, setModalIndex] = useState(0);
   // magazine.photo 배열에서 슬라이드 생성
   const slides = magazine?.photo || [];
 
@@ -53,6 +55,11 @@ export default function MagazineCarousel({magazine}) {
                   alt={`${magazine?.title || ''} - 이미지 ${currentSlide + 1}`}
                   className="object-contain w-full h-full"
                   draggable={false}
+                  onClick={() => {
+                    setModalIndex(currentSlide);
+                    setModalOpen(true);
+                  }}
+                  style={{ cursor: 'zoom-in' }}
                 />
               </div>
             
@@ -87,6 +94,52 @@ export default function MagazineCarousel({magazine}) {
         ))}
       </div>
       
+      {/* 원본 이미지 모달 오버레이 */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
+          onClick={() => setModalOpen(false)}
+        >
+          {/* 좌측 화살표 */}
+          {slides.length > 1 && (
+            <button
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-3xl z-50 bg-black/40 rounded-full w-10 h-10 flex items-center justify-center"
+              onClick={e => {
+                e.stopPropagation();
+                setModalIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+              }}
+              aria-label="이전 이미지"
+            >
+              &#8592;
+            </button>
+          )}
+          <div
+            className="max-w-full max-h-full overflow-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <img
+              src={slides[modalIndex]?.url || `https://picsum.photos/800/400?random=${modalIndex}`}
+              alt="원본 이미지"
+              className="block max-w-full max-h-[90vh] mx-auto"
+              draggable={false}
+              style={{ cursor: 'zoom-out' }}
+            />
+          </div>
+          {/* 우측 화살표 */}
+          {slides.length > 1 && (
+            <button
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-3xl z-50 bg-black/40 rounded-full w-10 h-10 flex items-center justify-center"
+              onClick={e => {
+                e.stopPropagation();
+                setModalIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+              }}
+              aria-label="다음 이미지"
+            >
+              &#8594;
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
