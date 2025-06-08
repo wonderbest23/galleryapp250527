@@ -181,21 +181,30 @@ const Success = () => {
         <div className="w-10"></div>
       </div>
       <div className="w-full h-auto flex justify-center items-center my-6 flex-col gap-y-4">
-        <div className="w-24 h-24 flex justify-center items-center bg-black rounded-full">
-          {user?.user_metadata?.avatar_url && (
+        <div className="w-24 h-24 flex justify-center items-center bg-black rounded-full relative overflow-hidden">
+          {(isArtist && profile?.isArtistApproval && profile?.avatar_url) ? (
             <Image
-              src={user.user_metadata.avatar_url}
-              width={96}
-              height={96}
+              src={profile.avatar_url}
               alt="프로필 이미지"
-              className="rounded-full object-contain"
+              fill
+              className="rounded-full object-cover"
             />
+          ) : (
+            user?.user_metadata?.avatar_url && (
+              <Image
+                src={user.user_metadata.avatar_url}
+                alt="프로필 이미지"
+                fill
+                className="rounded-full object-cover"
+              />
+            )
           )}
         </div>
         <div className="text-lg font-bold flex flex-col justify-center items-center">
           <div className="flex flex-row items-center gap-x-2 text-[#0B437E]">
-            {user?.user_metadata?.full_name || user?.email || "사용자"}
-            
+            {(isArtist && profile?.isArtistApproval && profile?.artist_name)
+              ? profile.artist_name
+              : (user?.user_metadata?.full_name || user?.email || "사용자")}
           </div>
           <div className="flex flex-row items-center text-sm justify-center gap-x-1">
             <div
