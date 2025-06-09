@@ -122,57 +122,57 @@ function OrderDetailContent() {
   }
 
   return (
-    <div className="flex flex-col min-h-[100dvh] relative bg-white mx-2">
+    <div className="flex flex-col min-h-[100dvh] relative bg-white mx-1">
       <div className="flex-1 flex flex-col items-center overflow-y-auto">
         {/* 상단 영역 */}
-        <div className="w-[90%] flex flex-col gap-y-8 mt-6">
+        <div className="w-[98%] flex flex-col gap-y-3 mt-2">
           <div className="flex flex-col items-center justify-center">
-            <div className="text-[36px] text-black font-bold">
-              <h1 className='text-[36px] text-black font-bold text-center mt-2'>주문 상세</h1>
-              <div className="text-[10px] text-black font-medium text-center mt-2">
+            <div className="text-[26px] text-black font-bold">
+              <h1 className='text-[26px] text-black font-bold text-center mt-1'>주문 상세</h1>
+              <div className="text-[10px] text-black font-medium text-center mt-1">
                 {orderInfo.exhibition?.contents}
               </div>
             </div>
           </div>
-          <div className="w-full py-8 text-[14px] text-black font-medium text-start bg-[#FAFAFA] px-8 rounded-2xl">
+          <div className="w-full py-3 text-[13px] text-black font-medium text-start bg-[#FAFAFA] px-3 rounded-lg">
             <p>구매날짜: {orderInfo.created_at?.split('T')[0]}</p>
             <p>티켓 구매 수: {orderInfo.peopleCount}매</p>
             <p>구매번호: {orderInfo.orderId}</p>
             <p>총 결제금액: {Number(orderInfo.amount).toLocaleString()}원</p>
           </div>
-          <div className="flex flex-col items-center justify-center gap-y-4">
+          <div className="flex flex-col items-center justify-center gap-y-2">
             {/* QR코드 영역 */}
-            <div className="my-4">
-              <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/mypage/order-detail?order_id=${orderInfo.orderId}&exhibition_id=${orderInfo.exhibition?.id}&user_id=${orderInfo.user?.id}&people_count=${orderInfo.peopleCount}&amount=${orderInfo.amount}&created_at=${orderInfo.created_at}&qr=1`} size={160} />
+            <div className="my-1">
+              <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/mypage/order-detail?order_id=${orderInfo.orderId}&exhibition_id=${orderInfo.exhibition?.id}&user_id=${orderInfo.user?.id}&people_count=${orderInfo.peopleCount}&amount=${orderInfo.amount}&created_at=${orderInfo.created_at}&qr=1`} size={120} />
             </div>
             {/* 상태별 안내 */}
             {ticketStatus === 'used' ? (
               <>
-                <FaCircleCheck className="text-blue-500 text-[48px] mb-2" />
-                <div className="text-[22px] text-blue-700 font-extrabold text-center mb-2">
+                <FaCircleCheck className="text-blue-500 text-[32px] mb-1" />
+                <div className="text-[15px] text-blue-700 font-extrabold text-center mb-1">
                   {isQrMode ? "이미 입장권이 사용된 티켓입니다." : "입장이 완료된 티켓입니다."}
                 </div>
                 {usedAt && (
-                  <div className="text-[16px] text-gray-700 font-semibold mb-2">입장시간: {dayjs(usedAt).format('YYYY-MM-DD HH:mm:ss')}</div>
+                  <div className="text-[12px] text-gray-700 font-semibold mb-1">입장시간: {dayjs(usedAt).format('YYYY-MM-DD HH:mm:ss')}</div>
                 )}
-                {isQrMode && <div className="text-[14px] text-red-500 font-bold">재입장은 불가합니다.</div>}
+                {isQrMode && <div className="text-[12px] text-red-500 font-bold">재입장은 불가합니다.</div>}
               </>
             ) : (
               <>
-                <FaCircleCheck className="text-green-500 text-[40px]" />
-                <div className="text-[18px] text-black font-medium">구매 완료된 티켓입니다.</div>
-                {isQrMode && <div className="text-[14px] text-gray-500">입장 처리가 완료되었습니다.</div>}
+                <FaCircleCheck className="text-green-500 text-[24px]" />
+                <div className="text-[13px] text-black font-medium">구매 완료된 티켓입니다.</div>
+                {isQrMode && <div className="text-[12px] text-gray-500">입장 처리가 완료되었습니다.</div>}
               </>
             )}
           </div>
         </div>
       </div>
       {/* 하단 버튼 */}
-      <div className="w-full flex flex-col items-center mb-2 mt-2">
+      <div className="w-full flex flex-col items-center mb-1 mt-1">
         <Button
           onPress={() => router.back()}
-          className="w-[90%] font-bold bg-white border-2 border-black text-black text-[18px] py-4"
-          size="lg"
+          className="w-[98%] font-bold bg-white border-2 border-black text-black text-[15px] py-2"
+          size="md"
         >
           돌아가기
         </Button>
