@@ -161,7 +161,13 @@ function OrderDetailContent() {
               <>
                 <FaCircleCheck className="text-green-500 text-[24px]" />
                 <div className="text-[13px] text-black font-medium">구매 완료된 티켓입니다.</div>
-                {isQrMode && <div className="text-[12px] text-gray-500">입장 처리가 완료되었습니다.</div>}
+                {isQrMode && ticketStatus !== 'used' && (
+                  <div className="w-full flex justify-center">
+                    <div className="px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-700 text-[16px] font-bold text-center shadow-md mt-2 mb-1">
+                      입장 처리가 완료되었습니다.
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
