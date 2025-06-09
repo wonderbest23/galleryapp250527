@@ -93,8 +93,19 @@ function OrderDetailContent() {
             .update({ status: "used", used_at: now })
             .eq("id", ticketId);
           if (!updateError) {
-            status = "used";
-            usedAtValue = now;
+            // 업데이트 후, 반드시 다시 select해서 최신 상태를 받아옴
+            const { data: updatedTicket } = await supabase
+              .from("payment_ticket")
+              .select("id, status, used_at")
+              .eq("id", ticketId)
+              .maybeSingle();
+            if (updatedTicket) {
+              status = updatedTicket.status;
+              usedAtValue = updatedTicket.used_at;
+            } else {
+              status = "used";
+              usedAtValue = now;
+            }
           }
         }
         setTicketStatus(status);
