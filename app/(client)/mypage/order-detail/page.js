@@ -7,6 +7,7 @@ import { FaArrowLeft, FaCircleCheck } from "react-icons/fa6";
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 import dayjs from "dayjs";
+import { v4 as uuidv4 } from "uuid";
 
 // 로딩 상태를 위한 컴포넌트
 function LoadingSkeleton() {
