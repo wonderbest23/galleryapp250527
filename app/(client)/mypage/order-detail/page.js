@@ -145,7 +145,7 @@ function OrderDetailContent() {
                 <>
                   <FaCircleCheck className="text-blue-500 text-[32px] mb-1" />
                   <div className="text-[15px] text-blue-700 font-extrabold text-center mb-1">
-                    {isQrMode ? "이미 입장권이 사용된 티켓입니다." : "입장이 완료된 티켓입니다."}
+                    {isQrMode ? "이미 사용한 티켓입니다." : "입장이 완료된 티켓입니다."}
                   </div>
                   {usedAt && (
                     <div className="text-[12px] text-gray-700 font-semibold mb-1">입장시간: {dayjs(usedAt).format('YYYY-MM-DD HH:mm:ss')}</div>
