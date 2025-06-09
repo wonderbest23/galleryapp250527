@@ -47,6 +47,7 @@ function OrderDetailContent() {
   const [ticketStatus, setTicketStatus] = useState("success");
   const [isQrMode, setIsQrMode] = useState(false);
   const [usedAt, setUsedAt] = useState(null);
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,29 +86,6 @@ function OrderDetailContent() {
           ticketId = ticketData.id;
           usedAtValue = ticketData.used_at;
         }
-        // QR모드(관계자)에서 미사용 티켓이면 사용처리
-        if (isQr && status === "success" && ticketId) {
-          const now = new Date().toISOString();
-          const { error: updateError } = await supabase
-            .from("payment_ticket")
-            .update({ status: "used", used_at: now })
-            .eq("id", ticketId);
-          if (!updateError) {
-            // 업데이트 후, 반드시 다시 select해서 최신 상태를 받아옴
-            const { data: updatedTicket } = await supabase
-              .from("payment_ticket")
-              .select("id, status, used_at")
-              .eq("id", ticketId)
-              .maybeSingle();
-            if (updatedTicket) {
-              status = updatedTicket.status;
-              usedAtValue = updatedTicket.used_at;
-            } else {
-              status = "used";
-              usedAtValue = now;
-            }
-          }
-        }
         setTicketStatus(status);
         setUsedAt(usedAtValue);
         setOrderInfo({
@@ -127,6 +105,28 @@ function OrderDetailContent() {
     };
     fetchData();
   }, [searchParams]);
+
+  // 입장확인 버튼 클릭 핸들러
+  const handleConfirmEntry = async () => {
+    if (!orderInfo.orderId) return;
+    // 티켓 id 가져오기
+    const { data: ticketData } = await supabase
+      .from("payment_ticket")
+      .select("id")
+      .eq("order_id", orderInfo.orderId)
+      .maybeSingle();
+    if (!ticketData) return;
+    const now = new Date().toISOString();
+    const { error: updateError } = await supabase
+      .from("payment_ticket")
+      .update({ status: "used", used_at: now })
+      .eq("id", ticketData.id);
+    if (!updateError) {
+      setTicketStatus("used");
+      setUsedAt(now);
+      setIsConfirmed(true);
+    }
+  };
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -152,29 +152,43 @@ function OrderDetailContent() {
             <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/mypage/order-detail?order_id=${orderInfo.orderId}&exhibition_id=${orderInfo.exhibition?.id}&user_id=${orderInfo.user?.id}&people_count=${orderInfo.peopleCount}&amount=${orderInfo.amount}&created_at=${orderInfo.created_at}&qr=1`} size={140} />
             {/* 상태별 안내 */}
             <div className="w-full flex flex-col items-center gap-1">
-              {ticketStatus === 'used' ? (
-                <>
-                  <FaCircleCheck className="text-blue-500 text-[32px] mb-1" />
-                  <div className="text-[15px] text-blue-700 font-extrabold text-center mb-1">
-                    {isQrMode ? "이미 사용한 티켓입니다." : "입장이 완료된 티켓입니다."}
-                  </div>
-                  {usedAt && (
-                    <div className="text-[12px] text-gray-700 font-semibold mb-1">입장시간: {dayjs(usedAt).format('YYYY-MM-DD HH:mm:ss')}</div>
-                  )}
-                  {isQrMode && <div className="text-[12px] text-red-500 font-bold">재입장은 불가합니다.</div>}
-                </>
+              {isQrMode ? (
+                ticketStatus === 'used' ? (
+                  <>
+                    <FaCircleCheck className="text-blue-500 text-[32px] mb-1" />
+                    <div className="text-[15px] text-blue-700 font-extrabold text-center mb-1">이미 사용한 티켓입니다.</div>
+                    {usedAt && (
+                      <div className="text-[12px] text-gray-700 font-semibold mb-1">입장시간: {dayjs(usedAt).format('YYYY-MM-DD HH:mm:ss')}</div>
+                    )}
+                    <div className="text-[12px] text-red-500 font-bold">재입장은 불가합니다.</div>
+                  </>
+                ) : (
+                  isConfirmed ? (
+                    <div className="px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-700 text-[16px] font-bold text-center shadow-md mt-2 mb-1">입장 처리가 완료되었습니다.</div>
+                  ) : (
+                    <Button
+                      className="w-full px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-700 text-[16px] font-bold text-center shadow-md mt-2 mb-1"
+                      onPress={handleConfirmEntry}
+                    >
+                      입장확인
+                    </Button>
+                  )
+                )
               ) : (
-                <>
-                  <FaCircleCheck className="text-green-500 text-[24px]" />
-                  <div className="text-[13px] text-black font-medium">구매 완료된 티켓입니다.</div>
-                  {isQrMode && ticketStatus !== 'used' && (
-                    <div className="w-full flex justify-center">
-                      <div className="px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-700 text-[16px] font-bold text-center shadow-md mt-2 mb-1">
-                        입장 처리가 완료되었습니다.
-                      </div>
-                    </div>
-                  )}
-                </>
+                ticketStatus === 'used' ? (
+                  <>
+                    <FaCircleCheck className="text-blue-500 text-[32px] mb-1" />
+                    <div className="text-[15px] text-blue-700 font-extrabold text-center mb-1">입장이 완료된 티켓입니다.</div>
+                    {usedAt && (
+                      <div className="text-[12px] text-gray-700 font-semibold mb-1">입장시간: {dayjs(usedAt).format('YYYY-MM-DD HH:mm:ss')}</div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <FaCircleCheck className="text-green-500 text-[24px]" />
+                    <div className="text-[13px] text-black font-medium">구매 완료된 티켓입니다.</div>
+                  </>
+                )
               )}
             </div>
           </div>
