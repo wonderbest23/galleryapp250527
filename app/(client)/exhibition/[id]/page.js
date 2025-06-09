@@ -440,6 +440,8 @@ export default function App() {
       alert("이미 무료티켓을 받으셨습니다.");
       return;
     }
+    // 고유 order_id 생성
+    const orderId = generateRandomString();
     // 주문 생성
     const { error } = await supabase
       .from("payment_ticket")
@@ -449,6 +451,7 @@ export default function App() {
         people_count: 1,
         amount: 0,
         status: "success",
+        order_id: orderId,
       });
     if (error) {
       console.log(error);
@@ -456,7 +459,7 @@ export default function App() {
       return;
     }
     // 완료 페이지 이동(주문상세)
-    router.push(`/mypage/order-detail?order_id=free&exhibition_id=${exhibition.id}&user_id=${userData.id}&people_count=1&amount=0&created_at=${encodeURIComponent(new Date().toISOString())}`);
+    router.push(`/mypage/order-detail?order_id=${orderId}&exhibition_id=${exhibition.id}&user_id=${userData.id}&people_count=1&amount=0&created_at=${encodeURIComponent(new Date().toISOString())}`);
   };
 
   // 무료티켓 발급 가능 여부(매진 체크)
