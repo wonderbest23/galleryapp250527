@@ -7,6 +7,7 @@ import { FaPlus } from "react-icons/fa";
 import Link from "next/link";
 import { FaCalendar } from "react-icons/fa6";
 import { FaMoneyBillWaveAlt } from "react-icons/fa";
+import dayjs from "dayjs";
 
 const OrderHistory = ({ user }) => {
   const [orders, setOrders] = useState([]);
@@ -100,9 +101,28 @@ const OrderHistory = ({ user }) => {
                   <div className="flex flex-col w-full min-w-0">
                     <div className="flex flex-row justify-between items-start">
                       <div className="flex flex-col min-w-0">
-                        
-                        <div className="text-lg font-bold truncate">
+                        <div className="text-lg font-bold truncate flex items-center gap-2">
                           {order.exhibition_id?.contents || "알 수 없는 전시회"}
+                          {order.status === 'used' && (
+                            <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold flex items-center">
+                              <svg className="w-3 h-3 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.071 7.071a1 1 0 01-1.414 0l-3.536-3.535a1 1 0 111.414-1.415l2.829 2.829 6.364-6.364a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                              사용됨
+                            </span>
+                          )}
+                          {order.status !== 'used' && order.exhibition_id?.end_date && (() => {
+                            const today = dayjs();
+                            const endDate = dayjs(order.exhibition_id.end_date);
+                            const daysLeft = endDate.diff(today, 'day');
+                            if (daysLeft >= 0) {
+                              return (
+                                <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-bold flex items-center">
+                                  <svg className="w-3 h-3 mr-1 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1a1 1 0 102 0V3a1 1 0 00-1-1zm6 0a1 1 0 00-1 1v1a1 1 0 102 0V3a1 1 0 00-1-1zM4.22 5.22a1 1 0 011.42 0l.71.7a1 1 0 01-1.42 1.42l-.7-.71a1 1 0 010-1.41zm9.19.7a1 1 0 011.42-1.42l.7.71a1 1 0 01-1.41 1.42l-.71-.71zM10 6a4 4 0 00-4 4v2a4 4 0 004 4 4 4 0 004-4v-2a4 4 0 00-4-4zm-2 4a2 2 0 114 0v2a2 2 0 11-4 0v-2zm-6 2a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm14 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zm-9.78 3.78a1 1 0 011.42 0l.71.7a1 1 0 01-1.42 1.42l-.7-.71a1 1 0 010-1.41zm9.19.7a1 1 0 011.42-1.42l.7.71a1 1 0 01-1.41 1.42l-.71-.71zM10 18a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" /></svg>
+                                  종료 {daysLeft}일 전
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                       </div>
                     </div>
