@@ -10,6 +10,41 @@ import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/utils/supabase/client";
 import { createClient as createClientAdmin } from "@supabase/supabase-js";
 
+// 브라우저에서 WebP 변환 함수 (최대 1200px 리사이즈 적용)
+async function fileToWebP(file) {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    const reader = new FileReader();
+    reader.onload = (e) => { img.src = e.target.result; };
+    img.onload = () => {
+      // 최대 크기 제한
+      const maxSize = 1200;
+      let targetW = img.width;
+      let targetH = img.height;
+      if (img.width > maxSize || img.height > maxSize) {
+        if (img.width > img.height) {
+          targetW = maxSize;
+          targetH = Math.round(img.height * (maxSize / img.width));
+        } else {
+          targetH = maxSize;
+          targetW = Math.round(img.width * (maxSize / img.height));
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, targetW, targetH);
+      canvas.toBlob(
+        (blob) => { resolve(blob); },
+        'image/webp',
+        0.8 // 압축률(0~1)
+      );
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export function GalleryDetail({
   gallery,
   onUpdate,
@@ -109,7 +144,7 @@ export function GalleryDetail({
         link.href = dataURL;
         link.click();
       } catch (err) {
-        console.error("QR 코드 다운로드 중 오류 발생:", err);
+        console.log("QR 코드 다운로드 중 오류 발생:", err);
         addToast({
           title: "QR 코드 다운로드 오류",
           description: "QR 코드 이미지를 생성하는 중 오류가 발생했습니다.",
@@ -164,33 +199,31 @@ export function GalleryDetail({
     reader.readAsDataURL(file);
   };
 
-  // 이미지 업로드 함수
+  // 이미지 업로드 함수 (webp 변환 적용)
   const uploadImage = async () => {
     if (!imageFile) return null;
-
     try {
       setIsUploading(true);
-
-      // 고유한 파일명 생성
-      const fileExt = imageFile.name.split(".").pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
+      const fileName = `${uuidv4()}.webp`;
       const filePath = `gallery/${fileName}`;
-
-      // Supabase Storage에 이미지 업로드
+      // WebP 변환
+      const webpBlob = await fileToWebP(imageFile);
+      // Supabase Storage에 업로드
       const { data, error } = await supabase.storage
         .from("gallery")
-        .upload(filePath, imageFile);
-
+        .upload(filePath, webpBlob, {
+          contentType: 'image/webp',
+          cacheControl: '3600',
+          upsert: false
+        });
       if (error) throw error;
-
       // 공개 URL 가져오기
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("gallery").getPublicUrl(filePath);
-
+      const { data: { publicUrl } } = supabase.storage
+        .from("gallery")
+        .getPublicUrl(filePath);
       return publicUrl;
     } catch (error) {
-      console.error("이미지 업로드 오류:", error);
+      console.log("이미지 업로드 오류:", error);
       addToast({
         title: "이미지 업로드 오류",
         description: error.message,
@@ -219,7 +252,7 @@ export function GalleryDetail({
 
       if (error) throw error;
     } catch (error) {
-      console.error("이미지 삭제 오류:", error);
+      console.log("이미지 삭제 오류:", error);
     }
   };
 
@@ -364,7 +397,7 @@ export function GalleryDetail({
           console.log("갤러리 목록 새로고침 함수가 전달되지 않았습니다");
         }
       } catch (refreshError) {
-        console.error("갤러리 목록 새로고침 중 오류 발생:", refreshError);
+        console.log("갤러리 목록 새로고침 중 오류 발생:", refreshError);
       }
 
       addToast({
@@ -431,7 +464,7 @@ export function GalleryDetail({
       });
       setSelectedGallery(null);
     } catch (error) {
-      console.error("갤러리 삭제 중 오류 발생:", error);
+      console.log("갤러리 삭제 중 오류 발생:", error);
       addToast({
         title: "갤러리 삭제 중 오류 발생",
         description: error.message,
@@ -543,7 +576,7 @@ export function GalleryDetail({
       });      
 
     } catch (error) {
-      console.error("계정 생성 오류:", error);
+      console.log("계정 생성 오류:", error);
       addToast({
         title: "계정 생성 오류",
         description: error.message,

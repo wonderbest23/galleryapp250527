@@ -7,6 +7,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import Froala from "./Froala";
+
 export function MagazineDetail({
   magazine,
   onUpdate,
@@ -73,36 +74,51 @@ export function MagazineDetail({
     prevMagazineIdRef.current = magazine.id;
   }, [magazine]);
 
+  // 브라우저에서 WebP 변환 함수
+  async function fileToWebP(file) {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(
+          (blob) => { resolve(blob); },
+          'image/webp',
+          0.8 // 압축률(0~1)
+        );
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   const uploadImageToSupabase = async (file) => {
     try {
       setImageUploading(true);
       setUploadProgress(0);
-      
-      // 파일 이름은 고유하게 생성 (UUID + 원본 파일명)
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
+      // WebP 변환
+      const webpBlob = await fileToWebP(file);
+      const fileName = `${uuidv4()}.webp`;
       const filePath = `magazine/${fileName}`;
-      
       // Supabase storage에 이미지 업로드
       const { data, error } = await supabase.storage
         .from('magazine')
-        .upload(filePath, file, {
+        .upload(filePath, webpBlob, {
+          contentType: 'image/webp',
           cacheControl: '3600',
           upsert: false,
-          onUploadProgress: (progress) => {
-            setUploadProgress(Math.round((progress.loaded / progress.total) * 100));
-          },
         });
-
       if (error) {
         throw error;
       }
-
       // 업로드된 이미지의 공개 URL 생성
       const { data: publicUrlData } = supabase.storage
         .from('magazine')
         .getPublicUrl(filePath);
-
       setImageUploading(false);
       return publicUrlData.publicUrl;
     } catch (error) {

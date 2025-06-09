@@ -18,6 +18,48 @@ const FroalaEditor = dynamic(
   }
 );
 
+// 브라우저에서 WebP 변환 함수 (최대 1200px 리사이즈 적용)
+async function fileToWebP(file) {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    const reader = new FileReader();
+    reader.onload = (e) => { img.src = e.target.result; };
+    img.onload = () => {
+      // 최대 크기 제한
+      const maxSize = 1200;
+      let targetW = img.width;
+      let targetH = img.height;
+      if (img.width > maxSize || img.height > maxSize) {
+        if (img.width > img.height) {
+          targetW = maxSize;
+          targetH = Math.round(img.height * (maxSize / img.width));
+        } else {
+          targetH = maxSize;
+          targetW = Math.round(img.width * (maxSize / img.height));
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, targetW, targetH);
+      canvas.toBlob(
+        (blob) => {
+          // webp base64로 변환
+          const reader2 = new FileReader();
+          reader2.onloadend = () => {
+            resolve(reader2.result);
+          };
+          reader2.readAsDataURL(blob);
+        },
+        'image/webp',
+        0.8
+      );
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export function ExhibitionDetail({
   galleryInfo,
   exhibition = {},
@@ -177,16 +219,13 @@ export function ExhibitionDetail({
     // 여기서 변경사항 즉시 저장하지 않고, 사용자가 저장 버튼을 누를 때 저장하도록 변경
   };
 
-  // 이미지 변경 핸들러
-  const handleImageChange = (e) => {
+  // handleImageChange에서 webp 변환 적용
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-        handleFieldChange("photo", reader.result);
-      };
-      reader.readAsDataURL(file);
+      const webpBase64 = await fileToWebP(file);
+      setImagePreview(webpBase64);
+      handleFieldChange("photo", webpBase64);
     }
   };
   console.log("editedExhibition", editedExhibition);

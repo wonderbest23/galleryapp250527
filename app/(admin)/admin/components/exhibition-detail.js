@@ -108,32 +108,49 @@ export function ExhibitionDetail({
     reader.readAsDataURL(file);
   };
 
+  // 브라우저에서 WebP 변환 함수
+  async function fileToWebP(file) {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(
+          (blob) => { resolve(blob); },
+          'image/webp',
+          0.8 // 압축률(0~1)
+        );
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   const uploadImage = async () => {
     if (!imageFile) return null;
-    
     try {
       setIsUploading(true);
-      
-      // 고유한 파일명 생성
-      const fileExt = imageFile.name.split(".").pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
+      const fileName = `${uuidv4()}.webp`;
       const filePath = `exhibition/${fileName}`;
-      
-      // Supabase Storage에 파일 업로드
+      // WebP 변환
+      const webpBlob = await fileToWebP(imageFile);
+      // Supabase Storage에 업로드
       const { data, error } = await supabase.storage
         .from("exhibition")
-        .upload(filePath, imageFile, {
+        .upload(filePath, webpBlob, {
+          contentType: 'image/webp',
           cacheControl: '3600',
           upsert: false
         });
-      
       if (error) throw error;
-      
       // 공개 URL 가져오기
       const { data: { publicUrl } } = supabase.storage
         .from("exhibition")
         .getPublicUrl(filePath);
-      
       return publicUrl;
     } catch (error) {
       console.error("이미지 업로드 오류:", error);
