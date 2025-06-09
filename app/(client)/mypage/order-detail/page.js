@@ -124,52 +124,48 @@ function OrderDetailContent() {
   return (
     <div className="flex flex-col min-h-[100dvh] relative bg-white mx-1">
       <div className="flex-1 flex flex-col items-center overflow-y-auto">
-        {/* 상단 영역 */}
-        <div className="w-[98%] flex flex-col gap-y-3 mt-2">
-          <div className="flex flex-col items-center justify-center">
-            <div className="text-[26px] text-black font-bold">
-              <h1 className='text-[26px] text-black font-bold text-center mt-1'>주문 상세</h1>
-              <div className="text-[10px] text-black font-medium text-center mt-1">
-                {orderInfo.exhibition?.contents}
-              </div>
-            </div>
+        <div className="w-full flex flex-col items-center mt-2">
+          <div className="text-[26px] font-bold text-center">주문 상세</div>
+          <div className="text-[12px] text-black font-medium text-center mt-1 mb-2">
+            {orderInfo.exhibition?.contents}
           </div>
-          <div className="w-full py-3 text-[13px] text-black font-medium text-start bg-[#FAFAFA] px-3 rounded-lg">
-            <p>구매날짜: {orderInfo.created_at?.split('T')[0]}</p>
-            <p>티켓 구매 수: {orderInfo.peopleCount}매</p>
-            <p>구매번호: {orderInfo.orderId}</p>
-            <p>총 결제금액: {Number(orderInfo.amount).toLocaleString()}원</p>
-          </div>
-          <div className="flex flex-col items-center justify-center gap-y-2">
-            {/* QR코드 영역 */}
-            <div className="my-1">
-              <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/mypage/order-detail?order_id=${orderInfo.orderId}&exhibition_id=${orderInfo.exhibition?.id}&user_id=${orderInfo.user?.id}&people_count=${orderInfo.peopleCount}&amount=${orderInfo.amount}&created_at=${orderInfo.created_at}&qr=1`} size={120} />
+          <div className="w-full max-w-xs bg-[#FAFAFA] rounded-xl p-4 flex flex-col items-center gap-3 shadow-md">
+            {/* 구매 정보 */}
+            <div className="w-full text-[14px] text-black font-medium text-left">
+              <p>구매날짜: {orderInfo.created_at?.split('T')[0]}</p>
+              <p>티켓 구매 수: {orderInfo.peopleCount}매</p>
+              <p>구매번호: {orderInfo.orderId}</p>
+              <p>총 결제금액: {Number(orderInfo.amount).toLocaleString()}원</p>
             </div>
+            {/* QR코드 */}
+            <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/mypage/order-detail?order_id=${orderInfo.orderId}&exhibition_id=${orderInfo.exhibition?.id}&user_id=${orderInfo.user?.id}&people_count=${orderInfo.peopleCount}&amount=${orderInfo.amount}&created_at=${orderInfo.created_at}&qr=1`} size={140} />
             {/* 상태별 안내 */}
-            {ticketStatus === 'used' ? (
-              <>
-                <FaCircleCheck className="text-blue-500 text-[32px] mb-1" />
-                <div className="text-[15px] text-blue-700 font-extrabold text-center mb-1">
-                  {isQrMode ? "이미 입장권이 사용된 티켓입니다." : "입장이 완료된 티켓입니다."}
-                </div>
-                {usedAt && (
-                  <div className="text-[12px] text-gray-700 font-semibold mb-1">입장시간: {dayjs(usedAt).format('YYYY-MM-DD HH:mm:ss')}</div>
-                )}
-                {isQrMode && <div className="text-[12px] text-red-500 font-bold">재입장은 불가합니다.</div>}
-              </>
-            ) : (
-              <>
-                <FaCircleCheck className="text-green-500 text-[24px]" />
-                <div className="text-[13px] text-black font-medium">구매 완료된 티켓입니다.</div>
-                {isQrMode && ticketStatus !== 'used' && (
-                  <div className="w-full flex justify-center">
-                    <div className="px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-700 text-[16px] font-bold text-center shadow-md mt-2 mb-1">
-                      입장 처리가 완료되었습니다.
-                    </div>
+            <div className="w-full flex flex-col items-center gap-1">
+              {ticketStatus === 'used' ? (
+                <>
+                  <FaCircleCheck className="text-blue-500 text-[32px] mb-1" />
+                  <div className="text-[15px] text-blue-700 font-extrabold text-center mb-1">
+                    {isQrMode ? "이미 입장권이 사용된 티켓입니다." : "입장이 완료된 티켓입니다."}
                   </div>
-                )}
-              </>
-            )}
+                  {usedAt && (
+                    <div className="text-[12px] text-gray-700 font-semibold mb-1">입장시간: {dayjs(usedAt).format('YYYY-MM-DD HH:mm:ss')}</div>
+                  )}
+                  {isQrMode && <div className="text-[12px] text-red-500 font-bold">재입장은 불가합니다.</div>}
+                </>
+              ) : (
+                <>
+                  <FaCircleCheck className="text-green-500 text-[24px]" />
+                  <div className="text-[13px] text-black font-medium">구매 완료된 티켓입니다.</div>
+                  {isQrMode && ticketStatus !== 'used' && (
+                    <div className="w-full flex justify-center">
+                      <div className="px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-700 text-[16px] font-bold text-center shadow-md mt-2 mb-1">
+                        입장 처리가 완료되었습니다.
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
