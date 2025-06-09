@@ -176,7 +176,7 @@ function OrderDetailContent() {
                   ) : (
                     <Button
                       className="w-full px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-700 text-[16px] font-bold text-center shadow-md mt-2 mb-1"
-                      onClick={handleConfirmEntry}
+                      onPress={handleConfirmEntry}
                     >
                       입장확인
                     </Button>
