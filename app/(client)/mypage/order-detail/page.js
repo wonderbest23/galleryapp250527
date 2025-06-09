@@ -122,7 +122,7 @@ function OrderDetailContent() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white mx-2">
+    <div className="flex flex-col min-h-[100dvh] relative bg-white mx-2">
       <div className="flex-1 flex flex-col items-center overflow-y-auto">
         {/* 상단 영역 */}
         <div className="w-[90%] flex flex-col gap-y-8 mt-6">
