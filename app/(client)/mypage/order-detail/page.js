@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { FaArrowLeft, FaCircleCheck } from "react-icons/fa6";
 import Image from "next/image";
+import { QRCodeSVG } from "qrcode.react";
 
 // 로딩 상태를 위한 컴포넌트
 function LoadingSkeleton() {
@@ -42,6 +43,8 @@ function OrderDetailContent() {
     amount: 0
   });
   const supabase = createClient();
+  const [ticketStatus, setTicketStatus] = useState("success");
+  const [isQrMode, setIsQrMode] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,31 +55,41 @@ function OrderDetailContent() {
         const orderId = searchParams.get('order_id');
         const amount = searchParams.get('amount');
         const createdAt = searchParams.get('created_at');
-        
+        const isQr = searchParams.get('qr') === '1';
+        setIsQrMode(isQr);
         // 전시회 정보 가져오기
-        const { data: exhibitionData, error: exhibitionError } = await supabase
+        const { data: exhibitionData } = await supabase
           .from("exhibition")
           .select("*, gallery:naver_gallery_url(*)")
           .eq("id", exhibitionId)
           .single();
-        
-        if (exhibitionError) {
-          console.log("전시회 정보를 가져오는 중 오류 발생:", exhibitionError);
-          return;
-        }
-        
         // 사용자 정보 가져오기
-        const { data: userData, error: userError } = await supabase
+        const { data: userData } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)
           .single();
-        
-        if (userError) {
-          console.log("사용자 정보를 가져오는 중 오류 발생:", userError);
+        // 티켓 상태 가져오기
+        let status = "success";
+        let ticketId = null;
+        const { data: ticketData } = await supabase
+          .from("payment_ticket")
+          .select("id, status")
+          .eq("order_id", orderId)
+          .maybeSingle();
+        if (ticketData) {
+          status = ticketData.status;
+          ticketId = ticketData.id;
         }
-        
-        // 주문 정보 저장
+        // QR모드(관계자)에서 미사용 티켓이면 사용처리
+        if (isQr && status === "success" && ticketId) {
+          const { error: updateError } = await supabase
+            .from("payment_ticket")
+            .update({ status: "used" })
+            .eq("id", ticketId);
+          if (!updateError) status = "used";
+        }
+        setTicketStatus(status);
         setOrderInfo({
           exhibition: exhibitionData,
           user: userData || { name: "게스트" },
@@ -86,14 +99,12 @@ function OrderDetailContent() {
           amount: amount,
           created_at: createdAt
         });
-        
         setIsLoading(false);
       } catch (error) {
         console.log("데이터 가져오기 오류:", error);
         setIsLoading(false);
       }
     };
-    
     fetchData();
   }, [searchParams]);
 
@@ -120,10 +131,24 @@ function OrderDetailContent() {
       </div>
       
       <div className="flex flex-col items-center justify-center gap-y-4">
-        <FaCircleCheck className="text-green-500 text-[40px]" />
-        <div className="text-[18px] text-black font-medium">
-          구매 완료된 티켓입니다.
+        {/* QR코드 영역 */}
+        <div className="my-4">
+          <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/mypage/order-detail?order_id=${orderInfo.orderId}&exhibition_id=${orderInfo.exhibition?.id}&user_id=${orderInfo.user?.id}&people_count=${orderInfo.peopleCount}&amount=${orderInfo.amount}&created_at=${orderInfo.created_at}&qr=1`} size={160} />
         </div>
+        {/* 상태별 안내 */}
+        {ticketStatus === 'used' ? (
+          <>
+            <FaCircleCheck className="text-blue-500 text-[40px]" />
+            <div className="text-[18px] text-black font-medium">사용 완료된 티켓입니다.</div>
+            {isQrMode && <div className="text-[14px] text-gray-500">입장 확인이 완료되었습니다.</div>}
+          </>
+        ) : (
+          <>
+            <FaCircleCheck className="text-green-500 text-[40px]" />
+            <div className="text-[18px] text-black font-medium">구매 완료된 티켓입니다.</div>
+            {isQrMode && <div className="text-[14px] text-gray-500">입장 처리가 완료되었습니다.</div>}
+          </>
+        )}
       </div>
 
       <Button
