@@ -514,7 +514,7 @@ export default function App() {
         className="w-full mt-4 bg-[#004BFE] text-white text-[13px] font-bold"
         size="lg"
       >
-        {exhibition.price?.toLocaleString()}원 구매하기
+        웹티켓 구매하기
       </Button>
     );
   }
