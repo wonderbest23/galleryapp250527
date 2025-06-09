@@ -179,28 +179,32 @@ export function ExhibitionDetail({
           ? editedExhibition.naver_gallery_url.url || "" 
           : editedExhibition.naver_gallery_url || "";
         
+        let payload = {
+          name: editedExhibition.name,
+          contents: editedExhibition.contents,
+          photo: photoUrl, // 새 이미지 URL 사용
+          start_date: editedExhibition.start_date,
+          end_date: editedExhibition.end_date,
+          working_hour: editedExhibition.working_hour,
+          off_date: editedExhibition.off_date,
+          add_info: editedExhibition.add_info,
+          homepage_url: editedExhibition.homepage_url,
+          isFree: editedExhibition.isFree,
+          isRecommended: editedExhibition.isRecommended,
+          review_count: editedExhibition.review_count,
+          review_average: editedExhibition.review_average,
+          naver_gallery_url: naver_gallery_url,
+          price: editedExhibition.price,
+          isSale: editedExhibition.isSale,
+          pick: editedExhibition.pick,
+        };
+        if (editedExhibition.isSale) {
+          payload.free_ticket_limit = editedExhibition.free_ticket_limit;
+        }
+        
         const { error } = await supabase
           .from("exhibition")
-          .update({
-            name: editedExhibition.name,
-            contents: editedExhibition.contents,
-            photo: photoUrl, // 여기서 새 이미지 URL 사용
-            start_date: editedExhibition.start_date,
-            end_date: editedExhibition.end_date,
-            working_hour: editedExhibition.working_hour,
-            off_date: editedExhibition.off_date,
-            add_info: editedExhibition.add_info,
-            homepage_url: editedExhibition.homepage_url,
-            isFree: editedExhibition.isFree,
-            isRecommended: editedExhibition.isRecommended,
-            review_count: editedExhibition.review_count,
-            review_average: editedExhibition.review_average,
-            naver_gallery_url: naver_gallery_url,
-            price: editedExhibition.price,
-            isSale: editedExhibition.isSale,
-            pick: editedExhibition.pick,
-            free_ticket_limit: editedExhibition.free_ticket_limit,
-          })
+          .update(payload)
           .eq("id", editedExhibition.id);
 
         if (error) {
@@ -357,30 +361,32 @@ export function ExhibitionDetail({
           ? (editedExhibition.naver_gallery_url?.url || "") 
           : (editedExhibition.naver_gallery_url || "");
         
+        let payload = {
+          name: editedExhibition.name,
+          contents: editedExhibition.contents,
+          photo: photoUrl,
+          start_date: editedExhibition.start_date,
+          end_date: editedExhibition.end_date,
+          working_hour: editedExhibition.working_hour,
+          off_date: editedExhibition.off_date,
+          add_info: editedExhibition.add_info,
+          homepage_url: editedExhibition.homepage_url,
+          isFree: editedExhibition.isFree,
+          isRecommended: editedExhibition.isRecommended,
+          review_count: editedExhibition.review_count,
+          review_average: editedExhibition.review_average,
+          naver_gallery_url: naver_gallery_url_value,
+          price: editedExhibition.price,
+          isSale: editedExhibition.isSale,
+          pick: editedExhibition.pick,
+        };
+        if (editedExhibition.isSale) {
+          payload.free_ticket_limit = editedExhibition.free_ticket_limit;
+        }
+        
         const { data, error } = await supabase
           .from("exhibition")
-          .insert([
-            {
-              name: editedExhibition.name,
-              contents: editedExhibition.contents,
-              photo: photoUrl,
-              start_date: editedExhibition.start_date,
-              end_date: editedExhibition.end_date,
-              working_hour: editedExhibition.working_hour,
-              off_date: editedExhibition.off_date,
-              add_info: editedExhibition.add_info,
-              homepage_url: editedExhibition.homepage_url,
-              isFree: editedExhibition.isFree,
-              isRecommended: editedExhibition.isRecommended,
-              review_count: editedExhibition.review_count,
-              review_average: editedExhibition.review_average,
-              naver_gallery_url: naver_gallery_url_value,
-              price: editedExhibition.price,
-              isSale: editedExhibition.isSale,
-              pick: editedExhibition.pick,
-              free_ticket_limit: editedExhibition.free_ticket_limit,
-            },
-          ])
+          .insert([payload])
           .select();
 
         if (error) {
@@ -414,7 +420,6 @@ export function ExhibitionDetail({
             price: editedExhibition.price,
             isSale: editedExhibition.isSale,
             pick: editedExhibition.pick,
-            free_ticket_limit: editedExhibition.free_ticket_limit,
           })
           .eq("id", editedExhibition.id);
 
