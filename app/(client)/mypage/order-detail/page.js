@@ -108,19 +108,27 @@ function OrderDetailContent() {
 
   // 입장확인 버튼 클릭 핸들러
   const handleConfirmEntry = async () => {
-    if (!orderInfo.orderId) return;
+    console.log('입장확인 버튼 클릭');
+    if (!orderInfo.orderId) {
+      console.log('orderId 없음');
+      return;
+    }
     // 티켓 id 가져오기
     const { data: ticketData } = await supabase
       .from("payment_ticket")
       .select("id")
       .eq("order_id", orderInfo.orderId)
       .maybeSingle();
+    console.log('ticketData:', ticketData);
     if (!ticketData) return;
     const now = new Date().toISOString();
     const { error: updateError } = await supabase
       .from("payment_ticket")
       .update({ status: "used", used_at: now })
       .eq("id", ticketData.id);
+    if (updateError) {
+      console.log('updateError:', updateError);
+    }
     if (!updateError) {
       setTicketStatus("used");
       setUsedAt(now);
@@ -168,7 +176,7 @@ function OrderDetailContent() {
                   ) : (
                     <Button
                       className="w-full px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-700 text-[16px] font-bold text-center shadow-md mt-2 mb-1"
-                      onPress={handleConfirmEntry}
+                      onClick={handleConfirmEntry}
                     >
                       입장확인
                     </Button>
