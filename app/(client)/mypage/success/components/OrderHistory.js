@@ -22,10 +22,11 @@ const OrderHistory = ({ user }) => {
         const supabase = createClient();
         
         // payment_ticket 테이블에서 사용자 주문 내역과 exhibition 정보 함께 가져오기
+        // 무료티켓(0원)은 used도 노출, 유료티켓은 success만 노출
         const { data: ticketData, error: ticketError } = await supabase
           .from('payment_ticket')
           .select('*, exhibition_id(*)')
-          .eq('status', 'success')
+          .or(`and(amount.eq.0,status.in.(success,used)),and(amount.gt.0,status.eq.success)`)
           .order('created_at', { ascending: false })
           .eq("user_id", user.id)
         
