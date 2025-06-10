@@ -109,74 +109,19 @@ export function ExhibitionDetail({
   }, [selectedKey, exhibition, isNew]);
   
   // 저장 핸들러 - 내용이 변경되면 자동으로 저장
-  const handleSave = async () => {
-    // 필수 필드 검증
-    if (!editedExhibition.contents) {
-      addToast({
-        title: "전시회명 오류",
-        description: "전시회명은 필수 입력 항목입니다.",
-        color: "danger",
-      });
-      return;
-    }
-    if (!editedExhibition.end_date) {
-      addToast({
-        title: "종료일 오류",
-        description: "종료일은 필수 입력 항목입니다.",
-        color: "danger",
-      });
-      return;
-    }
-    if (!editedExhibition.start_date) {
-      addToast({
-        title: "시작일 오류",
-        description: "시작일은 필수 입력 항목입니다.",
-        color: "danger",
-      });
-      return;
-    }
-
-    
-
-
-    // 날짜 형식 검증
-    const validateDateFormat = (dateStr) => {
-      if (!dateStr || dateStr.trim() === "") return true;
-      return /^\d{8}$/.test(dateStr.trim());
-    };
-
-    if (!validateDateFormat(editedExhibition.start_date)) {
-      addToast({
-        title: "날짜 형식 오류",
-        description: "시작일은 YYYYmmdd 형식으로 입력해주세요. (예: 20240101)",
-        color: "danger",
-      });
-      return;
-    }
-
-    if (!validateDateFormat(editedExhibition.end_date)) {
-      addToast({
-        title: "날짜 형식 오류",
-        description: "종료일은 YYYYmmdd 형식으로 입력해주세요. (예: 20240131)",
-        color: "danger",
-      });
-      return;
-    }
-
-
+  const handleSave = async (e) => {
+    if (e) e.preventDefault(); // form submit 방지
+    if (isSaving) return; // 중복 실행 방지
     setIsSaving(true);
     try {
       if (isNew) {
-        // 신규 전시회 저장
         if (onSave) {
           onSave(editedExhibition);
-          // 등록 후 1초 뒤 강제 새로고침
           setTimeout(() => {
             window.location.reload();
-          }, 1000);
+          }, 100);
         }
       } else {
-        // 기존 전시회 업데이트
         if (onUpdate) {
           onUpdate(editedExhibition);
         }
@@ -243,7 +188,12 @@ export function ExhibitionDetail({
         {!isReadOnly && (
           <div className="flex gap-2">
             {(!isNew || step === 2) && (
-              <Button color="primary" onPress={handleSave} isLoading={isSaving}>
+              <Button
+                color="primary"
+                onClick={handleSave}
+                isLoading={isSaving}
+                type="button"
+              >
                 <Icon icon="lucide:save" className="text-lg mr-1" />
                 {isNew ? "등록" : "수정한내용저장"}
               </Button>
