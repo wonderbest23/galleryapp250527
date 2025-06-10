@@ -9,6 +9,7 @@ html, body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  background: linear-gradient(180deg, #f5f6fa 0%, #e5e7eb 60%, #d1d5db 100%) !important;
 }
 
 *{
