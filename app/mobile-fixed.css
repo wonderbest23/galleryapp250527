@@ -1,7 +1,8 @@
-/* 모바일 고정 폭 레이아웃 (아이폰 14 Pro 기준 393px) */
+/* 모바일 고정 폭 레이아웃 (반응형: 320~430px) */
 .mobile-fixed-width {
-  max-width: 393px;
-  min-width: 393px;
+  width: 100vw;
+  max-width: 430px;
+  min-width: 320px;
   margin: 0 auto;
   box-shadow: 0 4px 32px rgba(0,0,0,0.18);
   background: #fff; /* 내부 컨텐츠 영역은 흰색 */
