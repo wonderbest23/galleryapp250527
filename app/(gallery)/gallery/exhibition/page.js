@@ -467,6 +467,10 @@ export default function Exhibition() {
   };
 
   const handleRefresh = () => {
+    if (!userInfo || !userInfo.url) {
+      // userInfo 준비 전이면 fetch 시도하지 않음
+      return;
+    }
     setCurrentPage(1);
     setSearchTerm("");
     setTimeout(() => {
@@ -525,6 +529,7 @@ export default function Exhibition() {
                       <span>등록된전시(새로고침)</span>
                       <button
                         onClick={handleRefresh}
+                        disabled={!userInfo || !userInfo.url || isLoading}
                         className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shadow hover:bg-blue-200 active:bg-blue-300 transition-colors border border-blue-200"
                         aria-label="새로고침"
                         type="button"
