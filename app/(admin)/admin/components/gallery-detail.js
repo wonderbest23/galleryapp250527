@@ -807,21 +807,30 @@ export function GalleryDetail({
         />
         <Textarea
           className="col-span-2 md:col-span-1"
-          label="매장 정보"
-          value={editedGallery.shop_info}
+          label="갤러리 소개"
+          value={editedGallery.shop_info || ""}
           onValueChange={(value) =>
             setEditedGallery({ ...editedGallery, shop_info: value })
           }
-          
+          placeholder="갤러리에 대한 소개 정보를 입력하세요"
         />
-        <h1>추가 정보</h1>
-        <RichTextEditor
-          contents={editedGallery.add_info}
-          setContents={(value) => {
-            
+        <Textarea
+          className="col-span-2 md:col-span-1"
+          label="갤러리 설명"
+          value={editedGallery.description || ""}
+          onValueChange={(value) =>
+            setEditedGallery({ ...editedGallery, description: value })
+          }
+          placeholder="갤러리에 대한 상세 설명을 입력하세요"
+        />
+        <Textarea
+          className="col-span-2 md:col-span-1"
+          label="추가 정보"
+          value={editedGallery.add_info || ""}
+          onValueChange={(value) => {
             setEditedGallery({ ...editedGallery, add_info: value });
           }}
-          className="col-span-2 w-full"
+          placeholder="추가 정보를 입력하세요. (텍스트만 입력 가능)"
         />
 
         <div className="flex flex-col gap-4 md:col-span-2 mt-2">

@@ -303,8 +303,6 @@ export default function AdminDashboard() {
   return (
     <div className="w-full h-full flex flex-col gap-4 py-20">
       <div className="w-full max-w-7xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold">갤러리 관리</h1>
-
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <Spinner color="primary" />
