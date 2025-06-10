@@ -574,7 +574,7 @@ export default function App() {
                 >
                   <Card className="my-4 mx-2 p-2">
                     <CardBody>
-                      <h3 className="text-lg font-bold mb-2">시설 안내</h3>
+                      <h3 className="text-lg font-bold mb-2">추가정보</h3>
                       <div 
                         className="fr-element text-[15px] sm:text-[14px] md:text-base whitespace-pre-line"
                         style={{ 
