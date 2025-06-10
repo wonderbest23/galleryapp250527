@@ -78,7 +78,8 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
           .from('profiles')
           .select('*')
           .eq('isArtist', true)
-          .limit(3);
+          .eq('isArtistApproval', true)
+          .limit(20);
 
         if (error) {
           console.log('작가 데이터를 불러오는 중 오류 발생:', error);
@@ -356,11 +357,11 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
     <div className="w-full max-w-full overflow-hidden my-4">
       <div className="w-full">
         {/* 상단 3개 카드 - 작가 프로필 */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="flex flex-row gap-4 mb-4 overflow-x-auto scrollbar-hide w-full">
           {isLoading ? (
             // 로딩 중일 때 스켈레톤 UI 표시
-            Array(3).fill().map((_, index) => (
-              <div key={`skeleton-${index}`} className="col-span-1">
+            Array(5).fill().map((_, index) => (
+              <div key={`skeleton-${index}`} className="min-w-[100px]">
                 <SkeletonCard />
               </div>
             ))
@@ -368,7 +369,7 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
             artists.map((artist, index) => (
               <Card 
                 key={`artist-${artist.id}`} 
-                classNames={{base: 'm-1'}} 
+                className="min-w-[100px] m-1" 
                 shadow="sm" 
                 radius="lg"
                 isPressable
@@ -387,7 +388,6 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
                     <p className="text-[14px] font-medium line-clamp-1 text-[#606060] text-center w-full">
                       {artist.artist_name || artist.full_name || "작가이름"}
                     </p>
-
                   </div>
                 </CardFooter>
               </Card>
