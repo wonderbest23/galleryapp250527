@@ -66,10 +66,9 @@ const formatDateForInput = (isoDate) => {
 
 export default function Exhibition() {
   const { userInfo } = useUserInfoStore();
-  // Supabase 클라이언트 생성
   const supabase = createClient();
-
-  // 상태 관리
+  const [isReady, setIsReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [exhibitions, setExhibitions] = useState([]);
   const [selectedExhibition, setSelectedExhibition] = useState(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
@@ -77,7 +76,6 @@ export default function Exhibition() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
   const [galleryInfo, setGalleryInfo] = useState(null);
   const itemsPerPage = 5;
   const [startDate, setStartDate] = useState(() => {
@@ -91,72 +89,77 @@ export default function Exhibition() {
   const [price, setPrice] = useState(selectedExhibition?.price || 0);
 
   useEffect(() => {
-    setGalleryInfo(null); // userInfo가 바뀌면 galleryInfo 초기화
-    if (userInfo?.url) {
-      const fetchGalleryInfo = async () => {
+    const fetchAll = async () => {
+      if (!userInfo?.url) {
+        setIsReady(false);
+        return;
+      }
+      setIsLoading(true);
+      // galleryInfo fetch
+      let galleryData = null;
+      try {
         const { data, error } = await supabase
           .from("gallery")
           .select("*")
-          .eq("url", userInfo?.url)
+          .eq("url", userInfo.url)
           .single();
-
-        if (error) {
-          console.log("갤러리 정보를 가져오는 중 오류 발생:", error);
-        } else {
-          setGalleryInfo(data);
-        }
-      };
-      fetchGalleryInfo();
-    }
-  }, [userInfo?.url]);
-  console.log("galleryInfo", galleryInfo);
-
-  // 전시회 데이터 로드 함수
-  const loadExhibitions = async () => {
-    if (userInfo?.url) {
-      setIsLoading(true);
+        if (error) throw error;
+        galleryData = data;
+        setGalleryInfo(data);
+      } catch (e) {
+        setGalleryInfo(null);
+      }
+      // exhibitions fetch
       try {
         const start = (currentPage - 1) * itemsPerPage;
         const end = start + itemsPerPage - 1;
-
         let query = supabase
           .from("exhibition")
           .select("*", { count: "exact" })
           .range(start, end)
           .order("created_at", { ascending: false })
-          .eq("naver_gallery_url", userInfo?.url);
-
+          .eq("naver_gallery_url", userInfo.url);
         if (searchTerm) {
           query = query.or(
             `name.ilike.%${searchTerm}%, contents.ilike.%${searchTerm}%, add_info.ilike.%${searchTerm}%`
           );
         }
-
         const { data, error, count } = await query;
-
         if (error) throw error;
-
         setExhibitions(data || []);
         setTotalPages(Math.ceil((count || 0) / itemsPerPage));
-      } catch (error) {
-        console.error("전시회 데이터를 가져오는 중 오류 발생:", error);
-      } finally {
-        setIsLoading(false);
+      } catch (e) {
+        setExhibitions([]);
       }
-    }
-  };
+      setIsLoading(false);
+      setIsReady(true);
+    };
+    fetchAll();
+  }, [userInfo, currentPage, searchTerm]);
 
-  // 페이지나 검색어가 변경될 때 데이터 로드
   useEffect(() => {
-    loadExhibitions();
-  }, [currentPage, searchTerm]);
-
-  // userInfo가 변경될 때 데이터 로드하는 useEffect 추가
-  useEffect(() => {
-    if (userInfo?.url) {
-      loadExhibitions();
+    if (selectedExhibition) {
+      setStartDate(selectedExhibition.start_date ? parse(selectedExhibition.start_date, "yyyyMMdd", new Date()) : null);
+      setEndDate(selectedExhibition.end_date ? parse(selectedExhibition.end_date, "yyyyMMdd", new Date()) : null);
+      setPrice(selectedExhibition.price || 0);
     }
-  }, [userInfo]);
+  }, [selectedExhibition]);
+
+  if (!isReady) {
+    return (
+      <div className="w-full h-full flex flex-col gap-4 py-20">
+        <div className="w-full max-w-7xl mx-auto space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold">전시 관리</h1>
+          </div>
+          <div className="flex flex-col items-center justify-center min-h-[300px]">
+            <Spinner color="primary" />
+            <div className="mt-4">데이터를 불러오는 중...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // 신규 전시회 생성 핸들러
   const handleNewExhibition = () => {
@@ -242,7 +245,7 @@ export default function Exhibition() {
 
       // 데이터 새로고침
       setTimeout(() => {
-        loadExhibitions();
+        fetchAll();
       }, 300);
     } catch (error) {
       console.error("전시회 저장 중 오류 발생:", error);
@@ -395,7 +398,7 @@ export default function Exhibition() {
 
       // 데이터 새로고침
       setTimeout(() => {
-        loadExhibitions();
+        fetchAll();
       }, 300);
     } catch (error) {
       console.error("전시회 업데이트 중 오류 발생:", error);
@@ -429,7 +432,7 @@ export default function Exhibition() {
 
         // 데이터 새로고침
         setTimeout(() => {
-          loadExhibitions();
+          fetchAll();
         }, 300);
       } catch (error) {
         addToast({
@@ -474,18 +477,9 @@ export default function Exhibition() {
     setCurrentPage(1);
     setSearchTerm("");
     setTimeout(() => {
-      loadExhibitions();
+      fetchAll();
     }, 0);
   };
-
-  // selectedExhibition이 바뀔 때마다 state 초기화
-  useEffect(() => {
-    if (selectedExhibition) {
-      setStartDate(selectedExhibition.start_date ? parse(selectedExhibition.start_date, "yyyyMMdd", new Date()) : null);
-      setEndDate(selectedExhibition.end_date ? parse(selectedExhibition.end_date, "yyyyMMdd", new Date()) : null);
-      setPrice(selectedExhibition.price || 0);
-    }
-  }, [selectedExhibition]);
 
   console.log("userInfo:", userInfo);
   console.log("selectedExhibition:", selectedExhibition);
@@ -524,7 +518,7 @@ export default function Exhibition() {
             <table className="w-full border-collapse border-spacing-0 min-w-[600px]">
               <thead className="bg-default-100">
                 <tr>
-                  <th className="p-3 text-left border-b ">
+                  <th className="p-3 text-left border-b w-1/2">
                     <div className="flex items-center gap-2">
                       <span>등록된전시(새로고침)</span>
                       <button
@@ -538,7 +532,7 @@ export default function Exhibition() {
                       </button>
                     </div>
                   </th>
-                  <th className="p-3 text-left border-b ">전시날짜</th>
+                  <th className="p-3 text-left border-b w-1/2">전시날짜</th>
                 </tr>
               </thead>
               <tbody>
@@ -566,11 +560,11 @@ export default function Exhibition() {
                       onClick={() => handleSelectExhibition(exhibition)}
                     >
                       {/* 제목 */}
-                      <td className="p-3">
+                      <td className="p-3 w-1/2 max-w-xs whitespace-nowrap overflow-hidden text-ellipsis align-middle">
                         {exhibition.contents}
                       </td>
                       {/* 날짜 */}
-                      <td className="p-3">
+                      <td className="p-3 w-1/2 max-w-xs whitespace-nowrap overflow-hidden text-ellipsis align-middle">
                         {exhibition.start_date && exhibition.end_date
                           ? formatDateRange(
                               exhibition.start_date,
