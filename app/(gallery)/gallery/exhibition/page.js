@@ -87,13 +87,12 @@ export default function Exhibition() {
     return e ? parse(e, "yyyyMMdd", new Date()) : null;
   });
   const [price, setPrice] = useState(selectedExhibition?.price || 0);
+  const [reloadTimeout, setReloadTimeout] = useState(null);
 
+  // 1. userInfo가 준비된 후에만 fetchAll 실행
   useEffect(() => {
+    if (!userInfo?.url) return;
     const fetchAll = async () => {
-      if (!userInfo?.url) {
-        setIsReady(false);
-        return;
-      }
       setIsLoading(true);
       // galleryInfo fetch
       let galleryData = null;
@@ -109,7 +108,17 @@ export default function Exhibition() {
       } catch (e) {
         setGalleryInfo(null);
       }
-      // exhibitions fetch
+      setIsLoading(false);
+      setIsReady(true);
+    };
+    fetchAll();
+  }, [userInfo]);
+
+  // 2. 페이지/검색어 변경 시에는 userInfo가 준비된 상태에서만 fetch
+  useEffect(() => {
+    if (!userInfo?.url) return;
+    const fetchExhibitions = async () => {
+      setIsLoading(true);
       try {
         const start = (currentPage - 1) * itemsPerPage;
         const end = start + itemsPerPage - 1;
@@ -132,10 +141,9 @@ export default function Exhibition() {
         setExhibitions([]);
       }
       setIsLoading(false);
-      setIsReady(true);
     };
-    fetchAll();
-  }, [userInfo, currentPage, searchTerm]);
+    fetchExhibitions();
+  }, [currentPage, searchTerm, userInfo]);
 
   useEffect(() => {
     if (selectedExhibition) {
@@ -144,6 +152,23 @@ export default function Exhibition() {
       setPrice(selectedExhibition.price || 0);
     }
   }, [selectedExhibition]);
+
+  useEffect(() => {
+    if (!userInfo?.url) {
+      // 3초(3000ms) 동안 userInfo가 세팅되지 않으면 강제 새로고침
+      const timeout = setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+      setReloadTimeout(timeout);
+    } else {
+      // userInfo가 세팅되면 타이머 해제
+      if (reloadTimeout) clearTimeout(reloadTimeout);
+    }
+    // 언마운트 시 타이머 해제
+    return () => {
+      if (reloadTimeout) clearTimeout(reloadTimeout);
+    };
+  }, [userInfo]);
 
   if (!isReady) {
     return (
