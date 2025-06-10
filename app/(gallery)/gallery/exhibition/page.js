@@ -543,19 +543,8 @@ export default function Exhibition() {
             <table className="w-full border-collapse border-spacing-0 min-w-[600px]">
               <thead className="bg-default-100">
                 <tr>
-                  <th className="p-3 text-left border-b w-1/2">
-                    <div className="flex items-center gap-2">
-                      <span>등록된전시(새로고침)</span>
-                      <button
-                        onClick={handleRefresh}
-                        disabled={!userInfo || !userInfo.url || isLoading}
-                        className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shadow hover:bg-blue-200 active:bg-blue-300 transition-colors border border-blue-200"
-                        aria-label="새로고침"
-                        type="button"
-                      >
-                        <Icon icon="lucide:refresh-ccw" className="text-xl text-blue-600" />
-                      </button>
-                    </div>
+                  <th className="p-3 text-left border-b w-1/2 max-w-[50%]">
+                    등록된전시
                   </th>
                   <th className="p-3 text-left border-b w-1/2">전시날짜</th>
                 </tr>
