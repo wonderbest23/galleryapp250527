@@ -260,12 +260,12 @@ export function ExhibitionDetail({
         step === 1 ? (
           <>
             <div className="grid grid-cols-1 gap-4">
-              <Input
+              {/* <Input
                 label="갤러리명"
                 value={galleryInfo?.name || ""}
                 onValueChange={(value) => handleFieldChange("name", value)}
                 isDisabled
-              />
+              /> */}
               <Input
                 label="전시회명"
                 value={editedExhibition.contents || ""}
@@ -376,7 +376,7 @@ export function ExhibitionDetail({
                 placeholder="예: 매주 월요일"
               />
 
-              <Input
+              {/* <Input
                 label="네이버 갤러리 URL"
                 value={galleryInfo?.url || ""}
                 onValueChange={(value) =>
@@ -384,7 +384,7 @@ export function ExhibitionDetail({
                 }
                 isReadOnly={isReadOnly}
                 isDisabled
-              />
+              /> */}
 
               <Input
                 label="홈페이지 URL"
@@ -505,12 +505,12 @@ export function ExhibitionDetail({
         )
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          <Input
+          {/* <Input
             label="갤러리명"
             value={galleryInfo?.name || ""}
             onValueChange={(value) => handleFieldChange("name", value)}
             isDisabled
-          />
+          /> */}
 
           <Input
             label="전시회명"
@@ -623,7 +623,7 @@ export function ExhibitionDetail({
             placeholder="예: 매주 월요일"
           />
 
-          <Input
+          {/* <Input
             label="네이버 갤러리 URL"
             value={galleryInfo?.url || ""}
             onValueChange={(value) =>
@@ -631,7 +631,7 @@ export function ExhibitionDetail({
             }
             isReadOnly={isReadOnly}
             isDisabled
-          />
+          /> */}
 
           <Input
             label="홈페이지 URL"
