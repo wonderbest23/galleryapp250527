@@ -185,26 +185,21 @@ export function ExhibitionDetail({
         <h2 className="text-xl font-semibold">
           {isNew ? "신규 전시회 등록" : "전시회 정보"}
         </h2>
-        {!isReadOnly && (
+        {!isReadOnly && step !== 2 && (
           <div className="flex gap-2">
             {(!isNew || step === 2) && (
-              <Button
-                color="primary"
-                onClick={handleSave}
-                isLoading={isSaving}
-                type="button"
-              >
+              <Button color="primary" onClick={handleSave} isLoading={isSaving} type="button">
                 <Icon icon="lucide:save" className="text-lg mr-1" />
                 {isNew ? "등록" : "수정한내용저장"}
               </Button>
             )}
             {!isNew && (
-              <Button color="danger" variant="flat" onPress={handleDelete}>
+              <Button color="danger" variant="flat" onClick={handleDelete}>
                 <Icon icon="lucide:trash" className="mr-1" />
                 삭제
               </Button>
             )}
-            <Button color="default" variant="flat" onPress={handleCancel}>
+            <Button color="default" variant="flat" onClick={handleCancel}>
               취소
             </Button>
           </div>
@@ -713,6 +708,13 @@ export function ExhibitionDetail({
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {false && (
+        <div className="flex justify-end gap-2 mt-4">
+          <Button onClick={onCancel} variant="light">취소</Button>
+          <Button color="primary" onClick={handleSave} isLoading={isSaving} type="button">등록</Button>
         </div>
       )}
 
