@@ -170,6 +170,10 @@ export function ExhibitionDetail({
         // 신규 전시회 저장
         if (onSave) {
           onSave(editedExhibition);
+          // 등록 후 1초 뒤 강제 새로고침
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         }
       } else {
         // 기존 전시회 업데이트
@@ -271,6 +275,7 @@ export function ExhibitionDetail({
                 value={editedExhibition.contents || ""}
                 onValueChange={(value) => handleFieldChange("contents", value)}
                 isReadOnly={isReadOnly}
+                className="border-2 border-gray-400 focus:border-blue-500 focus:outline-none"
               />
               <div className="relative">
                 <label className="text-small font-medium block mb-2">전시시작 *</label>
@@ -298,7 +303,7 @@ export function ExhibitionDetail({
                     customInput={
                       <div className="relative">
                         <input
-                          className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
+                          className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-400 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
                           value={
                             editedExhibition.start_date
                               ? `${editedExhibition.start_date.slice(0,4)}.${editedExhibition.start_date.slice(4,6)}.${editedExhibition.start_date.slice(6,8)}`
@@ -342,7 +347,7 @@ export function ExhibitionDetail({
                     customInput={
                       <div className="relative">
                         <input
-                          className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
+                          className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-400 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
                           value={
                             editedExhibition.end_date
                               ? `${editedExhibition.end_date.slice(0,4)}.${editedExhibition.end_date.slice(4,6)}.${editedExhibition.end_date.slice(6,8)}`
@@ -366,6 +371,7 @@ export function ExhibitionDetail({
                 onValueChange={(value) => handleFieldChange("working_hour", value)}
                 isReadOnly={isReadOnly}
                 placeholder="예: 10:00 - 18:00"
+                className="border-2 border-gray-400 focus:border-blue-500 focus:outline-none"
               />
 
               <Input
@@ -374,6 +380,7 @@ export function ExhibitionDetail({
                 onValueChange={(value) => handleFieldChange("off_date", value)}
                 isReadOnly={isReadOnly}
                 placeholder="예: 매주 월요일"
+                className="border-2 border-gray-400 focus:border-blue-500 focus:outline-none"
               />
 
               {/* <Input
@@ -391,6 +398,7 @@ export function ExhibitionDetail({
                 value={editedExhibition.homepage_url || ""}
                 onValueChange={(value) => handleFieldChange("homepage_url", value)}
                 isReadOnly={isReadOnly}
+                className="border-2 border-gray-400 focus:border-blue-500 focus:outline-none"
               />
 
               <Input
@@ -399,6 +407,7 @@ export function ExhibitionDetail({
                 value={editedExhibition.price || 0}
                 onValueChange={(value) => handleFieldChange("price", value)}
                 isReadOnly={isReadOnly}
+                className="border-2 border-gray-400 focus:border-blue-500 focus:outline-none"
               />
 
               <div className="flex flex-col gap-2">
@@ -517,6 +526,7 @@ export function ExhibitionDetail({
             value={editedExhibition.contents || ""}
             onValueChange={(value) => handleFieldChange("contents", value)}
             isReadOnly={isReadOnly}
+            className="border-2 border-gray-400 focus:border-blue-500 focus:outline-none"
           />
 
           <div className="relative">
@@ -545,7 +555,7 @@ export function ExhibitionDetail({
                 customInput={
                   <div className="relative">
                     <input
-                      className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
+                      className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-400 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
                       value={
                         editedExhibition.start_date
                           ? `${editedExhibition.start_date.slice(0,4)}.${editedExhibition.start_date.slice(4,6)}.${editedExhibition.start_date.slice(6,8)}`
@@ -589,7 +599,7 @@ export function ExhibitionDetail({
                 customInput={
                   <div className="relative">
                     <input
-                      className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
+                      className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-400 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
                       value={
                         editedExhibition.end_date
                           ? `${editedExhibition.end_date.slice(0,4)}.${editedExhibition.end_date.slice(4,6)}.${editedExhibition.end_date.slice(6,8)}`
@@ -613,6 +623,7 @@ export function ExhibitionDetail({
             onValueChange={(value) => handleFieldChange("working_hour", value)}
             isReadOnly={isReadOnly}
             placeholder="예: 10:00 - 18:00"
+            className="border-2 border-gray-400 focus:border-blue-500 focus:outline-none"
           />
 
           <Input
@@ -621,6 +632,7 @@ export function ExhibitionDetail({
             onValueChange={(value) => handleFieldChange("off_date", value)}
             isReadOnly={isReadOnly}
             placeholder="예: 매주 월요일"
+            className="border-2 border-gray-400 focus:border-blue-500 focus:outline-none"
           />
 
           {/* <Input
@@ -638,6 +650,7 @@ export function ExhibitionDetail({
             value={editedExhibition.homepage_url || ""}
             onValueChange={(value) => handleFieldChange("homepage_url", value)}
             isReadOnly={isReadOnly}
+            className="border-2 border-gray-400 focus:border-blue-500 focus:outline-none"
           />
 
           <Input
@@ -646,6 +659,7 @@ export function ExhibitionDetail({
             value={editedExhibition.price || 0}
             onValueChange={(value) => handleFieldChange("price", value)}
             isReadOnly={isReadOnly}
+            className="border-2 border-gray-400 focus:border-blue-500 focus:outline-none"
           />
 
           <div className="flex flex-col gap-2">

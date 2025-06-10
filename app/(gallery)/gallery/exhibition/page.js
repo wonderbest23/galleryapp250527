@@ -268,10 +268,10 @@ export default function Exhibition() {
       setSelectedExhibition(savedExhibition);
       setSelectedKey(new Set([savedExhibition.id.toString()]));
 
-      // 데이터 새로고침
+      // 데이터 새로고침 대신 0.1초 뒤 강제 새로고침
       setTimeout(() => {
-        fetchAll();
-      }, 300);
+        window.location.reload();
+      }, 100);
     } catch (error) {
       console.error("전시회 저장 중 오류 발생:", error);
     }
@@ -455,10 +455,10 @@ export default function Exhibition() {
         setSelectedExhibition(null);
         setSelectedKey(new Set([]));
 
-        // 데이터 새로고침
+        // 데이터 새로고침 대신 0.1초 뒤 강제 새로고침
         setTimeout(() => {
-          fetchAll();
-        }, 300);
+          window.location.reload();
+        }, 100);
       } catch (error) {
         addToast({
           title: "삭제 실패",
