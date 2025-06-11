@@ -30,6 +30,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { FaChevronRight } from "react-icons/fa";
 import MyArtworks from "./components/MyArtworks";
 import Messages from "./components/Messages";
+import { MdCircleNotifications } from "react-icons/md";
 
 const Success = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -45,6 +46,9 @@ const Success = () => {
   const [selectedGalleryTab, setSelectedGalleryTab] = useState("recommended");
   const [isArtist, setIsArtist] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [alarmExhibition, setAlarmExhibition] = useState(null);
+
   const getPolicy = async () => {
     const supabase = createClient();
     const { data, error } = await supabase.from("policy").select("*");
@@ -92,7 +96,23 @@ const Success = () => {
             setIsArtist(profileData.isArtist);
             setProfile(profileData);
           }
-
+          // 알림 불러오기
+          const { data: notiData } = await supabase
+            .from("notification")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1);
+          setNotifications(notiData || []);
+          // 전시회 정보도 함께 조회
+          if (notiData && notiData.length > 0) {
+            const { data: exhibition } = await supabase
+              .from("exhibition")
+              .select("*")
+              .eq("id", notiData[0].exhibition_id)
+              .single();
+            setAlarmExhibition(exhibition);
+          }
         } else {
           // 로그인되지 않은 경우 로그인 페이지로 리디렉션
           router.push("/mypage");
@@ -273,8 +293,27 @@ const Success = () => {
         <div className="w-[5%]"></div>
       </div>
 
+      {/* 즐겨찾기 탭 상단 알림 영역 */}
+      {selectedTab === "favorite" && notifications.length > 0 && alarmExhibition && (
+        <div className="w-full flex flex-col items-center justify-center mb-4">
+          <div className="w-full bg-yellow-100 border border-yellow-300 rounded-lg p-3 flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-yellow-700 font-semibold">
+              <MdCircleNotifications className="text-xl" />
+              {notifications[0].message}
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <img src={alarmExhibition.photo} alt="전시회 이미지" className="w-14 h-14 rounded-md object-cover" />
+              <div className="flex flex-col">
+                <span className="font-bold text-black">{alarmExhibition.contents}</span>
+                <span className="text-xs text-gray-500">{alarmExhibition.start_date} ~ {alarmExhibition.end_date}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full px-2 flex justify-center items-center">
-        {selectedTab === "favorite" && <BookmarkedExhibition user={user} />}
+        {selectedTab === "favorite" && <BookmarkedExhibition user={user} alarmExhibition={alarmExhibition} />}
         {selectedTab === "review" && <Reviews user={user} />}
         {selectedTab === "message" && <Messages user={user} />}
         {selectedTab === "order" && <OrderHistory user={user} />}
