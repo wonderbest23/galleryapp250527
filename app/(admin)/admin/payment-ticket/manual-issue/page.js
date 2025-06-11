@@ -14,6 +14,7 @@ export default function ManualTicketIssuePage() {
   const [status, setStatus] = useState("success");
   const [message, setMessage] = useState("");
   const [tickets, setTickets] = useState([]);
+  const [filterExhibition, setFilterExhibition] = useState("");
   const supabase = createClient();
 
   useEffect(() => {
@@ -140,6 +141,26 @@ export default function ManualTicketIssuePage() {
           <h2 className="text-lg font-bold">발급 내역</h2>
           <Button size="sm" color="primary" onClick={handleExcelDownload}>엑셀 다운로드</Button>
         </div>
+        {/* 전시회별 필터 드롭다운 */}
+        <div className="mb-2 max-w-xs">
+          <Select
+            label="전시회별 검색"
+            selectedKeys={filterExhibition ? new Set([String(filterExhibition)]) : new Set([""])}
+            onSelectionChange={keys => setFilterExhibition(String(keys.values().next().value) || "")}
+            renderValue={() => {
+              if (!filterExhibition) return "전체";
+              const e = exhibitions.find(e => String(e.id) === String(filterExhibition));
+              return e ? `${e.contents} (${e.id})` : "전체";
+            }}
+          >
+            <SelectItem key="" value="">전체</SelectItem>
+            {exhibitions.map(e => (
+              <SelectItem key={e.id} value={e.id}>
+                {e.contents} ({e.id})
+              </SelectItem>
+            ))}
+          </Select>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm border">
             <thead>
@@ -155,24 +176,26 @@ export default function ManualTicketIssuePage() {
               </tr>
             </thead>
             <tbody>
-              {tickets.map(t => {
-                const user = users.find(u => u.id === t.user_id);
-                return (
-                  <tr key={t.id}>
-                    <td className="p-2 border">{t.user_id}</td>
-                    <td className="p-2 border">{user ? (user.full_name || user.email || user.id) : '-'}</td>
-                    <td className="p-2 border">{t.exhibition_id}</td>
-                    <td className="p-2 border">{t.amount}</td>
-                    <td className="p-2 border">{t.people_count}</td>
-                    <td className="p-2 border">{t.status}</td>
-                    <td className="p-2 border">{t.created_at ? t.created_at.slice(0, 19).replace('T', ' ') : ''}</td>
-                    <td className="p-2 border">
-                      <Button size="sm" color="danger" onClick={() => handleDelete(t.id)}>취소</Button>
-                    </td>
-                  </tr>
-                );
-              })}
-              {tickets.length === 0 && (
+              {tickets
+                .filter(t => !filterExhibition || String(t.exhibition_id) === String(filterExhibition))
+                .map(t => {
+                  const user = users.find(u => u.id === t.user_id);
+                  return (
+                    <tr key={t.id}>
+                      <td className="p-2 border">{t.user_id}</td>
+                      <td className="p-2 border">{user ? (user.full_name || user.email || user.id) : '-'}</td>
+                      <td className="p-2 border">{t.exhibition_id}</td>
+                      <td className="p-2 border">{t.amount}</td>
+                      <td className="p-2 border">{t.people_count}</td>
+                      <td className="p-2 border">{t.status}</td>
+                      <td className="p-2 border">{t.created_at ? t.created_at.slice(0, 19).replace('T', ' ') : ''}</td>
+                      <td className="p-2 border">
+                        <Button size="sm" color="danger" onClick={() => handleDelete(t.id)}>취소</Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              {tickets.filter(t => !filterExhibition || String(t.exhibition_id) === String(filterExhibition)).length === 0 && (
                 <tr><td colSpan={8} className="text-center p-4">발급 내역이 없습니다.</td></tr>
               )}
             </tbody>
