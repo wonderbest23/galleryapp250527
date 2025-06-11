@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Button, Input, Select, SelectItem } from "@heroui/react";
 import { createClient } from "@/utils/supabase/client";
+import * as XLSX from "xlsx";
 
 export default function ManualTicketIssuePage() {
   const [users, setUsers] = useState([]);
@@ -12,6 +13,7 @@ export default function ManualTicketIssuePage() {
   const [peopleCount, setPeopleCount] = useState(1);
   const [status, setStatus] = useState("success");
   const [message, setMessage] = useState("");
+  const [tickets, setTickets] = useState([]);
   const supabase = createClient();
 
   useEffect(() => {
@@ -25,8 +27,18 @@ export default function ManualTicketIssuePage() {
       const { data, error } = await supabase.from("exhibition").select("id, contents, price");
       if (!error) setExhibitions(data);
     };
+    // 티켓 발급 내역 불러오기
+    const fetchTickets = async () => {
+      const { data, error } = await supabase
+        .from("payment_ticket")
+        .select("id, user_id, exhibition_id, amount, people_count, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(30);
+      if (!error) setTickets(data);
+    };
     fetchUsers();
     fetchExhibitions();
+    fetchTickets();
   }, []);
 
   useEffect(() => {
@@ -56,6 +68,21 @@ export default function ManualTicketIssuePage() {
     });
     if (error) setMessage("발급 실패: " + error.message);
     else setMessage("티켓이 정상적으로 발급되었습니다!");
+  };
+
+  // 발급 취소(삭제)
+  const handleDelete = async (id) => {
+    if (!window.confirm("정말로 이 발급 내역을 삭제하시겠습니까?")) return;
+    const { error } = await supabase.from("payment_ticket").delete().eq("id", id);
+    if (!error) setTickets(tickets.filter(t => t.id !== id));
+  };
+
+  // 엑셀 다운로드
+  const handleExcelDownload = () => {
+    const ws = XLSX.utils.json_to_sheet(tickets);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "티켓발급내역");
+    XLSX.writeFile(wb, "manual_ticket_issued.xlsx");
   };
 
   return (
@@ -106,6 +133,52 @@ export default function ManualTicketIssuePage() {
       </Select>
       <Button className="mt-4 w-full" onClick={handleIssue}>발급</Button>
       {message && <div className="mt-2 text-center text-red-500">{message}</div>}
+
+      {/* 발급 내역 테이블 */}
+      <div className="mt-8">
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-lg font-bold">발급 내역</h2>
+          <Button size="sm" color="primary" onClick={handleExcelDownload}>엑셀 다운로드</Button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm border">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="p-2 border">유저ID</th>
+                <th className="p-2 border">유저이름</th>
+                <th className="p-2 border">전시회ID</th>
+                <th className="p-2 border">금액</th>
+                <th className="p-2 border">인원수</th>
+                <th className="p-2 border">상태</th>
+                <th className="p-2 border">발급일</th>
+                <th className="p-2 border">취소</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tickets.map(t => {
+                const user = users.find(u => u.id === t.user_id);
+                return (
+                  <tr key={t.id}>
+                    <td className="p-2 border">{t.user_id}</td>
+                    <td className="p-2 border">{user ? (user.full_name || user.email || user.id) : '-'}</td>
+                    <td className="p-2 border">{t.exhibition_id}</td>
+                    <td className="p-2 border">{t.amount}</td>
+                    <td className="p-2 border">{t.people_count}</td>
+                    <td className="p-2 border">{t.status}</td>
+                    <td className="p-2 border">{t.created_at ? t.created_at.slice(0, 19).replace('T', ' ') : ''}</td>
+                    <td className="p-2 border">
+                      <Button size="sm" color="danger" onClick={() => handleDelete(t.id)}>취소</Button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {tickets.length === 0 && (
+                <tr><td colSpan={8} className="text-center p-4">발급 내역이 없습니다.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 } 
