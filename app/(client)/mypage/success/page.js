@@ -108,7 +108,7 @@ const Success = () => {
           if (notiData && notiData.length > 0) {
             const { data: exhibition } = await supabase
               .from("exhibition")
-              .select("*")
+              .select("*, gallery(*)")
               .eq("id", notiData[0].exhibition_id)
               .single();
             setAlarmExhibition(exhibition);

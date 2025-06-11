@@ -269,7 +269,7 @@ export default function BookmarkedExhibition({ user, alarmExhibition }) {
                             </div>
                             <div className="flex flex-row gap-1 items-center">
                               <IoMdPin className="w-3 h-3 text-[#007AFF]" />
-                              {item.gallery.address}
+                              {item.gallery?.address || '-'}
                             </div>
                             <div className="flex flex-row gap-1 items-center">
                               <FaMoneyBillWaveAlt className="w-3 h-3 text-[#007AFF]" />
