@@ -31,6 +31,7 @@ import { FaChevronRight } from "react-icons/fa";
 import MyArtworks from "./components/MyArtworks";
 import Messages from "./components/Messages";
 import { MdCircleNotifications } from "react-icons/md";
+import Link from "next/link";
 
 const Success = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -178,6 +179,14 @@ const Success = () => {
     }
   };
 
+  const handleDeleteAlarm = async () => {
+    if (!notifications[0]) return;
+    const supabase = createClient();
+    await supabase.from("notification").delete().eq("id", notifications[0].id);
+    setNotifications([]);
+    setAlarmExhibition(null);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen w-full">
@@ -296,18 +305,30 @@ const Success = () => {
       {/* 즐겨찾기 탭 상단 알림 영역 */}
       {selectedTab === "favorite" && notifications.length > 0 && alarmExhibition && (
         <div className="w-full flex flex-col items-center justify-center mb-4">
-          <div className="w-full bg-yellow-100 border border-yellow-300 rounded-lg p-3 flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-yellow-700 font-semibold">
-              <MdCircleNotifications className="text-xl" />
-              {notifications[0].message}
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-              <img src={alarmExhibition.photo} alt="전시회 이미지" className="w-14 h-14 rounded-md object-cover" />
-              <div className="flex flex-col">
-                <span className="font-bold text-black">{alarmExhibition.contents}</span>
-                <span className="text-xs text-gray-500">{alarmExhibition.start_date} ~ {alarmExhibition.end_date}</span>
+          <div className="relative flex flex-col items-center justify-center w-full max-w-md mx-auto">
+            <Link href={`/exhibition/${alarmExhibition.id}`} className="w-full" style={{ textDecoration: 'none' }}>
+              <div className="w-full bg-yellow-100 border border-yellow-300 rounded-lg p-3 flex flex-col gap-2 items-center justify-center cursor-pointer transition hover:bg-yellow-200">
+                <div className="flex items-center gap-2 text-yellow-700 font-semibold justify-center">
+                  <MdCircleNotifications className="text-xl" />
+                  {notifications[0].message}
+                </div>
+                <div className="flex flex-col items-center gap-2 mt-2">
+                  <img src={alarmExhibition.photo} alt="전시회 이미지" className="w-20 h-20 rounded-md object-cover mx-auto" />
+                  <div className="flex flex-col items-center">
+                    <span className="font-bold text-black text-center">{alarmExhibition.contents}</span>
+                    <span className="text-xs text-gray-500 text-center">{alarmExhibition.start_date} ~ {alarmExhibition.end_date}</span>
+                  </div>
+                </div>
               </div>
-            </div>
+            </Link>
+            {/* X 버튼 */}
+            <button
+              onClick={handleDeleteAlarm}
+              className="absolute left-2 bottom-2 bg-white border border-gray-300 rounded-full w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-200 z-10"
+              title="알림 닫기"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}
