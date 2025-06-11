@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { Button, Spinner } from "@heroui/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { useUserStore } from "@/stores/userStore";
 
 // SearchParams를 사용하는 컴포넌트를 별도로 분리
 function MyPageContent() {
@@ -151,5 +152,26 @@ function MyPageWithSearchParams() {
 
 // 메인 컴포넌트
 export default function mypage() {
+  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.replace("/mypage/success");
+    } else {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) {
+          setUser(user);
+          router.replace("/mypage/success");
+        }
+        // 없으면 로그인 화면 유지
+      });
+    }
+  }, [user, setUser, router]);
+
+  if (user) return null;
+
   return <MyPageWithSearchParams />;
 }

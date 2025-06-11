@@ -32,11 +32,13 @@ import MyArtworks from "./components/MyArtworks";
 import Messages from "./components/Messages";
 import { MdCircleNotifications } from "react-icons/md";
 import Link from "next/link";
+import { useUserStore } from "@/stores/userStore";
 
 const Success = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const router = useRouter();
-  const [user, setUser] = useState(null);
+  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
   const [loading, setLoading] = useState(true);
   const [policy, setPolicy] = useState(null);
   const [customerService, setCustomerService] = useState(null);
@@ -69,28 +71,21 @@ const Success = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const supabase = createClient();
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
-
-        if (error) {
-          console.error(
-            "사용자 정보를 가져오는 중 오류가 발생했습니다:",
-            error
-          );
-          router.push("/mypage");
-          return;
+        if (!user) {
+          const { data: { user: fetchedUser }, error } = await createClient().auth.getUser();
+          if (error || !fetchedUser) {
+            router.push("/mypage");
+            setLoading(false);
+            return;
+          }
+          setUser(fetchedUser);
         }
-
-        if (user) {
-          setUser(user);
-          console.log("user:", user);
-          const { data: profileData, error: profileError } = await supabase
+        const currentUser = user || (await createClient().auth.getUser()).data.user;
+        if (currentUser) {
+          const { data: profileData } = await createClient()
             .from('profiles')
             .select('*')
-            .eq('id', user.id)
+            .eq('id', currentUser.id)
             .eq('isArtistApproval', true)
             .single();  
           if (profileData) {
@@ -98,16 +93,16 @@ const Success = () => {
             setProfile(profileData);
           }
           // 알림 불러오기
-          const { data: notiData } = await supabase
+          const { data: notiData } = await createClient()
             .from("notification")
             .select("*")
-            .eq("user_id", user.id)
+            .eq("user_id", currentUser.id)
             .order("created_at", { ascending: false })
             .limit(1);
           setNotifications(notiData || []);
           // 전시회 정보도 함께 조회
           if (notiData && notiData.length > 0) {
-            const { data: exhibition } = await supabase
+            const { data: exhibition } = await createClient()
               .from("exhibition")
               .select("*, gallery(*)")
               .eq("id", notiData[0].exhibition_id)
@@ -115,7 +110,6 @@ const Success = () => {
             setAlarmExhibition(exhibition);
           }
         } else {
-          // 로그인되지 않은 경우 로그인 페이지로 리디렉션
           router.push("/mypage");
         }
       } catch (error) {
@@ -126,7 +120,7 @@ const Success = () => {
     };
 
     fetchUser();
-  }, [router]);
+  }, [router, setUser]);
 
   useEffect(() => {
     if (selectedModal === "policy") {
@@ -171,8 +165,7 @@ const Success = () => {
       }
 
       // Supabase 로그아웃
-      const supabase = createClient();
-      await supabase.auth.signOut();
+      await createClient().auth.signOut();
       router.push("/");
     } catch (error) {
       console.error("로그아웃 중 오류가 발생했습니다:", error);
@@ -181,8 +174,7 @@ const Success = () => {
 
   const handleDeleteAlarm = async () => {
     if (!notifications[0]) return;
-    const supabase = createClient();
-    await supabase.from("notification").delete().eq("id", notifications[0].id);
+    await createClient().from("notification").delete().eq("id", notifications[0].id);
     setNotifications([]);
     setAlarmExhibition(null);
   };
@@ -310,8 +302,7 @@ const Success = () => {
               className="w-full bg-yellow-100 border border-yellow-300 rounded-lg p-3 flex flex-col gap-2 items-center justify-center cursor-pointer transition hover:bg-yellow-200"
               onClick={async () => {
                 if (!notifications[0]) return;
-                const supabase = createClient();
-                await supabase.from("notification").delete().eq("id", notifications[0].id);
+                await createClient().from("notification").delete().eq("id", notifications[0].id);
                 setNotifications([]);
                 setAlarmExhibition(null);
                 window.location.href = `/exhibition/${alarmExhibition.id}`;
