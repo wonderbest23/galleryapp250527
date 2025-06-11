@@ -173,7 +173,13 @@ export function GallerySlider({ galleries, loading, user, toggleBookmark, isBook
                   >
                     <div className="relative">
                       <img
-                        src={gallery.thumbnail || `https://picsum.photos/400/300?random=${index}`}
+                        src={
+                          gallery.thumbnail
+                            ? gallery.thumbnail.includes('/thumbnails/')
+                              ? gallery.thumbnail
+                              : gallery.thumbnail.replace('/gallery/', '/gallery/thumbnails/')
+                            : `https://picsum.photos/400/300?random=${index}`
+                        }
                         alt={gallery.name || "갤러리 이미지"}
                         className="w-full h-[140px] object-cover"
                       />

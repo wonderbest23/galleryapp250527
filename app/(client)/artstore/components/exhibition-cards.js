@@ -35,7 +35,13 @@ export function ExhibitionCards({
                 <CardBody className="grid grid-cols-7 items-center justify-center gap-x-3">
                   <div className="col-span-2">
                     <img
-                      src={exhibition.photo || "/images/noimage.jpg"}
+                      src={
+                        exhibition.photo
+                          ? exhibition.photo.includes('/thumbnails/')
+                            ? exhibition.photo
+                            : exhibition.photo.replace('/gallery/', '/gallery/thumbnails/')
+                          : "/images/noimage.jpg"
+                      }
                       alt={exhibition.title}
                       className="w-20 h-20 object-cover rounded"
                     />

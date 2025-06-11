@@ -100,7 +100,13 @@ export default function MagazineList() {
             >
               {magazines[0].photo?.[0]?.url && (
                 <img
-                  src={magazines[0].photo[0].url}
+                  src={
+                    magazines[0].photo[0].url
+                      ? magazines[0].photo[0].url.includes('/thumbnails/')
+                        ? magazines[0].photo[0].url
+                        : magazines[0].photo[0].url.replace('/gallery/', '/gallery/thumbnails/')
+                      : "/images/noimage.jpg"
+                  }
                   alt="대표 이미지"
                   className="w-full h-64 object-cover rounded-t-2xl"
                 />
@@ -141,7 +147,13 @@ export default function MagazineList() {
                         <Image
                           alt="Card thumbnail"
                           className="object-cover w-[96px] h-[96px] min-w-[96px] min-h-[96px] rounded-none border border-gray-200"
-                          src={item.photo[0].url}
+                          src={
+                            item.photo[0].url
+                              ? item.photo[0].url.includes('/thumbnails/')
+                                ? item.photo[0].url
+                                : item.photo[0].url.replace('/gallery/', '/gallery/thumbnails/')
+                              : "/images/noimage.jpg"
+                          }
                         />
                       )}
                       {/* 텍스트 우측 */}

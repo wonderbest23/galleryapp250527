@@ -51,7 +51,13 @@ export function GalleryCards({ galleries, user, bookmarks, toggleBookmark, isBoo
                   <Link href={`/galleries/${gallery.id}`}>
                     <CardBody className="flex gap-4 flex-row w-full">
                       <img
-                        src={gallery.thumbnail || `https://picsum.photos/200/200?random=${index}`}
+                        src={
+                          gallery.thumbnail
+                            ? gallery.thumbnail.includes('/thumbnails/')
+                              ? gallery.thumbnail
+                              : gallery.thumbnail.replace('/gallery/', '/gallery/thumbnails/')
+                            : `https://picsum.photos/200/200?random=${index}`
+                        }
                         alt={gallery.name || gallery.title}
                         className="w-24 h-24 object-cover rounded"
                       />
