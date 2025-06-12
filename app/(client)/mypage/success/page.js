@@ -259,7 +259,7 @@ const Success = () => {
       {/* 첫 번째 커스텀 탭바 */}
       <div className="flex flex-row w-[90%] border-t border-gray-200 mb-2 justify-center items-center">
         <div className="w-[5%]"></div>
-        <div className="flex w-full">
+        <div className={`flex w-full${!isArtist ? ' justify-center' : ''}`}>
           <button
             className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "favorite" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
             onClick={() => setSelectedTab("favorite")}
@@ -284,12 +284,14 @@ const Success = () => {
           >
             주문내역
           </button>
-          <button
-            className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "myArt" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-            onClick={() => setSelectedTab("myArt")}
-          >
-            나의 작품
-          </button>
+          {isArtist && (
+            <button
+              className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "myArt" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
+              onClick={() => setSelectedTab("myArt")}
+            >
+              나의 작품
+            </button>
+          )}
         </div>
         <div className="w-[5%]"></div>
       </div>
@@ -337,7 +339,7 @@ const Success = () => {
         {selectedTab === "review" && <Reviews user={user} />}
         {selectedTab === "message" && <Messages user={user} />}
         {selectedTab === "order" && <OrderHistory user={user} />}
-        {selectedTab === "myArt" && <MyArtworks user={user} profile={profile} />}
+        {isArtist && selectedTab === "myArt" && <MyArtworks user={user} profile={profile} />}
       </div>
 
       {/* 두 번째 커스텀 탭바 */}
