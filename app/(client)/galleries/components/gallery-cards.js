@@ -10,6 +10,7 @@ import { FaStar } from "react-icons/fa";
 import { FaMap } from "react-icons/fa";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import SafeImage from '@/components/SafeImage';
 
 export function GalleryCards({ galleries, user, bookmarks, toggleBookmark, isBookmarked }) {
   // 갤러리 카드 애니메이션 설정
@@ -51,14 +52,8 @@ export function GalleryCards({ galleries, user, bookmarks, toggleBookmark, isBoo
                 <Card shadow="sm" className="hover:cursor-pointer w-full">
                   <Link href={`/galleries/${gallery.id}`}>
                     <CardBody className="flex gap-4 flex-row w-full">
-                      <Image
-                        src={
-                          gallery.thumbnail
-                            ? gallery.thumbnail.includes('/thumbnails/')
-                              ? gallery.thumbnail
-                              : gallery.thumbnail.replace('/gallery/', '/gallery/thumbnails/')
-                            : `https://picsum.photos/200/200?random=${index}`
-                        }
+                      <SafeImage
+                        src={gallery.thumbnail ? gallery.thumbnail : `https://picsum.photos/200/200?random=${index}`}
                         alt={gallery.name || gallery.title}
                         width={96}
                         height={96}
