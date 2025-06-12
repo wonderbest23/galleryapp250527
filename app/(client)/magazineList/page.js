@@ -10,6 +10,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function MagazineList() {
   const [magazines, setMagazines] = useState([]);
@@ -99,7 +100,7 @@ export default function MagazineList() {
               onClick={() => router.push(`/magazine/${magazines[0].id}`)}
             >
               {magazines[0].photo?.[0]?.url && (
-                <img
+                <Image
                   src={
                     magazines[0].photo[0].url
                       ? magazines[0].photo[0].url.includes('/thumbnails/')
@@ -108,7 +109,11 @@ export default function MagazineList() {
                       : "/images/noimage.jpg"
                   }
                   alt="대표 이미지"
+                  width={400}
+                  height={256}
+                  priority
                   className="w-full h-64 object-cover rounded-t-2xl"
+                  style={{ borderRadius: '16px' }}
                 />
               )}
               <div className="p-4">
@@ -154,6 +159,9 @@ export default function MagazineList() {
                                 : item.photo[0].url.replace('/gallery/', '/gallery/thumbnails/')
                               : "/images/noimage.jpg"
                           }
+                          width={96}
+                          height={96}
+                          loading="lazy"
                         />
                       )}
                       {/* 텍스트 우측 */}

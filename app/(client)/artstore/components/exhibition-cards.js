@@ -8,6 +8,7 @@ import { FaRegBookmark, FaBookmark } from "react-icons/fa6";
 import Link from "next/link";
 import { FaPlusCircle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export function ExhibitionCards({
   exhibitions,
@@ -34,7 +35,7 @@ export function ExhibitionCards({
               <Link href={`/exhibition/${exhibition.id}`}>
                 <CardBody className="grid grid-cols-7 items-center justify-center gap-x-3">
                   <div className="col-span-2">
-                    <img
+                    <Image
                       src={
                         exhibition.photo
                           ? exhibition.photo.includes('/thumbnails/')
@@ -43,7 +44,11 @@ export function ExhibitionCards({
                           : "/images/noimage.jpg"
                       }
                       alt={exhibition.title}
+                      width={80}
+                      height={80}
                       className="w-20 h-20 object-cover rounded"
+                      priority={index === 0}
+                      loading={index === 0 ? "eager" : "lazy"}
                     />
                   </div>
 
