@@ -27,7 +27,6 @@ const OrderHistory = ({ user }) => {
         const { data: ticketData, error: ticketError } = await supabase
           .from('payment_ticket')
           .select('*, exhibition_id(*)')
-          .or(`and(amount.eq.0,status.in.(success,used)),and(amount.gt.0,status.eq.success)`)
           .order('created_at', { ascending: false })
           .eq("user_id", user.id)
         
