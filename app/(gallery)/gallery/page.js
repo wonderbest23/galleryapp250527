@@ -4,7 +4,7 @@ import { HiUsers, HiPhotograph, HiClock, HiThumbUp } from "react-icons/hi";
 import { GalleryList } from "./components/gallery-list";
 import { GalleryDetail } from "./components/gallery-detail";
 import { createClient } from "@/utils/supabase/client";
-import { addToast, Tabs, Tab, Card, Image, Spinner } from "@heroui/react";
+import { addToast, Tabs, Tab, Card, Spinner } from "@heroui/react";
 
 // 통계 카드 컴포넌트
 const StatCard = ({ title, value, icon, color }) => (

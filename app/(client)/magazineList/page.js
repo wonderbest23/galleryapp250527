@@ -3,7 +3,7 @@ import React from "react";
 import { Button, Skeleton } from "@heroui/react";
 import { FaChevronLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { Card, CardBody, Divider, Image } from "@heroui/react";
+import { Card, CardBody, Divider } from "@heroui/react";
 import { FaPlusCircle } from "react-icons/fa";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
