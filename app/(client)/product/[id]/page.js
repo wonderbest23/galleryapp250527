@@ -29,9 +29,17 @@ import { cn } from "@/utils/cn";
 import { LuWallet } from "react-icons/lu";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa6";
 import { motion } from "framer-motion";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+import dynamic from 'next/dynamic';
+
+const Slider = dynamic(
+  async () => {
+    const mod = await import('react-slick');
+    await import('slick-carousel/slick/slick.css');
+    await import('slick-carousel/slick/slick-theme.css');
+    return mod.default;
+  },
+  { ssr: false, loading: () => <div>슬라이더 로딩 중...</div> }
+);
 
 // 리뷰 컴포넌트 추가
 
@@ -511,53 +519,6 @@ export default function App() {
           )}
         </motion.div>
       )}
-      <style jsx global>{`
-        .slick-dots {
-          position: absolute !important;
-          bottom: 16px;
-          left: 0;
-          width: 100%;
-          display: flex !important;
-          justify-content: center;
-          z-index: 10;
-          padding: 0;
-          margin: 0;
-        }
-        .slick-dots li {
-          margin: 0 4px;
-        }
-        .slick-dots li button:before {
-          font-size: 12px;
-          color: white;
-          opacity: 1;
-        }
-        .slick-dots li.slick-active button:before {
-          color: #007AFF !important;
-          opacity: 1;
-        }
-        .slick-list{
-          margin:0 !important;
-          padding:0 !important;
-          gap:0 !important;
-        }
-        .slick-track {
-          display: flex !important;
-          gap: 0 !important;
-          margin: 0 !important;
-        }
-        .slick-slide {
-          padding: 0 !important;
-          margin: 0 !important;
-        }
-        .slick-slide > div {
-          margin: 0 !important;
-          padding: 0 !important;
-        }
-        .slick-slider {
-          margin: 0 !important;
-          padding: 0 !important;
-        }
-      `}</style>
     </div>
   );
 }
