@@ -3,7 +3,7 @@ import { EnvVarWarning } from "@/components/env-var-warning";
 import HeaderAuth from "@/components/header-auth";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
-import { Geist } from "next/font/google";
+import { Geist, Noto_Sans_KR } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "@/app/globals.css";
 import { HeroUIProvider } from "@heroui/react";
@@ -36,6 +36,12 @@ export function generateViewport() {
   };
 }
 
+const notoSansKR = Noto_Sans_KR({
+  subsets: ["latin"],
+  weight: ["100", "300", "400", "500", "700", "900"],
+  display: "swap",
+});
+
 const geistSans = Geist({
   display: "swap",
   subsets: ["latin"],
@@ -47,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={geistSans.className} suppressHydrationWarning>
+    <html lang="ko" className={`${notoSansKR.className} ${geistSans.className}`} suppressHydrationWarning>
       <body className="bg-background text-foreground">
         <ThemeProvider
           attribute="class"
