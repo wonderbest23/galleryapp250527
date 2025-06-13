@@ -370,7 +370,7 @@ export function ExhibitionDetail({
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-small font-medium">전시회 이미지</label>
+                  <label className="text-small font-medium">포스터 이미지</label>
                   <Button 
                     color="primary" 
                     variant="flat" 
@@ -388,7 +388,7 @@ export function ExhibitionDetail({
                     <div className="relative w-full">
                       <img
                         src={imagePreview}
-                        alt="전시회 이미지"
+                        alt="포스터 이미지"
                         className="w-full h-48 object-cover rounded-md"
                       />
                       {!isReadOnly && (
@@ -622,7 +622,7 @@ export function ExhibitionDetail({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-small font-medium">전시회 이미지</label>
+              <label className="text-small font-medium">포스터 이미지</label>
               <Button 
                 color="primary" 
                 variant="flat" 
@@ -640,7 +640,7 @@ export function ExhibitionDetail({
                 <div className="relative w-full">
                   <img
                     src={imagePreview}
-                    alt="전시회 이미지"
+                    alt="포스터 이미지"
                     className="w-full h-48 object-cover rounded-md"
                   />
                   {!isReadOnly && (
