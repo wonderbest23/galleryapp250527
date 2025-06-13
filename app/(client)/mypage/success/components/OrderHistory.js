@@ -67,11 +67,23 @@ const OrderHistory = ({ user }) => {
     );
   }
 
+  // used(입장완료) 아닌 것들 먼저, 종료일 빠른 순서로 정렬
+  const sortedOrders = [
+    ...orders
+      .filter(order => order.status !== 'used')
+      .sort((a, b) => {
+        const aEnd = a.exhibition_id?.end_date ? new Date(a.exhibition_id.end_date) : new Date(8640000000000000);
+        const bEnd = b.exhibition_id?.end_date ? new Date(b.exhibition_id.end_date) : new Date(8640000000000000);
+        return aEnd - bEnd;
+      }),
+    ...orders.filter(order => order.status === 'used')
+  ];
+
   return (
     <div className="w-full">
       <div className="flex flex-col items-center gap-4 w-full">
         <div className="grid gap-4 w-full">
-          {orders.slice(0, visibleOrders).map((order) => (
+          {sortedOrders.slice(0, visibleOrders).map((order) => (
             <Link
               key={order.order_id}
               href={`/mypage/order-detail?order_id=${order.order_id}&exhibition_id=${order.exhibition_id.id}&user_id=${user.id}&people_count=${order.people_count}&amount=${order.amount}&created_at=${encodeURIComponent(order.created_at)}`}
