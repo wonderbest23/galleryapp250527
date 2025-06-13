@@ -75,9 +75,7 @@ export function ExhibitionCards({
                       <img
                         src={
                           exhibition.photo
-                            ? exhibition.photo.includes('/thumbnails/')
-                              ? exhibition.photo
-                              : exhibition.photo.replace('/gallery/', '/gallery/thumbnails/')
+                            ? exhibition.photo
                             : "/images/noimage.jpg"
                         }
                         alt={exhibition.title}
