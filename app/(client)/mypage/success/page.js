@@ -342,35 +342,8 @@ const Success = () => {
         {isArtist && selectedTab === "myArt" && <MyArtworks user={user} profile={profile} />}
       </div>
 
-      {/* 두 번째 커스텀 탭바 */}
-      <div className="flex w-[90%] border-t border-gray-200 mb-2 mt-4 justify-center items-center">
-        <div className="w-[10%]"></div>
-        <div className="flex w-2/3">
-          <button
-            className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedGalleryTab === "recommended" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-            onClick={() => setSelectedGalleryTab("recommended")}
-          >
-            추천갤러리
-          </button>
-          <button
-            className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedGalleryTab === "new" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-            onClick={() => setSelectedGalleryTab("new")}
-          >
-            신규갤러리
-          </button>
-          <button
-            className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedGalleryTab === "now" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-            onClick={() => setSelectedGalleryTab("now")}
-          >
-            전시갤러리
-          </button>
-        </div>
-        <div className="w-[10%]"></div>
-      </div>
-
-      <div className="w-full px-2">
-        <GalleryCards selectedTab={selectedGalleryTab} />
-      </div>
+      {/* 북마크 없음 안내와 하단 메뉴 사이에 여백 추가 */}
+      <div className="h-6" />
 
       <div className="w-full h-auto flex justify-center items-center flex-col gap-y-4 mb-24 px-4">
         <div
