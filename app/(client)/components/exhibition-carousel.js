@@ -41,7 +41,7 @@ export function ExhibitionCarousel() {
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: true,
-    autoplaySpeed: 2000,
+    autoplaySpeed: 4000,
     pauseOnHover: true,
     arrows: false,
     dotsClass: "slick-dots custom-dots",
@@ -104,7 +104,12 @@ export function ExhibitionCarousel() {
                       transition={{ duration: 0.5 }}
                     >
                       <Image
-                        src={banner?.thumbnail_url || banner?.url || "/noimage.jpg"}
+                        src={
+                          banner?.thumbnail_url ||
+                          (banner?.url
+                            ? banner.url.replace(/\.(jpg|jpeg|png)$/i, ".webp")
+                            : "/noimage.jpg")
+                        }
                         alt={banner?.title || `Slide ${index + 1}`}
                         width={400}
                         height={200}
