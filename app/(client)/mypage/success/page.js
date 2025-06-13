@@ -179,6 +179,12 @@ const Success = () => {
     setAlarmExhibition(null);
   };
 
+  // 개인정보 처리방침 내용 예시 (실제 내용으로 교체)
+  const privacyPolicy = `
+    <h3>개인정보 처리방침</h3>
+    <p>여기에 개인정보 처리방침 내용을 입력하세요.</p>
+  `;
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen w-full">
@@ -374,6 +380,16 @@ const Success = () => {
           <FiLogOut className="text-gray-600" size={20} />
           <span>로그아웃</span>
         </div>
+        <span
+          className="text-xs text-gray-500 underline cursor-pointer text-center mt-2"
+          onClick={() => {
+            setTitle("개인정보 처리방침");
+            setContent(privacyPolicy);
+            onOpen();
+          }}
+        >
+          개인정보 처리방침
+        </span>
       </div>
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
