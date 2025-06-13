@@ -8,6 +8,9 @@ import { v4 as uuidv4 } from "uuid";
 import { QRCodeSVG } from "qrcode.react";
 import Froala from "./Froala";
 import RichTextEditor from "./RichTextEditor/RichTextEditor";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { ko } from "date-fns/locale";
 
 export function ExhibitionDetail({
   exhibition,
@@ -39,6 +42,10 @@ export function ExhibitionDetail({
   const [qrValue, setQrValue] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
   const qrRef = useRef(null);
+
+  // DatePicker 관련 상태
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   useEffect(() => {
     console.log('ExhibitionDetail: exhibition prop 변경됨:', exhibition);
@@ -777,23 +784,157 @@ export function ExhibitionDetail({
           </div>
         </div>
         
-        <Input
-          label="전시시작"
-          value={editedExhibition.start_date||""}
-          onValueChange={(value) =>
-            setEditedExhibition({ ...editedExhibition, start_date: value })
-          }
-          className="col-span-2 md:col-span-1"
-        />
-        <Input
-          label="전시종료"
-          value={editedExhibition.end_date||""}
-          onValueChange={(value) =>
-            setEditedExhibition({ ...editedExhibition, end_date: value })
-          }
-          className="col-span-2 md:col-span-1"
-          isRequired={true}
-        />
+        {/* 전시시작/종료 달력 UI - 신규 등록 모드일 때 갤러리와 동일하게 */}
+        {isNewExhibition ? (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="relative">
+                <label className="text-sm font-medium mb-1 block">전시시작 *</label>
+                <DatePicker
+                  locale={ko}
+                  selected={startDate}
+                  onChange={(date) => {
+                    setStartDate(date);
+                    if (date) {
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      const day = String(date.getDate()).padStart(2, "0");
+                      setEditedExhibition({ ...editedExhibition, start_date: `${year}${month}${day}` });
+                    }
+                  }}
+                  dateFormat="yyyy.MM.dd"
+                  customInput={
+                    <div className="relative">
+                      <input
+                        className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-400 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
+                        value={
+                          editedExhibition.start_date
+                            ? `${editedExhibition.start_date.slice(0,4)}.${editedExhibition.start_date.slice(4,6)}.${editedExhibition.start_date.slice(6,8)}`
+                            : ""
+                        }
+                        readOnly
+                        placeholder="YYYY.MM.DD"
+                      />
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                        <Icon icon="lucide:calendar" className="text-gray-500 text-xl" />
+                      </div>
+                    </div>
+                  }
+                  popperClassName="react-datepicker-popper z-50"
+                />
+              </div>
+              <div className="relative">
+                <label className="text-sm font-medium mb-1 block">전시종료 *</label>
+                <DatePicker
+                  locale={ko}
+                  selected={endDate}
+                  onChange={(date) => {
+                    setEndDate(date);
+                    if (date) {
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      const day = String(date.getDate()).padStart(2, "0");
+                      setEditedExhibition({ ...editedExhibition, end_date: `${year}${month}${day}` });
+                    }
+                  }}
+                  dateFormat="yyyy.MM.dd"
+                  customInput={
+                    <div className="relative">
+                      <input
+                        className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-400 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
+                        value={
+                          editedExhibition.end_date
+                            ? `${editedExhibition.end_date.slice(0,4)}.${editedExhibition.end_date.slice(4,6)}.${editedExhibition.end_date.slice(6,8)}`
+                            : ""
+                        }
+                        readOnly
+                        placeholder="YYYY.MM.DD"
+                      />
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                        <Icon icon="lucide:calendar" className="text-gray-500 text-xl" />
+                      </div>
+                    </div>
+                  }
+                  popperClassName="react-datepicker-popper z-50"
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          // 기존 코드 유지 (수정/상세 모드)
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">전시시작 *</label>
+              <DatePicker
+                locale={ko}
+                selected={startDate}
+                onChange={(date) => {
+                  setStartDate(date);
+                  if (date) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, "0");
+                    const day = String(date.getDate()).padStart(2, "0");
+                    setEditedExhibition({ ...editedExhibition, start_date: `${year}${month}${day}` });
+                  }
+                }}
+                dateFormat="yyyy.MM.dd"
+                customInput={
+                  <div className="relative">
+                    <input
+                      className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-400 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
+                      value={
+                        editedExhibition.start_date
+                          ? `${editedExhibition.start_date.slice(0,4)}.${editedExhibition.start_date.slice(4,6)}.${editedExhibition.start_date.slice(6,8)}`
+                          : ""
+                      }
+                      readOnly
+                      placeholder="YYYY.MM.DD"
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <Icon icon="lucide:calendar" className="text-gray-500 text-xl" />
+                    </div>
+                  </div>
+                }
+                popperClassName="react-datepicker-popper z-50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">전시종료 *</label>
+              <DatePicker
+                locale={ko}
+                selected={endDate}
+                onChange={(date) => {
+                  setEndDate(date);
+                  if (date) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, "0");
+                    const day = String(date.getDate()).padStart(2, "0");
+                    setEditedExhibition({ ...editedExhibition, end_date: `${year}${month}${day}` });
+                  }
+                }}
+                dateFormat="yyyy.MM.dd"
+                customInput={
+                  <div className="relative">
+                    <input
+                      className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-400 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
+                      value={
+                        editedExhibition.end_date
+                          ? `${editedExhibition.end_date.slice(0,4)}.${editedExhibition.end_date.slice(4,6)}.${editedExhibition.end_date.slice(6,8)}`
+                          : ""
+                      }
+                      readOnly
+                      placeholder="YYYY.MM.DD"
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <Icon icon="lucide:calendar" className="text-gray-500 text-xl" />
+                    </div>
+                  </div>
+                }
+                popperClassName="react-datepicker-popper z-50"
+              />
+            </div>
+          </div>
+        )}
 
         <Input
           label="운영 시간"
