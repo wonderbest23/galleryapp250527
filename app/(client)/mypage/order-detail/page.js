@@ -143,13 +143,22 @@ function OrderDetailContent() {
 
   return (
     <div className="flex flex-col min-h-[100dvh] relative bg-white mx-1">
-      <div className="flex-1 flex flex-col items-center overflow-y-auto">
+      {/* 상단바: ← 주문상세 */}
+      <div className="w-full flex items-center justify-start px-2 py-2 bg-white z-10">
+        <Button
+          isIconOnly
+          variant="light"
+          className="mr-2"
+          onPress={() => router.back()}
+        >
+          <FaArrowLeft className="text-xl" />
+        </Button>
+        <span className="text-lg font-bold ml-0">주문상세</span>
+      </div>
+      {/* 카드(주문 상세) */}
+      <div className="flex-1 flex flex-col items-center overflow-y-auto pt-2">
         <div className="w-full flex flex-col items-center mt-2">
-          <div className="text-[26px] font-bold text-center">주문 상세</div>
-          <div className="text-[12px] text-black font-medium text-center mt-1 mb-2">
-            {orderInfo.exhibition?.contents}
-          </div>
-          <div className="w-full max-w-xs bg-[#FAFAFA] rounded-xl p-4 flex flex-col items-center gap-3 shadow-md">
+          <div className="w-full max-w-md bg-[#FAFAFA] rounded-xl p-4 flex flex-col items-center gap-3 mx-auto">
             {/* 구매 정보 */}
             <div className="w-full text-[14px] text-black font-medium text-left">
               <p>구매날짜: {orderInfo.created_at?.split('T')[0]}</p>
