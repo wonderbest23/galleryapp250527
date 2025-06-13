@@ -100,8 +100,10 @@ const OrderHistory = ({ user }) => {
                   <div className="flex flex-col w-full min-w-0">
                     <div className="flex flex-row justify-between items-start">
                       <div className="flex flex-col min-w-0">
-                        <div className="text-lg font-bold truncate flex items-center gap-2">
-                          {order.exhibition_id?.contents || "알 수 없는 전시회"}
+                        <div className="text-base font-bold truncate flex items-center gap-2">
+                          {(order.exhibition_id?.contents?.length > 10
+                            ? order.exhibition_id.contents.slice(0, 10) + "..."
+                            : order.exhibition_id?.contents) || "알 수 없는 전시회"}
                           {order.status === 'used' && (
                             <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold flex items-center">
                               <svg className="w-3 h-3 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.071 7.071a1 1 0 01-1.414 0l-3.536-3.535a1 1 0 111.414-1.415l2.829 2.829 6.364-6.364a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
