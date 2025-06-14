@@ -368,6 +368,12 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
     );
   }, []);
 
+  function getWebpImageUrl(url) {
+    if (!url) return "/noimage.jpg";
+    if (url.endsWith(".webp")) return url;
+    return url.replace(/\.(jpg|jpeg|png)$/i, ".webp");
+  }
+
   console.log('MiddleArtists products:', products);
 
   return (
@@ -434,7 +440,7 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
                   >
                     <CardBody className="flex flex-row justify-center items-center ">
                       <div className="w-[80px] h-[80px] relative">
-                        <Image src={product.image[0] || "/noimage.jpg"} alt="product image" className="w-full h-full object-contain bg-white" fill />
+                        <Image src={getWebpImageUrl(product.image[0])} alt="product image" className="w-full h-full object-contain bg-white" fill />
                       </div>
                       <div className="flex flex-col flex-grow ml-2">
                         <p className="text-[14px] font-medium line-clamp-1 text-[#606060]">{product.name}</p>

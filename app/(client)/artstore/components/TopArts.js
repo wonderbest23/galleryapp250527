@@ -43,6 +43,12 @@ const fadeIn = {
   transition: { duration: 0.5 }
 };
 
+function getWebpImageUrl(url) {
+  if (!url) return "/noimage.jpg";
+  if (url.endsWith(".webp")) return url;
+  return url.replace(/\.(jpg|jpeg|png)$/i, ".webp");
+}
+
 export default function TopArts() {
   const [categories, setCategories] = useState([
     { id: 1, name: "추천상품", selected: true, genre: null },
@@ -314,7 +320,7 @@ export default function TopArts() {
                 <Card className="rounded-lg overflow-hidden w-[157px] cursor-pointer" shadow="none">
                   <div className="relative w-full aspect-[157/200]" onClick={() => navigateToProduct(item.id)}>
                     <Image
-                      src={item.image[0] || "/noimage.jpg"}
+                      src={getWebpImageUrl(item.image[0])}
                       alt="image"
                       className="object-contain bg-white rounded-lg"
                       fill

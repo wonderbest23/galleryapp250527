@@ -11,6 +11,12 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
+function getWebpImageUrl(url) {
+  if (!url) return "/noimage.jpg";
+  if (url.endsWith(".webp")) return url;
+  return url.replace(/\.(jpg|jpeg|png)$/i, ".webp");
+}
+
 const Artists = () => {
   const router = useRouter();
   const [artists, setArtists] = useState([]);
@@ -198,7 +204,7 @@ const Artists = () => {
             <>
               <div className="w-[150px] aspect-[2/3] relative">
                 <Image
-                  src={work.image[0] || "/noimage.jpg"}
+                  src={getWebpImageUrl(work.image[0])}
                   alt="works"
                   fill
                   className="object-contain rounded-lg bg-white"
@@ -220,7 +226,7 @@ const Artists = () => {
           ) : (
             <>
               <Image
-                src={work.image[0] || "/noimage.jpg"}
+                src={getWebpImageUrl(work.image[0])}
                 alt="bestofweek"
                 fill
                 className="object-contain rounded-lg bg-white"
