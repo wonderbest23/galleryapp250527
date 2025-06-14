@@ -236,9 +236,13 @@ const Success = () => {
           <div className="flex flex-row items-center text-sm justify-center gap-x-1 mt-2">
             {isArtist ? (
               profile?.isArtistApproval === false ? (
-                <span className="px-4 py-2 rounded-lg border border-yellow-400 bg-yellow-50 text-yellow-700 font-semibold flex items-center gap-2 cursor-not-allowed select-none">
+                <button
+                  className="px-4 py-2 rounded-lg border border-yellow-400 bg-yellow-50 text-yellow-700 font-semibold flex items-center gap-2 cursor-not-allowed select-none"
+                  type="button"
+                  disabled
+                >
                   <FaClock className="text-yellow-500 text-sm animate-pulse" /> 승인 대기중
-                </span>
+                </button>
               ) : (
                 <button
                   className="px-4 py-2 rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-semibold flex items-center gap-2 shadow-sm hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300"
