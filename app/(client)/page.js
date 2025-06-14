@@ -157,8 +157,8 @@ export default function Home() {
       <div className="flex flex-row gap-4 pt-4 pb-[80px] bg-[hsl(0,0%,93%)] w-full justify-center items-center">
         <div className="w-[30%] h-full flex justify-center items-center ">
           <Image
-            src="/footer/footer.png"
-            alt="noimage"
+            src="/logo/logomain.png"
+            alt="logo"
             width={37}
             height={37}
           />
