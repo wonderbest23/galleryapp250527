@@ -113,7 +113,7 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
           return;
         }
 
-        setProducts(data || []);
+        setProducts((data || []).filter(item => item.artist_id?.isArtistApproval === true));
         setProductsLoading(false);
       } catch (error) {
         console.log('상품 데이터 로딩 오류:', error);

@@ -195,7 +195,7 @@ export default function TopArts() {
         return;
       }
       
-      setArtItems(data);
+      setArtItems((data || []).filter(item => item.artist_id?.isArtistApproval === true));
     } catch (error) {
       console.error("Error:", error);
     } finally {

@@ -74,11 +74,10 @@ const Artists = () => {
         const { data: worksData, error: worksError } = await supabase
           .from("product")
           .select("*, artist_id(*)")
-          .order("created_at", { ascending: false })
-          .limit(5);
+          .order("created_at", { ascending: false });
 
         if (worksError) throw worksError;
-        setWorks(worksData);
+        setWorks((worksData || []).filter(item => item.artist_id?.isArtistApproval === true));
 
         // 추천 작품 5개 가져오기
         const { data: recommendedData, error: recommendedError } =
@@ -89,7 +88,7 @@ const Artists = () => {
             .limit(5);
 
         if (recommendedError) throw recommendedError;
-        setRecommendedWorks(recommendedData);
+        setRecommendedWorks((recommendedData || []).filter(item => item.artist_id?.isArtistApproval === true));
 
         setIsLoading(false);
       } catch (error) {
