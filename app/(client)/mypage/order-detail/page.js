@@ -196,7 +196,7 @@ function OrderDetailContent() {
                 ticketStatus === 'used' ? (
                   <>
                     <FaCircleCheck className="text-blue-500 text-[32px] mb-1" />
-                    <div className="text-[15px] text-blue-700 font-extrabold text-center mb-1">이미 사용완료된 티켓입니다.</div>
+                    <div className="text-[15px] text-red-500 font-extrabold text-center mb-1">이미 사용완료된 티켓입니다.</div>
                     {usedAt && (
                       <div className="text-[12px] text-gray-700 font-semibold mb-1">입장시간: {dayjs(usedAt).format('YYYY-MM-DD HH:mm:ss')}</div>
                     )}
@@ -210,17 +210,11 @@ function OrderDetailContent() {
               )}
             </div>
           </div>
+          {/* 교환 및 반품 안내문구: 카드 아래에 위치 */}
+          <div className="w-full flex justify-center items-center py-4">
+            <div className="text-center text-xs text-gray-600 font-medium cursor-pointer underline" onClick={() => alert('교환 및 반품 안내\n\n관람 7일 전까지 취소 시: 전액 환불 가능\n관람 당일 취소: 환불 불가\n날짜 및 시간 변경은 관람 7일 전까지 1회에 한하여 가능합니다.\n자세한 내용은 고객센터로 문의해 주세요.')}>교환 및 반품</div>
+          </div>
         </div>
-      </div>
-      {/* 하단 버튼 */}
-      <div className="w-full flex flex-col items-center mb-1 mt-1">
-        <Button
-          onPress={() => router.back()}
-          className="w-[98%] font-bold bg-white border-2 border-black text-black text-[15px] py-2"
-          size="md"
-        >
-          돌아가기
-        </Button>
       </div>
     </div>
   );

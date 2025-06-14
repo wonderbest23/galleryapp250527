@@ -12,7 +12,7 @@ import dayjs from "dayjs";
 const OrderHistory = ({ user }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [visibleOrders, setVisibleOrders] = useState(3);
+  const [visibleOrders, setVisibleOrders] = useState(4);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -159,6 +159,17 @@ const OrderHistory = ({ user }) => {
               </Card>
             </Link>
           ))}
+          {sortedOrders.length > visibleOrders && (
+            <div className="flex justify-center w-full mt-2">
+              <button
+                className="text-gray-500 text-2xl font-bold hover:cursor-pointer px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200"
+                onClick={() => setVisibleOrders(visibleOrders + 4)}
+                aria-label="더보기"
+              >
+                ...
+              </button>
+            </div>
+          )}
         </div>
 
         {orders.length > visibleOrders && (

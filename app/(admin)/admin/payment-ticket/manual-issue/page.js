@@ -15,6 +15,7 @@ export default function ManualTicketIssuePage() {
   const [message, setMessage] = useState("");
   const [tickets, setTickets] = useState([]);
   const [filterExhibition, setFilterExhibition] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
   const supabase = createClient();
 
   useEffect(() => {
@@ -141,8 +142,25 @@ export default function ManualTicketIssuePage() {
           <h2 className="text-lg font-bold">발급 내역</h2>
           <Button size="sm" color="primary" onClick={handleExcelDownload}>엑셀 다운로드</Button>
         </div>
-        {/* 전시회별 필터 드롭다운 */}
-        <div className="mb-2 max-w-xs">
+        <div className="flex gap-2 mb-2">
+          <Select
+            label="상태별 검색"
+            selectedKeys={filterStatus ? new Set([filterStatus]) : new Set([""])}
+            onSelectionChange={keys => setFilterStatus(keys.values().next().value || "")}
+            renderValue={() => {
+              if (!filterStatus) return "전체";
+              if (filterStatus === "success") return "success";
+              if (filterStatus === "used") return "used";
+              if (filterStatus === "cancel") return "cancel";
+              return "전체";
+            }}
+            className="max-w-xs"
+          >
+            <SelectItem key="" value="">전체</SelectItem>
+            <SelectItem key="success" value="success">success</SelectItem>
+            <SelectItem key="used" value="used">used</SelectItem>
+            <SelectItem key="cancel" value="cancel">cancel</SelectItem>
+          </Select>
           <Select
             label="전시회별 검색"
             selectedKeys={filterExhibition ? new Set([String(filterExhibition)]) : new Set([""])}
@@ -152,6 +170,7 @@ export default function ManualTicketIssuePage() {
               const e = exhibitions.find(e => String(e.id) === String(filterExhibition));
               return e ? `${e.contents} (${e.id})` : "전체";
             }}
+            className="max-w-xs"
           >
             <SelectItem key="" value="">전체</SelectItem>
             {exhibitions.map(e => (
@@ -177,7 +196,8 @@ export default function ManualTicketIssuePage() {
             </thead>
             <tbody>
               {tickets
-                .filter(t => !filterExhibition || String(t.exhibition_id) === String(filterExhibition))
+                .filter(t => (!filterExhibition || String(t.exhibition_id) === String(filterExhibition)))
+                .filter(t => (!filterStatus || t.status === filterStatus))
                 .map(t => {
                   const user = users.find(u => u.id === t.user_id);
                   return (
@@ -195,7 +215,7 @@ export default function ManualTicketIssuePage() {
                     </tr>
                   );
                 })}
-              {tickets.filter(t => !filterExhibition || String(t.exhibition_id) === String(filterExhibition)).length === 0 && (
+              {tickets.filter(t => (!filterExhibition || String(t.exhibition_id) === String(filterExhibition))).filter(t => (!filterStatus || t.status === filterStatus)).length === 0 && (
                 <tr><td colSpan={8} className="text-center p-4">발급 내역이 없습니다.</td></tr>
               )}
             </tbody>
