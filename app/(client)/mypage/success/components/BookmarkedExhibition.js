@@ -219,14 +219,14 @@ export default function BookmarkedExhibition({ user, alarmExhibition }) {
                     <div className="flex flex-col w-full min-w-0">
                       <div className="flex flex-row justify-between items-start">
                         <div className="flex flex-col min-w-0">
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-500 sm:text-xs text-[11px] max-[390px]:text-[10px]">
                             {item.type === 'gallery' 
                               ? '갤러리' 
                               : item.type === 'product'
                                 ? '작품'
                                 : '전시회'}
                           </div>
-                          <div className="text-lg font-bold truncate">
+                          <div className="text-lg font-bold truncate sm:text-lg text-[13px] max-[390px]:text-[12px]">
                             {item.type === 'gallery' 
                               ? item.name 
                               : item.type === 'product'
@@ -240,7 +240,7 @@ export default function BookmarkedExhibition({ user, alarmExhibition }) {
                         orientation="horizontal"
                         className="bg-gray-300"
                       />
-                      <div className="text-xs flex flex-col my-2">
+                      <div className="text-xs flex flex-col my-2 sm:text-xs text-[11px] max-[390px]:text-[10px]">
                         {item.type === 'gallery' ? (
                           <div className="flex flex-row gap-1 items-center">
                             <IoMdPin className="w-3 h-3 text-[#007AFF]" />
@@ -249,7 +249,7 @@ export default function BookmarkedExhibition({ user, alarmExhibition }) {
                         ) : item.type === 'product' ? (
                           <>
                             <div className="flex flex-row gap-1 items-center ">
-                            <FaMoneyBillWaveAlt className="w-3 h-3 text-[#007AFF]" />
+                              <FaMoneyBillWaveAlt className="w-3 h-3 text-[#007AFF]" />
                               ₩{formatPrice(item.price)}원
                             </div>
                             
