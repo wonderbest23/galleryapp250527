@@ -9,6 +9,12 @@ import "slick-carousel/slick/slick-theme.css";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 
+function getWebpImageUrl(url) {
+  if (!url) return "/noimage.jpg";
+  if (url.endsWith(".webp")) return url;
+  return url.replace(/\.(jpg|jpeg|png)$/i, ".webp");
+}
+
 export default function LowerCarousel() {
   const router = useRouter();
   const [artItems, setArtItems] = useState([]);
@@ -127,7 +133,7 @@ export default function LowerCarousel() {
                 className="relative w-[127px] h-[150px] mx-auto"
               >
                 <Image
-                  src={item.image[0]}
+                  src={getWebpImageUrl(item.image[0])}
                   alt={item.name}
                   className="w-full h-full object-contain bg-white rounded-2xl"
                   fill
