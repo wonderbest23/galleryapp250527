@@ -120,12 +120,11 @@ export default function LowerCarousel() {
   }
 
   return (
-    <div className="w-full overflow-hidden my-4">
-      <Slider {...settings} ref={sliderRef}>
+    <div className="w-full overflow-x-auto scrollbar-hide my-4">
+      <div className="flex flex-row gap-4">
         {artItems.map((item) => (
-          <div key={item.id} className="pr-4">
+          <div key={item.id} className="pr-4 min-w-[127px]">
             <Card 
-              
               className="cursor-pointer rounded-xl overflow-hidden shadow-sm h-full flex flex-col"
             >
               <div 
@@ -150,7 +149,7 @@ export default function LowerCarousel() {
             </Card>
           </div>
         ))}
-      </Slider>
+      </div>
     </div>
   );
 }

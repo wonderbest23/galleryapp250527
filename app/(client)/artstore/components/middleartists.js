@@ -380,42 +380,44 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
     <div className="w-full max-w-full overflow-hidden my-4">
       <div className="w-full">
         {/* 상단 3개 카드 - 작가 프로필 */}
-        <div className="flex flex-row gap-4 mb-4 overflow-x-auto scrollbar-hide w-full">
-          {isLoading ? (
-            // 로딩 중일 때 스켈레톤 UI 표시
-            Array(5).fill().map((_, index) => (
-              <div key={`skeleton-${index}`} className="min-w-[100px]">
-                <SkeletonCard />
-              </div>
-            ))
-          ) : (
-            artists.map((artist, index) => (
-              <Card 
-                key={`artist-${artist.id}`} 
-                className="min-w-[100px] m-1" 
-                shadow="sm" 
-                radius="lg"
-                isPressable
-                onPress={() => router.push(`/artist/${artist.id}`)}
-              >
-                <CardBody className="p-0 relative w-full aspect-square">
-                  <Image 
-                    src={artist.avatar_url || "/noimage.jpg"} 
-                    alt="아티스트 이미지" 
-                    className="w-full h-full object-cover bg-white" 
-                    fill 
-                  />
-                </CardBody>
-                <CardFooter className="flex justify-center">  
-                  <div className="flex flex-row items-center justify-between w-full">
-                    <p className="text-[14px] font-medium line-clamp-1 text-[#606060] text-center w-full">
-                      {artist.artist_name || artist.full_name || "작가이름"}
-                    </p>
-                  </div>
-                </CardFooter>
-              </Card>
-            ))
-          )}
+        <div className="w-full overflow-x-auto scrollbar-hide py-2">
+          <div className="flex flex-row gap-4">
+            {isLoading ? (
+              Array(5).fill().map((_, index) => (
+                <div key={`skeleton-${index}`} className="min-w-[100px]">
+                  <SkeletonCard />
+                </div>
+              ))
+            ) : (
+              artists.map((artist, index) => (
+                <div key={`artist-${artist.id}`} className="min-w-[100px]">
+                  <Card 
+                    className="min-w-[100px] m-1" 
+                    shadow="sm" 
+                    radius="lg"
+                    isPressable
+                    onPress={() => router.push(`/artist/${artist.id}`)}
+                  >
+                    <CardBody className="p-0 relative w-full aspect-square">
+                      <Image 
+                        src={artist.avatar_url || "/noimage.jpg"} 
+                        alt="아티스트 이미지" 
+                        className="w-full h-full object-cover bg-white" 
+                        fill 
+                      />
+                    </CardBody>
+                    <CardFooter className="flex justify-center">  
+                      <div className="flex flex-row items-center justify-between w-full">
+                        <p className="text-[14px] font-medium line-clamp-1 text-[#606060] text-center w-full">
+                          {artist.artist_name || artist.full_name || "작가이름"}
+                        </p>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                </div>
+              ))
+            )}
+          </div>
         </div>
         
         <Divider orientation="horizontal" className="my-4" />
