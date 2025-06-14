@@ -263,7 +263,7 @@ export default function MagazineList() {
       });
 
       // 성공 후 리다이렉트 (예: 작가 프로필 페이지로)
-      router.push('/register/waiting');
+      router.push('/mypage/success');
       
     } catch (error) {
       console.log('작가 등록 오류:', error);
