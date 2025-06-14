@@ -241,6 +241,7 @@ export default function MagazineList() {
         .from('profiles')
         .update({
           isArtist: true,
+          isArtistApproval: false,
           artist_name: artistName,
           artist_phone: artistPhone,
           artist_intro: artistIntro,
@@ -262,7 +263,7 @@ export default function MagazineList() {
       });
 
       // 성공 후 리다이렉트 (예: 작가 프로필 페이지로)
-      router.push('/mypage/success');
+      router.push('/register/waiting');
       
     } catch (error) {
       console.log('작가 등록 오류:', error);
