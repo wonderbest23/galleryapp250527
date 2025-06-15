@@ -143,7 +143,7 @@ function OrderDetailContent() {
   }
 
   return (
-    <div className="flex flex-col min-h-[100dvh] relative bg-white mx-1">
+    <div className="flex flex-col min-h-[100dvh] relative bg-white mx-1 no-copy-bg">
       {/* 상단바: ← 주문상세 */}
       <div className="w-full flex items-center justify-start px-2 py-2 bg-white z-10">
         <Button
