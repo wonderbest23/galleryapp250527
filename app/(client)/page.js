@@ -154,7 +154,9 @@ export default function Home() {
 
       {/* Magazine Section */}
       <MagazineCarousel />
-      <div className="flex flex-row gap-4 pt-4 pb-[80px] bg-[hsl(0,0%,93%)] w-full justify-center items-center">
+      {/* 매거진과 푸터 사이 넉넉한 흰색 여백 */}
+      <div style={{ height: '48px', background: '#fff', width: '100%' }} />
+      <div className="flex flex-row gap-4 pt-4 pb-[32px] bg-[hsl(0,0%,93%)] w-full justify-center items-center">
         <div className="w-[30%] h-full flex justify-center items-center ">
           <Image
             src="/logo/logomain.png"
@@ -191,6 +193,8 @@ export default function Home() {
           </div>
         </div>
       </div>
+      {/* 푸터와 하단 네비게이션 사이 넉넉한 여백(흰색) */}
+      <div style={{ height: '32px', background: '#fff', width: '100%' }} />
 
       {/* 이용약관 모달 */}
       <Modal
