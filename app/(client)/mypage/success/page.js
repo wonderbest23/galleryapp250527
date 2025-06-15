@@ -151,13 +151,9 @@ const Success = () => {
     try {
       // 카카오 로그아웃 확인
       if (window.Kakao && window.Kakao.Auth.getAccessToken()) {
-        // 카카오 초기화 확인
         if (!window.Kakao.isInitialized()) {
-          // 카카오 초기화 (KAKAO_APP_KEY는 환경 변수나 설정으로 관리해야 합니다)
           window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_APP_KEY);
         }
-
-        // 카카오 로그아웃
         window.Kakao.Auth.logout(() => {
           console.log("카카오 로그아웃 완료");
         });
@@ -165,7 +161,8 @@ const Success = () => {
 
       // Supabase 로그아웃
       await createClient().auth.signOut();
-      router.push("/");
+      setUser(null); // 상태 초기화
+      window.location.href = "/"; // 강제 새로고침
     } catch (error) {
       console.error("로그아웃 중 오류가 발생했습니다:", error);
     }
