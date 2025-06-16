@@ -2,6 +2,14 @@
 import React, { useState } from "react";
 import { Card, CardBody } from "@heroui/react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+
+// webp 변환 함수 (다른 페이지와 동일)
+function getWebpImageUrl(url) {
+  if (!url) return "/noimage.jpg";
+  if (url.endsWith(".webp")) return url;
+  return url.replace(/\.(jpg|jpeg|png)$/i, ".webp");
+}
 
 // 굵은 화살표 SVG 컴포넌트
 function ThickArrow({ direction = 'left', size = 32 }) {
@@ -22,6 +30,9 @@ export default function MagazineCarousel({magazine}) {
   const [touchEnd, setTouchEnd] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
+  // 모달 내 스와이프 상태
+  const [modalTouchStart, setModalTouchStart] = useState(0);
+  const [modalTouchEnd, setModalTouchEnd] = useState(0);
   // magazine.photo 배열에서 슬라이드 생성
   const slides = magazine?.photo || [];
 
@@ -64,17 +75,24 @@ export default function MagazineCarousel({magazine}) {
           <CardBody className="p-0">
             
               <div className="relative w-full h-[40vh] md:h-[60vh] overflow-hidden">
-                <img
-                  src={slides[currentSlide]?.url || `https://picsum.photos/800/400?random=${currentSlide}`}
-                  alt={`${magazine?.title || ''} - 이미지 ${currentSlide + 1}`}
-                  className="object-contain w-full h-full"
-                  draggable={false}
-                  onClick={() => {
-                    setModalIndex(currentSlide);
-                    setModalOpen(true);
-                  }}
-                  style={{ cursor: 'zoom-in' }}
-                />
+                <AnimatePresence initial={false} custom={currentSlide}>
+                  <motion.img
+                    key={currentSlide}
+                    src={getWebpImageUrl(slides[currentSlide]?.url) || `https://picsum.photos/800/400?random=${currentSlide}`}
+                    alt={`${magazine?.title || ''} - 이미지 ${currentSlide + 1}`}
+                    className="object-contain w-full h-full"
+                    draggable={false}
+                    onClick={() => {
+                      setModalIndex(currentSlide);
+                      setModalOpen(true);
+                    }}
+                    style={{ cursor: 'zoom-in' }}
+                    initial={{ x: 100, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -100, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                </AnimatePresence>
               </div>
             
           </CardBody>
@@ -128,16 +146,33 @@ export default function MagazineCarousel({magazine}) {
             </button>
           )}
           <div
-            className="max-w-full max-h-full overflow-auto"
+            className="flex items-center justify-center w-full h-[90vh] max-h-[90vh] overflow-hidden"
             onClick={e => e.stopPropagation()}
+            onTouchStart={e => setModalTouchStart(e.touches[0].clientX)}
+            onTouchMove={e => setModalTouchEnd(e.touches[0].clientX)}
+            onTouchEnd={() => {
+              const distance = modalTouchStart - modalTouchEnd;
+              if (distance > 50) {
+                setModalIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+              } else if (distance < -50) {
+                setModalIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+              }
+            }}
           >
-            <img
-              src={slides[modalIndex]?.url || `https://picsum.photos/800/400?random=${modalIndex}`}
-              alt="원본 이미지"
-              className="block max-w-full max-h-[90vh] mx-auto"
-              draggable={false}
-              style={{ cursor: 'zoom-out' }}
-            />
+            <AnimatePresence initial={false} custom={modalIndex}>
+              <motion.img
+                key={modalIndex}
+                src={getWebpImageUrl(slides[modalIndex]?.url) || `https://picsum.photos/800/400?random=${modalIndex}`}
+                alt="원본 이미지"
+                className="object-contain w-auto h-full max-h-[90vh] mx-auto"
+                draggable={false}
+                style={{ cursor: 'zoom-out' }}
+                initial={{ x: 100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -100, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+            </AnimatePresence>
           </div>
           {/* 우측 화살표 */}
           {slides.length > 1 && (
