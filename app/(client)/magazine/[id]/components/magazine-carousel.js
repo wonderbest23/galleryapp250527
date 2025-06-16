@@ -33,6 +33,7 @@ export default function MagazineCarousel({magazine}) {
   // 모달 내 스와이프 상태
   const [modalTouchStart, setModalTouchStart] = useState(0);
   const [modalTouchEnd, setModalTouchEnd] = useState(0);
+  const [zoomed, setZoomed] = useState(false);
   // magazine.photo 배열에서 슬라이드 생성
   const slides = magazine?.photo || [];
 
@@ -139,6 +140,7 @@ export default function MagazineCarousel({magazine}) {
               onClick={e => {
                 e.stopPropagation();
                 setModalIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+                setZoomed(false);
               }}
               aria-label="이전 이미지"
             >
@@ -154,8 +156,10 @@ export default function MagazineCarousel({magazine}) {
               const distance = modalTouchStart - modalTouchEnd;
               if (distance > 50) {
                 setModalIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+                setZoomed(false);
               } else if (distance < -50) {
                 setModalIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+                setZoomed(false);
               }
             }}
           >
@@ -164,9 +168,10 @@ export default function MagazineCarousel({magazine}) {
                 key={modalIndex}
                 src={getWebpImageUrl(slides[modalIndex]?.url) || `https://picsum.photos/800/400?random=${modalIndex}`}
                 alt="원본 이미지"
-                className="object-contain w-auto h-full max-h-[90vh] mx-auto"
+                className={`object-contain w-auto h-full max-h-[90vh] mx-auto transition-transform duration-300 ${zoomed ? 'scale-150' : 'scale-100'}`}
                 draggable={false}
-                style={{ cursor: 'zoom-out' }}
+                style={{ cursor: zoomed ? 'zoom-out' : 'zoom-in' }}
+                onClick={() => setZoomed(z => !z)}
                 initial={{ x: 100, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -100, opacity: 0 }}
@@ -181,6 +186,7 @@ export default function MagazineCarousel({magazine}) {
               onClick={e => {
                 e.stopPropagation();
                 setModalIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+                setZoomed(false);
               }}
               aria-label="다음 이미지"
             >
