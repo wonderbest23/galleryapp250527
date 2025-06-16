@@ -86,7 +86,7 @@ const Success = () => {
             .from('profiles')
             .select('*')
             .eq('id', currentUser.id)
-            .single();
+            .single();  
           if (profileData) {
             setIsArtist(profileData.isArtist);
             setProfile(profileData);
@@ -175,10 +175,96 @@ const Success = () => {
     setAlarmExhibition(null);
   };
 
-  // 개인정보 처리방침 내용 예시 (실제 내용으로 교체)
+  // 개인정보 처리방침 내용 최신화
   const privacyPolicy = `
-    <h3>개인정보 처리방침</h3>
-    <p>여기에 개인정보 처리방침 내용을 입력하세요.</p>
+    <h3>■ 제1조 (개인정보 수집 항목 및 수집 방법)</h3>
+    <p>회사는 회원가입 및 카카오 로그인 연동을 통해 다음과 같은 개인정보를 수집합니다.</p>
+    <ol>
+      <li><b>필수 수집 항목 (회원가입 시 수집)</b>
+        <ul>
+          <li>이메일 주소</li>
+          <li>카카오계정 식별자(UID)</li>
+          <li>닉네임</li>
+          <li>프로필 이미지</li>
+          <li>이름</li>
+          <li>성별</li>
+          <li>출생연도</li>
+          <li>카카오계정 전화번호</li>
+        </ul>
+        <p>※ 위 항목은 회원가입 시점에 이용자 동의를 통해 수집되며, 서비스 제공을 위한 최소한의 정보입니다.</p>
+      </li>
+      <li><b>선택 수집 항목 (서비스 이용 중 추가 수집될 수 있음)</b>
+        <ul>
+          <li>생년월일</li>
+          <li>휴대폰 번호</li>
+          <li>관심 전시/작품 분야</li>
+        </ul>
+      </li>
+      <li><b>수집 방법</b>
+        <ul>
+          <li>카카오 로그인 연동 시 API를 통해 자동 수집</li>
+          <li>홈페이지 회원가입 양식 작성 시</li>
+          <li>서비스 이용 중 이용자 자발적 입력</li>
+        </ul>
+      </li>
+    </ol>
+    <h3>■ 제2조 (개인정보 수집 및 이용 목적)</h3>
+    <p>회사는 수집한 개인정보를 다음 목적에 따라 이용합니다.</p>
+    <ol>
+      <li><b>회원관리</b>
+        <ul>
+          <li>회원가입 의사 확인 및 본인 확인</li>
+          <li>부정이용 방지 및 이용자 식별</li>
+        </ul>
+      </li>
+      <li><b>기본 서비스 제공</b>
+        <ul>
+          <li>전시 예약, 티켓 발급 등 기본 기능 제공</li>
+          <li>전시 관람 정보 기록 및 조회 기능</li>
+        </ul>
+      </li>
+      <li><b>맞춤형 콘텐츠 및 알림 서비스</b>
+        <p>※ 아래 항목은 이용자 선택 동의 시 별도로 수집 및 활용됩니다.</p>
+        <ul>
+          <li>성별, 출생연도 기반 관심 전시 추천</li>
+          <li>카카오 메시지를 통한 전시 알림, 티켓 관련 안내</li>
+          <li>구매 이력 기반 전시 추천 및 알림 발송</li>
+          <li>이벤트 정보 제공 및 마케팅 메시지 발송</li>
+        </ul>
+      </li>
+    </ol>
+    <h3>■ 제3조 (개인정보 제3자 제공)</h3>
+    <p>회사는 원칙적으로 이용자의 사전 동의 없이 개인정보를 외부에 제공하지 않으며, 다음의 경우 예외로 합니다.</p>
+    <ul>
+      <li>법령에 근거한 요청이 있을 경우</li>
+      <li>이용자가 사전에 명시적으로 동의한 경우</li>
+    </ul>
+    <h3>■ 제4조 (개인정보 보유 및 이용기간)</h3>
+    <p>수집된 개인정보는 회원 탈퇴 시 또는 수집 목적 달성 시까지 보관하며, 관련 법령에 따라 아래와 같이 예외적으로 보관할 수 있습니다.</p>
+    <ul>
+      <li>계약 및 청약철회 기록: 5년</li>
+      <li>결제 및 재화 제공 기록: 5년</li>
+      <li>소비자 불만 또는 분쟁처리 기록: 3년</li>
+    </ul>
+    <h3>■ 제5조 (개인정보 처리 위탁)</h3>
+    <p>회사는 서비스 운영을 위해 다음과 같이 개인정보 처리 업무를 외부에 위탁할 수 있습니다.</p>
+    <ul>
+      <li>카카오(주): 카카오 로그인 및 메시지 API</li>
+      <li>Supabase Inc.: 사용자 데이터베이스 및 인증 관리</li>
+      <li>Amazon Web Services: 클라우드 서버 운영 및 백업</li>
+    </ul>
+    <h3>■ 제6조 (이용자의 권리 및 행사 방법)</h3>
+    <p>이용자는 언제든지 자신의 개인정보를 조회하거나 수정할 수 있으며, 회원 탈퇴 및 개인정보 삭제를 요청할 수 있습니다.<br />권리 행사는 이메일 또는 고객센터를 통해 가능합니다.</p>
+    <h3>■ 제7조 (쿠키의 설치 및 거부)</h3>
+    <p>회사는 서비스 개선을 위해 쿠키를 사용할 수 있으며, 이용자는 브라우저 설정을 통해 이를 거부할 수 있습니다.</p>
+    <h3>■ 제8조 (개인정보 보호책임자)</h3>
+    <ul>
+      <li>성명: 김주홍</li>
+      <li>이메일: support@artandbridge.com</li>
+      <li>담당 업무: 개인정보 보호 및 민원 처리</li>
+    </ul>
+    <h3>■ 부칙</h3>
+    <p>본 개인정보 처리방침은 2025년 6월 13일부터 시행됩니다.</p>
   `;
 
   if (loading) {
@@ -242,7 +328,7 @@ const Success = () => {
               ) : (
                 <button
                   className="px-4 py-2 rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-semibold flex items-center gap-2 shadow-sm hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  onClick={() => router.push("/register")}
+              onClick={() => router.push("/register")}
                   type="button"
                 >
                   <FaCheckCircle className="text-blue-500 text-sm" /> 작가 정보 수정하기
