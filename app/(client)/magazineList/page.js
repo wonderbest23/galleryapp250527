@@ -87,7 +87,7 @@ export default function MagazineList() {
             >
               <FaArrowLeft className="text-xl" />
             </Button>
-            <h2 className="text-lg font-bold text-center flex-grow">매거진</h2>
+            <h2 className="text-lg font-bold text-center flex-grow">전시나그네 매거진</h2>
             <div className="w-10"></div>
           </div>
           {/* 1. 가장 최근 매거진(대형 카드) */}
