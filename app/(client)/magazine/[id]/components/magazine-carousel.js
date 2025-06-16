@@ -132,6 +132,13 @@ export default function MagazineCarousel({magazine}) {
         <div
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
           onClick={() => setModalOpen(false)}
+          onTouchStart={e => setModalTouchStart(e.touches[0].clientX)}
+          onTouchEnd={e => {
+            // 터치 시작/끝 위치 차이가 작으면(드래그가 아니면) 닫기
+            if (Math.abs(modalTouchStart - e.changedTouches[0].clientX) < 10) {
+              setModalOpen(false);
+            }
+          }}
         >
           {/* 좌측 화살표 */}
           {slides.length > 1 && (
