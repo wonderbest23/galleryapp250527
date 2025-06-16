@@ -15,6 +15,7 @@ function MyPageContent() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [policyTitle, setPolicyTitle] = useState("");
   const [policyContent, setPolicyContent] = useState("");
+  const [showPolicy, setShowPolicy] = useState(false);
   // 개인정보 처리방침 내용 예시 (실제 내용으로 교체)
   const privacyPolicy = `
     <h3>■ 제1조 (개인정보 수집 항목 및 수집 방법)</h3>
@@ -143,6 +144,24 @@ function MyPageContent() {
     }
   };
 
+  // 카카오 로그인 버튼 클릭 시 최초 1회만 개인정보 처리방침 동의 팝업
+  const handleKakaoLoginButton = () => {
+    if (typeof window !== "undefined" && !localStorage.getItem("policyAgreed")) {
+      setShowPolicy(true);
+    } else {
+      handleKakaoLogin();
+    }
+  };
+
+  // 개인정보 처리방침 팝업에서 확인 버튼 클릭 시
+  const handlePolicyConfirm = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("policyAgreed", "true");
+    }
+    setShowPolicy(false);
+    handleKakaoLogin();
+  };
+
   return (
     <div className="w-full flex justify-center items-centerh-full">
       <div className="w-full flex flex-col justify-center items-center h-[90vh] px-4">
@@ -157,7 +176,7 @@ function MyPageContent() {
         </div>
         <Button
           className="w-full flex rounded-none items-center justify-center gap-2 bg-[#FEE500] text-black font-medium py-2 hover:bg-[#F6D33F] transition-colors"
-          onPress={handleKakaoLogin}
+          onPress={handleKakaoLoginButton}
           isDisabled={loading}
         >
           {loading ? (
@@ -219,6 +238,18 @@ function MyPageContent() {
                 </ModalFooter>
               </>
             )}
+          </ModalContent>
+        </Modal>
+        {/* 개인정보 처리방침 최초 1회 동의용 팝업 */}
+        <Modal isOpen={showPolicy} onOpenChange={setShowPolicy} size="xs">
+          <ModalContent className="max-w-xs">
+            <ModalHeader className="text-xs">개인정보 처리방침</ModalHeader>
+            <ModalBody className="max-h-[40vh] overflow-y-auto text-xs">
+              <div dangerouslySetInnerHTML={{ __html: privacyPolicy }} />
+            </ModalBody>
+            <ModalFooter>
+              <Button color="primary" size="sm" onPress={handlePolicyConfirm}>확인</Button>
+            </ModalFooter>
           </ModalContent>
         </Modal>
       </div>
