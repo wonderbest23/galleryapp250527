@@ -145,6 +145,7 @@ export function MagazineList({
           <TableColumn className="w-1/4">제목</TableColumn>
           <TableColumn className="w-1/4">부제목</TableColumn>
           <TableColumn className="w-1/4">내용</TableColumn>
+          <TableColumn className="w-1/4">작성일</TableColumn>
         </TableHeader>
         <TableBody>
           {magazines.map((magazine) => (
@@ -153,6 +154,9 @@ export function MagazineList({
               <TableCell>{magazine.subtitle}</TableCell>
               <TableCell className="overflow-hidden whitespace-nowrap text-ellipsis max-w-[200px]" title={magazine.content}>
                 {magazine.contents}
+              </TableCell>
+              <TableCell>
+                {magazine.created_at ? new Date(magazine.created_at).toLocaleString("ko-KR") : "-"}
               </TableCell>
             </TableRow>
           ))}

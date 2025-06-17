@@ -29,6 +29,7 @@ export function MagazineDetail({
     subtitle: magazine.subtitle || "",
     photos: magazine.photos || magazine.photo || [{ url: "" }],
     contents: magazine.contents || "",
+    created_at: magazine.created_at || "",
   });
   const [imageUploading, setImageUploading] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState(0);
@@ -57,6 +58,7 @@ export function MagazineDetail({
       // photo와 photos 모두 확인하여 처리 (데이터베이스에는 photo로 저장되므로)
       photos: magazine.photos || magazine.photo || [{ url: "" }],
       contents: magazine.contents || "",
+      created_at: magazine.created_at || "",
     });
 
     // Froala 에디터 내용도 함께 업데이트
@@ -157,6 +159,7 @@ export function MagazineDetail({
             subtitle: editedMagazine.subtitle || "",
             contents: editedMagazine.contents || "",
             photo: filteredPhotos.length > 0 ? filteredPhotos : null,
+            created_at: editedMagazine.created_at || null,
           },
         ]).select();
 
@@ -186,6 +189,7 @@ export function MagazineDetail({
             subtitle: editedMagazine.subtitle || "",
             contents: editedMagazine.contents,
             photo: filteredPhotos.length > 0 ? filteredPhotos : null,
+            created_at: editedMagazine.created_at || null,
           })
           .eq("id", editedMagazine.id);
 
@@ -365,6 +369,14 @@ export function MagazineDetail({
           label="부제목"
           value={editedMagazine.subtitle || ''}
           onValueChange={(value) => setEditedMagazine({...editedMagazine, subtitle: value})}
+          className="md:col-span-2"
+        />
+
+        <Input
+          label="작성일"
+          type="datetime-local"
+          value={editedMagazine.created_at ? editedMagazine.created_at.slice(0, 16) : ""}
+          onValueChange={value => setEditedMagazine({ ...editedMagazine, created_at: value })}
           className="md:col-span-2"
         />
 
