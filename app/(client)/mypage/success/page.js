@@ -16,7 +16,7 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@heroui/react";
-import { FaChevronLeft, FaFileContract, FaCheckCircle, FaClock } from "react-icons/fa";
+import { FaChevronLeft, FaFileContract, FaCheckCircle, FaClock, FaUserSlash } from "react-icons/fa";
 import { BiSupport } from "react-icons/bi";
 import { FiLogOut } from "react-icons/fi";
 import { useRouter } from "next/navigation";
@@ -51,6 +51,8 @@ const Success = () => {
   const [profile, setProfile] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [alarmExhibition, setAlarmExhibition] = useState(null);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
 
   const getPolicy = async () => {
     const supabase = createClient();
@@ -190,6 +192,36 @@ const Success = () => {
     await createClient().from("notification").delete().eq("id", notifications[0].id);
     setNotifications([]);
     setAlarmExhibition(null);
+  };
+
+  // 카카오 연결 해제 및 로그아웃
+  const handleWithdraw = async () => {
+    setWithdrawLoading(true);
+    try {
+      // 카카오 연결 해제
+      if (window.Kakao && window.Kakao.Auth.getAccessToken()) {
+        if (!window.Kakao.isInitialized()) {
+          window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_APP_KEY);
+        }
+        await new Promise((resolve, reject) => {
+          window.Kakao.API.request({
+            url: '/v1/user/unlink',
+            success: function(res) { resolve(res); },
+            fail: function(err) { reject(err); }
+          });
+        });
+      }
+      // Supabase 로그아웃
+      await createClient().auth.signOut();
+      setUser(null);
+      window.location.href = "/";
+    } catch (error) {
+      alert("탈퇴 처리 중 오류가 발생했습니다. 다시 시도해 주세요.");
+      console.log(error);
+    } finally {
+      setWithdrawLoading(false);
+      setIsWithdrawOpen(false);
+    }
   };
 
   // 개인정보 처리방침 내용 최신화
@@ -462,16 +494,27 @@ const Success = () => {
           <FiLogOut className="text-gray-600" size={20} />
           <span>로그아웃</span>
         </div>
-        <span
-          className="text-xs text-gray-500 underline cursor-pointer text-center mt-2"
-          onClick={() => {
-            setTitle("개인정보 처리방침");
-            setContent(privacyPolicy);
-            onOpen();
-          }}
-        >
-          개인정보 처리방침
-        </span>
+        <Divider></Divider>
+        {/* 개인정보처리방침 & 탈퇴하기 나란히 */}
+        <div className="flex flex-row justify-center items-center gap-x-4 mt-2">
+          <span
+            className="text-xs text-gray-500 underline cursor-pointer text-center"
+            onClick={() => {
+              setTitle("개인정보 처리방침");
+              setContent(privacyPolicy);
+              onOpen();
+            }}
+          >
+            개인정보 처리방침
+          </span>
+          <span
+            className="text-xs text-gray-500 underline cursor-pointer text-center"
+            onClick={() => setIsWithdrawOpen(true)}
+            style={{ minWidth: '60px' }}
+          >
+            탈퇴하기
+          </span>
+        </div>
       </div>
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
@@ -487,6 +530,30 @@ const Success = () => {
               <ModalFooter>
                 <Button color="primary" onPress={onClose}>
                   확인
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+      {/* 탈퇴 동의 모달 */}
+      <Modal isOpen={isWithdrawOpen} onOpenChange={setIsWithdrawOpen}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1 text-red-600">정말 탈퇴하시겠습니까?</ModalHeader>
+              <ModalBody>
+                <div className="text-sm text-gray-700">
+                  탈퇴 시 모든 정보가 즉시 삭제되며, 카카오 계정 연동도 해제됩니다.<br/>
+                  <span className="text-red-500 font-bold">이 작업은 되돌릴 수 없습니다.</span>
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" isLoading={withdrawLoading} onPress={handleWithdraw}>
+                  동의하고 탈퇴
+                </Button>
+                <Button color="default" onPress={onClose} disabled={withdrawLoading}>
+                  취소
                 </Button>
               </ModalFooter>
             </>
