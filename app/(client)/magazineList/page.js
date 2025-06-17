@@ -87,7 +87,9 @@ export default function MagazineList() {
             >
               <FaArrowLeft className="text-xl" />
             </Button>
-            <h2 className="text-lg font-bold text-center flex-grow">전시나그네 매거진</h2>
+            <div className="flex items-center justify-center flex-grow gap-3">
+              <h2 className="text-lg font-bold text-center flex-grow">전시나그네 매거진</h2>
+            </div>
             <div className="w-10"></div>
           </div>
           {/* 1. 가장 최근 매거진(대형 카드) */}
@@ -123,12 +125,24 @@ export default function MagazineList() {
                 )}
                 <div className="text-lg font-bold mb-2 text-black leading-tight line-clamp-2 break-keep">{magazines[0].title}</div>
                 {magazines[0].subtitle && (
-                  <div className="text-sm text-gray-500 mb-2">{magazines[0].subtitle}</div>
+                  <span className="flex items-center text-sm text-gray-500 mb-2">
+                    {magazines[0].subtitle === '전시나그네' && (
+                      <span className="inline-block w-7 h-7 rounded-full bg-white shadow-lg mr-1 flex items-center justify-center">
+                        <img src="/imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-5 h-5 rounded-full object-cover" style={{margin: '2px'}} />
+                      </span>
+                    )}
+                    {magazines[0].subtitle}
+                  </span>
                 )}
                 <div className="text-xs text-gray-400">
                   {new Date(magazines[0].created_at).getFullYear()}년 {new Date(magazines[0].created_at).getMonth() + 1}월 {new Date(magazines[0].created_at).getDate()}일
                   {magazines[0].author && (
-                    <span> | by {magazines[0].author}</span>
+                    <span className="flex items-center gap-1">| by
+                      <span className="inline-block w-6 h-6 rounded-full overflow-hidden align-middle mr-1 ml-1 shadow">
+                        <img src="/imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-full h-full object-cover" />
+                      </span>
+                      {magazines[0].author}
+                    </span>
                   )}
                 </div>
               </div>
@@ -172,13 +186,25 @@ export default function MagazineList() {
                         <h3 className="text-[15px] font-bold text-black leading-tight line-clamp-2 break-keep">{item.title}</h3>
                         <div className="flex flex-row items-center gap-2">
                           {item.subtitle && (
-                            <span className="text-[12px] text-gray-500 truncate">{item.subtitle}</span>
+                            <span className="flex items-center text-[12px] text-gray-500 truncate">
+                              {item.subtitle === '전시나그네' && (
+                                <span className="inline-block w-7 h-7 rounded-full bg-white shadow-lg mr-1 flex items-center justify-center">
+                                  <img src="/imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-5 h-5 rounded-full object-cover" style={{margin: '2px'}} />
+                                </span>
+                              )}
+                              {item.subtitle}
+                            </span>
                           )}
                           <span className="text-[12px] text-gray-400">·</span>
                           <span className="text-[12px] text-gray-400 truncate">
                             {new Date(item.created_at).getFullYear()}년 {new Date(item.created_at).getMonth() + 1}월 {new Date(item.created_at).getDate()}일
                             {item.author && (
-                              <span> | by {item.author}</span>
+                              <span className="flex items-center gap-1">| by
+                                <span className="inline-block w-6 h-6 rounded-full overflow-hidden align-middle mr-1 ml-1 shadow">
+                                  <img src="/imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-full h-full object-cover" />
+                                </span>
+                                {item.author}
+                              </span>
                             )}
                           </span>
                         </div>
