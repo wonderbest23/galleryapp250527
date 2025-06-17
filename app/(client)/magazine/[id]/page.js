@@ -94,9 +94,11 @@ export default function page({params}) {
           className="text-[15px] font-medium text-gray-500 flex items-center"
         >
           {magazine.subtitle === '전시나그네' && (
-            <span className="inline-block w-7 h-7 rounded-full bg-white shadow-lg mr-1 flex items-center justify-center">
-              <img src="https://teaelrzxuigiocnukwha.supabase.co/storage/v1/object/public/notification//imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-5 h-5 rounded-full object-cover" style={{margin: '2px'}} />
-            </span>
+            <a href="https://www.instagram.com/exhibition_wanderer/" target="_blank" rel="noopener noreferrer">
+              <span className="inline-block w-7 h-7 rounded-full bg-white shadow-lg mr-1 flex items-center justify-center">
+                <img src="https://teaelrzxuigiocnukwha.supabase.co/storage/v1/object/public/notification//imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-5 h-5 rounded-full object-cover" style={{margin: '2px'}} />
+              </span>
+            </a>
           )}
           {magazine.subtitle}
         </motion.div>
