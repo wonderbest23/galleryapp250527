@@ -128,7 +128,7 @@ export default function MagazineList() {
                   <span className="flex items-center text-sm text-gray-500 mb-2">
                     {magazines[0].subtitle === '전시나그네' && (
                       <span className="inline-block w-7 h-7 rounded-full bg-white shadow-lg mr-1 flex items-center justify-center">
-                        <img src="/imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-5 h-5 rounded-full object-cover" style={{margin: '2px'}} />
+                        <img src="https://teaelrzxuigiocnukwha.supabase.co/storage/v1/object/public/notification//imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-5 h-5 rounded-full object-cover" style={{margin: '2px'}} />
                       </span>
                     )}
                     {magazines[0].subtitle}
@@ -139,7 +139,7 @@ export default function MagazineList() {
                   {magazines[0].author && (
                     <span className="flex items-center gap-1">| by
                       <span className="inline-block w-6 h-6 rounded-full overflow-hidden align-middle mr-1 ml-1 shadow">
-                        <img src="/imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-full h-full object-cover" />
+                        <img src="https://teaelrzxuigiocnukwha.supabase.co/storage/v1/object/public/notification//imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-full h-full object-cover" />
                       </span>
                       {magazines[0].author}
                     </span>
@@ -189,7 +189,7 @@ export default function MagazineList() {
                             <span className="flex items-center text-[12px] text-gray-500 truncate">
                               {item.subtitle === '전시나그네' && (
                                 <span className="inline-block w-7 h-7 rounded-full bg-white shadow-lg mr-1 flex items-center justify-center">
-                                  <img src="/imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-5 h-5 rounded-full object-cover" style={{margin: '2px'}} />
+                                  <img src="https://teaelrzxuigiocnukwha.supabase.co/storage/v1/object/public/notification//imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-5 h-5 rounded-full object-cover" style={{margin: '2px'}} />
                                 </span>
                               )}
                               {item.subtitle}
@@ -201,7 +201,7 @@ export default function MagazineList() {
                             {item.author && (
                               <span className="flex items-center gap-1">| by
                                 <span className="inline-block w-6 h-6 rounded-full overflow-hidden align-middle mr-1 ml-1 shadow">
-                                  <img src="/imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-full h-full object-cover" />
+                                  <img src="https://teaelrzxuigiocnukwha.supabase.co/storage/v1/object/public/notification//imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-full h-full object-cover" />
                                 </span>
                                 {item.author}
                               </span>
