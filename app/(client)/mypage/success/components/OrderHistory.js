@@ -8,6 +8,7 @@ import Link from "next/link";
 import { FaCalendar } from "react-icons/fa6";
 import { FaMoneyBillWaveAlt } from "react-icons/fa";
 import dayjs from "dayjs";
+import { motion } from "framer-motion";
 
 const OrderHistory = ({ user }) => {
   const [orders, setOrders] = useState([]);
@@ -81,6 +82,9 @@ const OrderHistory = ({ user }) => {
 
   return (
     <div className="w-full">
+      <div className="w-full flex justify-center mb-2">
+        <span className="text-xs text-gray-500">티켓 카드를 클릭하면 QR을 확인할 수 있습니다.</span>
+      </div>
       <div className="flex flex-col items-center gap-4 w-full">
         <div className="grid gap-4 w-full">
           {sortedOrders.slice(0, visibleOrders).map((order) => (
@@ -90,7 +94,7 @@ const OrderHistory = ({ user }) => {
               className="w-full no-underline"
             >
               <Card 
-                className="w-full hover:shadow-md transition-shadow duration-200"
+                className="w-full hover:shadow-md transition-shadow duration-200 relative"
                 isPressable
               >
                 <CardBody className="flex gap-4 flex-row justify-center items-center">
@@ -151,9 +155,15 @@ const OrderHistory = ({ user }) => {
                         <FaCalendar className="w-3 h-3 text-[#007AFF]" />
                         <span>인원: {order.people_count}명 / 주문일: {new Date(order.created_at).toLocaleDateString('ko-KR')}</span>
                       </div>
-                      
-                      
                     </div>
+                    {/* 티켓 확인(클릭) 깜빡임 효과 */}
+                    <motion.div
+                      className="absolute bottom-2 right-4 flex items-center gap-1 select-none"
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      <span className="text-[11px] font-bold text-blue-600">티켓 확인(클릭)</span>
+                    </motion.div>
                   </div>
                 </CardBody>
               </Card>

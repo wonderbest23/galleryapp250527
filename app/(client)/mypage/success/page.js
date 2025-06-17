@@ -121,6 +121,23 @@ const Success = () => {
     fetchUser();
   }, [router, setUser]);
 
+  // 사용 가능한 티켓이 있으면 자동으로 주문내역 탭으로 이동
+  useEffect(() => {
+    const checkAvailableTickets = async () => {
+      if (!user) return;
+      const supabase = createClient();
+      const { data: tickets, error } = await supabase
+        .from('payment_ticket')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'success');
+      if (!error && tickets && tickets.length > 0) {
+        setSelectedTab('order');
+      }
+    };
+    checkAvailableTickets();
+  }, [user]);
+
   useEffect(() => {
     if (selectedModal === "policy") {
       setTitle(policy?.title);
