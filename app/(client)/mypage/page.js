@@ -102,7 +102,7 @@ function MyPageContent() {
           // role이 'client'인 경우에만 로그인 성공으로 처리
           if (profile && profile.role === 'client') {
             console.log("클라이언트 권한 확인됨, 리다이렉트 경로:", returnUrl);
-            router.push(returnUrl);
+            window.location.href = returnUrl;
           } else {
             console.log("클라이언트 권한이 아님, 로그인 화면 유지");
           }
