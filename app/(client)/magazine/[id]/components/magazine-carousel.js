@@ -130,11 +130,17 @@ export default function MagazineCarousel({magazine}) {
       {/* 원본 이미지 모달 오버레이 */}
       {modalOpen && (
         <div
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center [touch-action:none]"
+          style={{ touchAction: 'none' }}
           onClick={() => setModalOpen(false)}
-          onTouchStart={e => setModalTouchStart(e.touches[0].clientX)}
+          onTouchStart={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            setModalTouchStart(e.touches[0].clientX);
+          }}
           onTouchEnd={e => {
-            // 터치 시작/끝 위치 차이가 작으면(드래그가 아니면) 닫기
+            e.preventDefault();
+            e.stopPropagation();
             if (Math.abs(modalTouchStart - e.changedTouches[0].clientX) < 10) {
               setModalOpen(false);
             }
