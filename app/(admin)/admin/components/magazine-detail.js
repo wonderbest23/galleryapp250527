@@ -300,18 +300,33 @@ export function MagazineDetail({
   };
 
   const handleImageChange = async (e, index) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    let updatedPhotos = [...editedMagazine.photos];
+    let insertPos = index;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
       const imageUrl = await uploadImageToSupabase(file);
       if (imageUrl) {
-        const updatedPhotos = [...editedMagazine.photos];
-        updatedPhotos[index] = { url: imageUrl };
-        setEditedMagazine({
-          ...editedMagazine,
-          photos: updatedPhotos,
-        });
+        // 비어있는 칸 찾기
+        while (insertPos < updatedPhotos.length && updatedPhotos[insertPos]?.url) {
+          insertPos++;
+        }
+        if (insertPos < updatedPhotos.length) {
+          updatedPhotos[insertPos] = { url: imageUrl };
+        } else {
+          updatedPhotos.push({ url: imageUrl });
+        }
+        insertPos++;
       }
     }
+
+    setEditedMagazine({
+      ...editedMagazine,
+      photos: updatedPhotos,
+    });
   };
 
   const addImageField = () => {
@@ -474,6 +489,7 @@ export function MagazineDetail({
                             type="file"
                             id={`photo-upload-${index + 1}`}
                             accept="image/*"
+                            multiple
                             onChange={(e) => handleImageChange(e, index + 1)}
                             className="hidden"
                             disabled={imageUploading}
