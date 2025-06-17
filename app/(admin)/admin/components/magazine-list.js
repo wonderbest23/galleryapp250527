@@ -103,7 +103,7 @@ export function MagazineList({
 
     if (selectedKey) {
       const magazine = magazines.find((m) => m.id === Number(selectedKey));
-      if (magazine) onSelectMagazine(magazine);
+      if (magazine) onSelectMagazine({ ...magazine });
     }
   };
 
