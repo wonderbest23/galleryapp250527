@@ -148,6 +148,41 @@ export default function MagazineList() {
     setVisibleCount(newVisibleCount);
   };
 
+  // 브라우저에서 WebP 변환 함수 (최대 1200px 리사이즈 적용)
+  async function fileToWebP(file) {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      img.onload = () => {
+        // 최대 크기 제한
+        const maxSize = 1200;
+        let targetW = img.width;
+        let targetH = img.height;
+        if (img.width > maxSize || img.height > maxSize) {
+          if (img.width > img.height) {
+            targetW = maxSize;
+            targetH = Math.round(img.height * (maxSize / img.width));
+          } else {
+            targetH = maxSize;
+            targetW = Math.round(img.width * (maxSize / img.height));
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, targetW, targetH);
+        canvas.toBlob(
+          (blob) => { resolve(blob); },
+          'image/webp',
+          0.8 // 압축률(0~1)
+        );
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   const handleImageUpload = async (e) => {
     try {
       const file = e.target.files[0];
@@ -155,15 +190,26 @@ export default function MagazineList() {
 
       setIsUploading(true);
 
-      // 파일 확장자 추출
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      // 파일 확장자 체크 및 미리보기
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+
+      // webp 변환
+      const webpBlob = await fileToWebP(file);
+      const fileName = `${Math.random()}.webp`;
       const filePath = `${fileName}`;
 
-      // Supabase Storage에 이미지 업로드
+      // Supabase Storage에 webp 업로드
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, webpBlob, {
+          contentType: 'image/webp',
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
         throw uploadError;
