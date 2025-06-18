@@ -87,6 +87,15 @@ export default function ManualTicketIssuePage() {
     XLSX.writeFile(wb, "manual_ticket_issued.xlsx");
   };
 
+  // 인원수 변경 시 금액 자동 계산
+  const handlePeopleCountChange = (value) => {
+    setPeopleCount(value);
+    const exhibition = exhibitions.find(e => String(e.id) === String(selectedExhibition));
+    if (exhibition && typeof exhibition.price !== 'undefined') {
+      setAmount(exhibition.price * value);
+    }
+  };
+
   return (
     <div className="max-w-lg mx-auto p-8">
       <h1 className="text-2xl font-bold mb-4">관리자 티켓 수동 발급</h1>
@@ -127,7 +136,7 @@ export default function ManualTicketIssuePage() {
         </Select>
       </div>
       <Input label="금액" type="number" value={amount} readOnly className="mb-4 bg-gray-100" />
-      <Input label="인원수" type="number" value={peopleCount} onChange={e => setPeopleCount(Number(e.target.value))} className="mb-4" />
+      <Input label="인원수" type="number" value={peopleCount} onChange={e => handlePeopleCountChange(Number(e.target.value))} className="mb-4" />
       <Select label="상태" value={status} onChange={e => setStatus(e.target.value)} className="mb-4">
         <SelectItem key="success" value="success">success</SelectItem>
         <SelectItem key="used" value="used">used</SelectItem>
@@ -207,7 +216,7 @@ export default function ManualTicketIssuePage() {
                       <td className="p-2 border">{t.order_id || '-'}</td>
                       <td className="p-2 border">{user ? (user.full_name || user.email || user.id) : '-'}</td>
                       <td className="p-2 border">{t.exhibition_id}</td>
-                      <td className="p-2 border">{t.amount}</td>
+                      <td className="p-2 border">{(t.amount || 0).toLocaleString()}원</td>
                       <td className="p-2 border">{t.people_count}</td>
                       <td className="p-2 border">{t.status}</td>
                       <td className="p-2 border">{t.created_at ? t.created_at.slice(0, 19).replace('T', ' ') : ''}</td>
