@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Button, Divider, Spinner } from "@heroui/react";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import { HiOutlineClock, HiOutlineTag, HiOutlineUser, HiOutlineEye, HiOutlineSta
 
 const PAGE_SIZE = 10;
 
-export default function CommunityPage() {
+function CommunityPageContent() {
   const supabase = createClient();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -169,5 +169,13 @@ export default function CommunityPage() {
         <div className="text-sm">{page} / {totalPages}</div>
       </div>
     </div>
+  );
+}
+
+export default function CommunityPage() {
+  return (
+    <Suspense>
+      <CommunityPageContent />
+    </Suspense>
   );
 } 
