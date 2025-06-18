@@ -33,7 +33,7 @@ export default function ManualTicketIssuePage() {
     const fetchTickets = async () => {
       const { data, error } = await supabase
         .from("payment_ticket")
-        .select("id, user_id, exhibition_id, amount, people_count, status, created_at")
+        .select("id, user_id, order_id, exhibition_id, amount, people_count, status, created_at")
         .order("created_at", { ascending: false })
         .limit(30);
       if (!error) setTickets(data);
@@ -185,6 +185,7 @@ export default function ManualTicketIssuePage() {
             <thead>
               <tr className="bg-gray-100">
                 <th className="p-2 border">유저ID</th>
+                <th className="p-2 border">구매번호</th>
                 <th className="p-2 border">유저이름</th>
                 <th className="p-2 border">전시회ID</th>
                 <th className="p-2 border">금액</th>
@@ -203,6 +204,7 @@ export default function ManualTicketIssuePage() {
                   return (
                     <tr key={t.id}>
                       <td className="p-2 border">{t.user_id}</td>
+                      <td className="p-2 border">{t.order_id || '-'}</td>
                       <td className="p-2 border">{user ? (user.full_name || user.email || user.id) : '-'}</td>
                       <td className="p-2 border">{t.exhibition_id}</td>
                       <td className="p-2 border">{t.amount}</td>
