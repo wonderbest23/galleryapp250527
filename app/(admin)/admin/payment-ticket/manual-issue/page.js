@@ -216,7 +216,11 @@ export default function ManualTicketIssuePage() {
                       <td className="p-2 border">{t.order_id || '-'}</td>
                       <td className="p-2 border">{user ? (user.full_name || user.email || user.id) : '-'}</td>
                       <td className="p-2 border">{t.exhibition_id}</td>
-                      <td className="p-2 border">{(t.amount || 0).toLocaleString()}원</td>
+                      <td className="p-2 border">{
+                        (t.people_count > 1 && t.amount < 10000)
+                          ? ((t.amount || 0) * (t.people_count || 1)).toLocaleString() + '원'
+                          : (t.amount || 0).toLocaleString() + '원'
+                      }</td>
                       <td className="p-2 border">{t.people_count}</td>
                       <td className="p-2 border">{t.status}</td>
                       <td className="p-2 border">{t.created_at ? t.created_at.slice(0, 19).replace('T', ' ') : ''}</td>
