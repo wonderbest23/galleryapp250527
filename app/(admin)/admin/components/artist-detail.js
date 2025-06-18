@@ -218,6 +218,13 @@ export function ArtistDetail({
         }
       }
       
+      // 등록 크레딧 자동 설정 로직 추가
+      let artistCredit = editedArtist.artist_credit || 0;
+      // 미승인(false) → 승인(true)로 바뀌는 경우에만 20으로 설정
+      if (!artist.isArtistApproval && editedArtist.isArtistApproval) {
+        artistCredit = 20;
+      }
+
       // 업데이트할 데이터 준비
       const updateData = {
         isArtist: true,
@@ -227,7 +234,7 @@ export function ArtistDetail({
         artist_birth: editedArtist.artist_birth || "",
         artist_genre: editedArtist.artist_genre || "",
         artist_proof: editedArtist.artist_proof || "",
-        artist_credit: editedArtist.artist_credit || 0,
+        artist_credit: artistCredit,
         isArtistApproval: editedArtist.isArtistApproval || false,
         avatar_url: avatar_url || "", // 업로드된 이미지 URL 추가
       };
