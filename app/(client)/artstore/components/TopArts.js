@@ -6,7 +6,6 @@ import Image from "next/image";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa";
 import { Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
-import { getSupabaseImageUrl } from "@/utils/image";
 
 // 북마크 아이콘을 위한 별도 컴포넌트
 const BookmarkIcon = ({ isBookmarked, onClick }) => {
@@ -45,16 +44,8 @@ const fadeIn = {
   transition: { duration: 0.5 }
 };
 
-function getThumbUrl(url, width = 150, height = 190) {
-  return (
-    getSupabaseImageUrl(url, {
-      width,
-      height,
-      resize: "contain",
-      // quality 100 by default in util
-      quality: 100,
-    }) || "/images/noimage.jpg"
-  );
+function getThumbUrl(url) {
+  return url || "/images/noimage.jpg";
 }
 
 export default function TopArts() {
