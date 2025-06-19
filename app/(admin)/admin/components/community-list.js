@@ -88,7 +88,7 @@ export function CommunityList({
         </TableHeader>
         <TableBody emptyContent="데이터가 없습니다." items={posts}>
           {(item) => (
-            <TableRow key={item.id}>
+            <TableRow key={item.id} onClick={() => handleSelectionChange(new Set([String(item.id)]))} className="cursor-pointer hover:bg-gray-50">
               <TableCell>{item.id}</TableCell>
               <TableCell className="truncate max-w-[250px]">{item.title}</TableCell>
               <TableCell>{item.likes}</TableCell>
