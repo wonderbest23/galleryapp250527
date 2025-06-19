@@ -31,7 +31,7 @@ function CommunityPageContent() {
         error: bestErr,
       } = await supabase
         .from("community_post")
-        .select("*, comments:community_comment(count)")
+        .select("*, comments:community_comment(count), profile:profiles(nickname,email)")
         .gte("likes", 10)
         .order("likes", { ascending: false })
         .limit(4);
@@ -42,7 +42,7 @@ function CommunityPageContent() {
       // 최신글 + 페이징 (베스트 제외)
       let query = supabase
         .from("community_post")
-        .select("*, comments:community_comment(count)", { count: "exact" })
+        .select("*, comments:community_comment(count), profile:profiles(nickname,email)", { count: "exact" })
         .order("created_at", { ascending: false });
 
       // 검색
@@ -103,7 +103,7 @@ function CommunityPageContent() {
                   <div className="flex items-center gap-2 text-[11px] text-gray-600">
                     <HiOutlineClock className="w-3 h-3" /> {new Date(p.created_at).toLocaleDateString("ko-KR")} 
                     <HiOutlineTag className="w-3 h-3" /> {p.category || "커뮤니티"}
-                    <HiOutlineUser className="w-3 h-3" /> {p.nickname || "익명"}
+                    <HiOutlineUser className="w-3 h-3" /> {p.nickname || p.profile?.nickname || p.profile?.email || "익명"}
                     <HiOutlineEye className="w-3 h-3" /> {p.views || 0}
                     <HiOutlineStar className="w-3 h-3" /> {p.likes}
                   </div>
@@ -128,7 +128,7 @@ function CommunityPageContent() {
                 <div className="flex items-center gap-2 text-[11px] text-gray-600">
                   <HiOutlineClock className="w-3 h-3" /> {new Date(p.created_at).toLocaleDateString("ko-KR")} 
                   <HiOutlineTag className="w-3 h-3" /> {p.category || "커뮤니티"}
-                  <HiOutlineUser className="w-3 h-3" /> {p.nickname || "익명"}
+                  <HiOutlineUser className="w-3 h-3" /> {p.nickname || p.profile?.nickname || p.profile?.email || "익명"}
                   <HiOutlineEye className="w-3 h-3" /> {p.views || 0}
                   <HiOutlineStar className="w-3 h-3" /> {p.likes}
                 </div>
