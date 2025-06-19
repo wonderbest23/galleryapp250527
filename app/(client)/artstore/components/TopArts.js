@@ -45,13 +45,14 @@ const fadeIn = {
   transition: { duration: 0.5 }
 };
 
-function getThumbUrl(url, width = 157, height = 200) {
+function getThumbUrl(url, width = 150, height = 190) {
   return (
     getSupabaseImageUrl(url, {
       width,
       height,
       resize: "contain",
-      quality: 90,
+      // quality 100 by default in util
+      quality: 100,
     }) || "/images/noimage.jpg"
   );
 }
@@ -326,7 +327,6 @@ export default function TopArts() {
                         alt="image"
                         className="object-contain bg-white rounded-lg"
                         fill
-                        quality={90}
                         priority={false}
                         placeholder="blur"
                         blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4="
