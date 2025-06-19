@@ -283,19 +283,25 @@ export default function MagazineList() {
       const genreName = genres.find(g => g.id === selectedGenre)?.name || "";
 
       // profiles 테이블 업데이트
+      const updatePayload = {
+        isArtist: true,
+        artist_name: artistName,
+        artist_phone: artistPhone,
+        artist_intro: artistIntro,
+        artist_birth: birthDate,
+        artist_genre: genreName,
+        artist_proof: artistProof,
+        avatar_url: profileImage,
+      };
+
+      if (!isEdit) {
+        // 신규 등록 시에만 승인 상태 false 로 설정
+        updatePayload.isArtistApproval = false;
+      }
+
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({
-          isArtist: true,
-          isArtistApproval: false,
-          artist_name: artistName,
-          artist_phone: artistPhone,
-          artist_intro: artistIntro,
-          artist_birth: birthDate,  // 문자열 형태로 저장
-          artist_genre: genreName,
-          artist_proof: artistProof,
-          avatar_url: profileImage
-        })
+        .update(updatePayload)
         .eq('id', user.id);
 
       if (updateError) {
