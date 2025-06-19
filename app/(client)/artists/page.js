@@ -110,8 +110,8 @@ export default function ArtistList() {
                       fill
                     />
                   </div>
-                 <div className="flex flex-col items-center justify-center my-2">
-                    <div className="text-base font-semibold">
+                 <div className="flex flex-col items-center justify-center py-1">
+                    <div className="text-sm font-medium leading-tight text-center truncate w-full max-w-[90%]">
                       {artist.artist_name || '이름 없음'}
                     </div>
                  </div>
