@@ -2,12 +2,13 @@ export interface TransformOptions {
   width?: number;
   height?: number;
   quality?: number;
+  resize?: 'cover' | 'contain' | 'fill';
   format?: 'origin' | 'jpg' | 'png' | 'webp' | 'avif';
 }
 
 export function getSupabaseImageUrl(
   url?: string,
-  { width, height, quality = 70, format }: TransformOptions = {}
+  { width, height, quality = 70, resize, format }: TransformOptions = {}
 ): string | undefined {
   if (!url) return url;
 
@@ -24,6 +25,7 @@ export function getSupabaseImageUrl(
   if (width) params.push(`width=${width}`);
   if (height) params.push(`height=${height}`);
   if (quality) params.push(`quality=${quality}`);
+  if (resize) params.push(`resize=${resize}`);
   if (format) params.push(`format=${format}`);
 
   return `${transformed}${params.length ? '?' + params.join('&') : ''}`;
