@@ -17,7 +17,7 @@ export function CommunityDetail({ post, onUpdate, onDelete, onRefresh }) {
       .update({ likes })
       .eq("id", post.id)
       .select()
-      .single();
+      .maybeSingle();
     if (error) {
       addToast({ title: "수정 실패", description: error.message, color: "danger" });
     } else {
