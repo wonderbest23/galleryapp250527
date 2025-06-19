@@ -30,6 +30,39 @@ async function ensureWebpForImage(url) {
 
   const webpPath = filepath.replace(/\.(jpg|jpeg|png)$/i, '.webp');
 
+  // ===== 0) 아바타 버킷에 잘못 들어간 상품 이미지 처리 =====
+  if (bucket === 'avatars') {
+    try {
+      // 원본 다운로드
+      const { data: origRes, error: dlErr } = await supabase.storage.from('avatars').download(filepath);
+      if (dlErr || !origRes) {
+        console.error('avatars 다운로드 실패', filepath, dlErr?.message);
+        return null;
+      }
+      const origBuf = Buffer.from(await origRes.arrayBuffer());
+      const webpBuf = url.endsWith('.webp') ? origBuf : await sharp(origBuf).webp({ quality: 80 }).toBuffer();
+
+      const targetBucket = 'product';
+      const targetPath = `product/${path.basename(webpPath)}`; // product/product/<file>.webp
+
+      // 업로드 (덮어쓰기 허용)
+      const { error: upErr } = await supabase.storage.from(targetBucket).upload(targetPath, webpBuf, {
+        contentType: 'image/webp', upsert: true
+      });
+      if (upErr) {
+        console.error('product 버킷 업로드 실패', targetPath, upErr.message);
+        return null;
+      }
+
+      const { data: pub } = supabase.storage.from(targetBucket).getPublicUrl(targetPath);
+      console.log('🚚 avatars → product 이동', targetPath);
+      return pub.publicUrl;
+    } catch (e) {
+      console.error('avatars 처리 중 예외', e);
+      return null;
+    }
+  }
+
   // 이미 webp 존재하는지 확인
   const { data: existing } = await supabase.storage.from(bucket).list(path.dirname(webpPath), { search: path.basename(webpPath) });
   if (existing && existing.length) return webpUrl;
