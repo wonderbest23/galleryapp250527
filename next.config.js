@@ -12,7 +12,8 @@ const nextConfig = {
     domains: [
       'picsum.photos', 
       'teaelrzxuigiocnukwha.supabase.co',
-      'teaelrzxuigiocnukwha.supabase.in'
+      'teaelrzxuigiocnukwha.supabase.in',
+      'search.pstatic.net'
     ],
     unoptimized: false,
   },
