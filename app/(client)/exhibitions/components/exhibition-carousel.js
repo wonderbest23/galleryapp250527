@@ -5,6 +5,7 @@ import { FaStar } from "react-icons/fa";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa6";
 import Link from "next/link";
 import { useEffect, useState, useCallback, useRef } from "react";
+import Image from "next/image";
 
 export default function ExhibitionCarousel({ exhibitions, user, bookmarks, toggleBookmark, isBookmarked }) {
   // 슬라이더 ref
@@ -36,6 +37,11 @@ export default function ExhibitionCarousel({ exhibitions, user, bookmarks, toggl
     </div>
   );
 
+  // 이미지 URL 반환 함수
+  function getImageUrl(url) {
+    return url || "/images/noimage.jpg";
+  }
+
   // 전시회 카드 컴포넌트
   const ExhibitionCard = useCallback(
     ({ exhibition }) => (
@@ -51,9 +57,11 @@ export default function ExhibitionCarousel({ exhibitions, user, bookmarks, toggl
       >
         <Card className="h-[240px] overflow-hidden shadow hover:shadow-lg transition-shadow rounded-xl">
           <div className="relative">
-            <img
-              src={exhibition.photo || "/images/noimage.jpg"}
+            <Image
+              src={getImageUrl(exhibition.photo)}
               alt={exhibition.name || "전시회 이미지"}
+              width={280}
+              height={140}
               className="h-[140px] w-full object-cover"
             />
             {/* <div

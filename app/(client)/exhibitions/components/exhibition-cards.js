@@ -6,6 +6,7 @@ import { IoMdPin } from "react-icons/io";
 import { FaRegStar } from "react-icons/fa";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa6";
 import Link from "next/link";
+import Image from "next/image";
 import { FaPlusCircle } from "react-icons/fa";
 import { FaStar } from "react-icons/fa";
 import { FaMap } from "react-icons/fa";
@@ -36,6 +37,11 @@ const containerVariants = {
     }
   }
 };
+
+// 이미지 URL 반환 (없으면 기본 이미지)
+function getImageUrl(url) {
+  return url || "/images/noimage.jpg";
+}
 
 export function ExhibitionCards({
   exhibitions,
@@ -72,15 +78,14 @@ export function ExhibitionCards({
                 <Link href={`/exhibition/${exhibition.id}`}>
                   <CardBody className="grid grid-cols-7 items-center justify-center gap-x-3">
                     <div className="col-span-2">
-                      <img
-                        src={
-                          exhibition.photo
-                            ? exhibition.photo
-                            : "/images/noimage.jpg"
-                        }
-                        alt={exhibition.title}
-                        className="w-20 h-20 object-cover rounded"
-                      />
+                      <div className="w-20 h-20 relative">
+                        <Image
+                          src={getImageUrl(exhibition.photo)}
+                          alt={exhibition.title}
+                          fill
+                          className="object-cover rounded"
+                        />
+                      </div>
                     </div>
 
                     <div className="flex flex-col col-span-5">
