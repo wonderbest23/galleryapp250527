@@ -21,7 +21,7 @@ export default function CommunityDetail() {
     const fetchPost = async () => {
       const { data, error } = await supabase
         .from("community_post")
-        .select("*, profile:profiles(avatar_url,nickname,email)")
+        .select("*")
         .eq("id", id)
         .single();
       if (error || !data) {
@@ -89,7 +89,7 @@ export default function CommunityDetail() {
         {/* 작성자 + 메타 정보 */}
         <div className="flex flex-wrap items-center gap-3 text-[13px] text-gray-700 mb-1">
           <Avatar src={post.profile?.avatar_url || "/noimage.jpg"} size="sm" radius="sm" />
-          <span className="font-medium mr-2">{post.nickname || post.profile?.nickname || post.profile?.email || "익명"}</span>
+          <span className="font-medium mr-2">{post.nickname || "익명"}</span>
           <span className="text-gray-500 text-[12px]">조회 수 {post.views || 0}</span>
           <span className="text-gray-500 text-[12px]">추천 수 {post.likes}</span>
           <span className="text-gray-500 text-[12px]">댓글 {commentCnt}</span>
