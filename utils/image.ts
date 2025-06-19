@@ -2,12 +2,12 @@ export interface TransformOptions {
   width?: number;
   height?: number;
   quality?: number;
-  format?: 'webp' | 'jpeg' | 'png' | 'avif' | 'jpg';
+  format?: 'origin' | 'jpg' | 'png' | 'webp' | 'avif';
 }
 
 export function getSupabaseImageUrl(
   url?: string,
-  { width, height, quality = 70, format = 'webp' }: TransformOptions = {}
+  { width, height, quality = 70, format }: TransformOptions = {}
 ): string | undefined {
   if (!url) return url;
 
