@@ -89,7 +89,7 @@ export default function ArtistList() {
             <h2 className="text-lg font-bold text-center flex-grow">아티스트</h2>
             <div className="w-10"></div>
           </div>
-          <div className="grid grid-cols-3 gap-4 mb-4 w-[90%] mt-4">
+          <div className="grid grid-cols-2 gap-4 mb-4 w-[90%] mt-4">
             {visibleArtists.map((artist, index) => (
               <Card
                 key={`artist-card-${index}`}
@@ -110,8 +110,8 @@ export default function ArtistList() {
                       fill
                     />
                   </div>
-                 <div className="flex flex-col items-center justify-center my-2">
-                    <div className="text-base font-semibold">
+                 <div className="flex flex-col items-center justify-center py-1">
+                    <div className="text-sm font-medium leading-tight text-center line-clamp-2 break-keep">
                       {artist.artist_name || '이름 없음'}
                     </div>
                  </div>
