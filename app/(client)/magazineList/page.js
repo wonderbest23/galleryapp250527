@@ -102,7 +102,7 @@ export default function MagazineList() {
               {magazines[0].photo?.[0]?.url && (
                 <Image
                   src={
-                    getSupabaseImageUrl(magazines[0].photo?.[0]?.url, { width: 400, quality: 85, resize: 'contain' }) || "/images/noimage.jpg"
+                    getSupabaseImageUrl(magazines[0].photo?.[0]?.url, { width: 400, quality: 90, resize: 'contain' }) || "/images/noimage.jpg"
                   }
                   alt="대표 이미지"
                   width={400}
@@ -161,7 +161,7 @@ export default function MagazineList() {
                           alt="Card thumbnail"
                           className="object-cover w-[96px] h-[96px] min-w-[96px] min-h-[96px] rounded-none border border-gray-200"
                           src={
-                            getSupabaseImageUrl(item.photo?.[0]?.url, { width: 96, height: 96, quality: 85, resize: 'contain' }) || "/images/noimage.jpg"
+                            getSupabaseImageUrl(item.photo?.[0]?.url, { width: 96, height: 96, quality: 90, resize: 'contain' }) || "/images/noimage.jpg"
                           }
                           width={96}
                           height={96}
