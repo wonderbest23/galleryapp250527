@@ -56,7 +56,7 @@ export function CommunityList({
     onSelectionChange(keys);
     const first = Array.from(keys)[0];
     if (first) {
-      const post = posts.find((p) => p.id === Number(first));
+      const post = posts.find((p) => p.id === first);
       if (post) onSelectPost(post);
     }
   };
