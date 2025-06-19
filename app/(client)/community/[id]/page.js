@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useParams, useRouter } from "next/navigation";
-import { Button, Spinner, Divider } from "@heroui/react";
-import { HiOutlineClock, HiOutlineUser, HiOutlineEye, HiOutlineStar, HiOutlineLink } from "react-icons/hi";
+import { Button, Spinner, Divider, Avatar } from "@heroui/react";
+import { HiOutlineClock, HiOutlineUser, HiOutlineEye, HiOutlineStar, HiOutlineLink, HiOutlineChat } from "react-icons/hi";
 import Link from "next/link";
 
 export default function CommunityDetail() {
@@ -12,6 +12,7 @@ export default function CommunityDetail() {
   const router = useRouter();
 
   const [post, setPost] = useState(null);
+  const [commentCnt, setCommentCnt] = useState(0);
   const [loading, setLoading] = useState(true);
   const [likeLoading, setLikeLoading] = useState(false);
   const [copyMsg, setCopyMsg] = useState("");
@@ -27,6 +28,12 @@ export default function CommunityDetail() {
         router.replace("/community");
       } else {
         setPost(data);
+        // 댓글 수 조회
+        const { count } = await supabase
+          .from("community_comment")
+          .select("id", { count: "exact", head: true })
+          .eq("post_id", id);
+        setCommentCnt(count || 0);
         setLoading(false);
         // 조회수 +1
         supabase
@@ -74,18 +81,20 @@ export default function CommunityDetail() {
     <div className="flex flex-col items-center w-full max-w-[700px] mx-auto px-4 py-6 gap-6">
       {/* 제목 영역 */}
       <div className="w-full">
-        <div className="flex items-start gap-2 mb-2">
-          <span className="inline-block bg-blue-600 text-white text-[11px] font-semibold rounded px-1.5 py-[2px]">커뮤니티</span>
-          <h1 className="text-2xl font-bold break-words leading-snug flex-1">{post.title}</h1>
+        <div className="flex justify-between items-start gap-2 mb-2">
+          <h1 className="text-[17px] font-semibold break-words flex-1 leading-snug">{post.title}</h1>
+          <span className="text-[12px] text-gray-500 whitespace-nowrap">{new Date(post.created_at).toLocaleDateString("ko-KR")} {new Date(post.created_at).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"})}</span>
         </div>
-        {/* 메타 정보 */}
-        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
-          <HiOutlineClock className="w-3 h-3" /> {new Date(post.created_at).toLocaleString("ko-KR")}
-          <HiOutlineUser className="w-3 h-3" /> {post.nickname || post.user_id || "익명"}
-          {typeof post.views !== "undefined" && (<><HiOutlineEye className="w-3 h-3" /> {post.views}</>)}
-          <HiOutlineStar className="w-3 h-3" /> {post.likes}
-          {/* 링크 복사 */}
-          <button onClick={handleCopyLink} className="ml-auto flex items-center gap-1 text-blue-600 hover:underline">
+
+        {/* 작성자 + 메타 정보 */}
+        <div className="flex flex-wrap items-center gap-3 text-[13px] text-gray-700 mb-1">
+          <Avatar src={post.profile?.avatar_url || "/noimage.jpg"} size="sm" radius="sm" />
+          <span className="font-medium mr-2">{post.nickname || "익명"}</span>
+          <span className="text-gray-500 text-[12px]">조회 수 {post.views || 0}</span>
+          <span className="text-gray-500 text-[12px]">추천 수 {post.likes}</span>
+          <span className="text-gray-500 text-[12px]">댓글 {commentCnt}</span>
+          {/* 링크 복사 버튼 */}
+          <button onClick={handleCopyLink} className="ml-auto flex items-center gap-1 text-gray-500 hover:underline text-[12px]">
             <HiOutlineLink className="w-4 h-4" /> 복사
           </button>
         </div>
