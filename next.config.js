@@ -14,7 +14,7 @@ const nextConfig = {
       'teaelrzxuigiocnukwha.supabase.co',
       'teaelrzxuigiocnukwha.supabase.in'
     ],
-    unoptimized: true,
+    unoptimized: false,
   },
   productionBrowserSourceMaps: true,
 };
