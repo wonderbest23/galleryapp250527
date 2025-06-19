@@ -8,7 +8,7 @@ export interface TransformOptions {
 
 export function getSupabaseImageUrl(
   url?: string,
-  { width, height, quality = 70, resize, format }: TransformOptions = {}
+  { width, height, quality = 100, resize, format }: TransformOptions = {}
 ): string | undefined {
   if (!url) return url;
 

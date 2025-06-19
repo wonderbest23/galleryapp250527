@@ -6,6 +6,7 @@ import Image from "next/image";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa";
 import { Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
+
 // 북마크 아이콘을 위한 별도 컴포넌트
 const BookmarkIcon = ({ isBookmarked, onClick }) => {
   const handleClick = (e) => {
@@ -43,10 +44,8 @@ const fadeIn = {
   transition: { duration: 0.5 }
 };
 
-function getWebpImageUrl(url) {
-  if (!url) return "/noimage.jpg";
-  if (url.endsWith(".webp")) return url;
-  return url.replace(/\.(jpg|jpeg|png)$/i, ".webp");
+function getThumbUrl(url) {
+  return url || "/images/noimage.jpg";
 }
 
 export default function TopArts() {
@@ -315,11 +314,10 @@ export default function TopArts() {
                   <Card className="rounded-lg overflow-hidden w-[157px] cursor-pointer" shadow="none">
                     <div className="relative w-full aspect-[157/200]" onClick={() => navigateToProduct(item.id)}>
                       <Image
-                        src={getWebpImageUrl(item.image[0])}
+                        src={getThumbUrl(item.image?.[0])}
                         alt="image"
                         className="object-contain bg-white rounded-lg"
                         fill
-                        quality={30}
                         priority={false}
                         placeholder="blur"
                         blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4="

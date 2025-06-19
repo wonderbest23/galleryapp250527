@@ -12,7 +12,6 @@ import { FaArrowLeft } from "react-icons/fa";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Pagination } from "@heroui/react";
-import { getSupabaseImageUrl } from "@/utils/image";
 
 export default function MagazineList() {
   const [magazines, setMagazines] = useState([]);
@@ -102,7 +101,7 @@ export default function MagazineList() {
               {magazines[0].photo?.[0]?.url && (
                 <Image
                   src={
-                    getSupabaseImageUrl(magazines[0].photo?.[0]?.url, { width: 400, quality: 70, resize: 'contain' }) || "/images/noimage.jpg"
+                    (magazines[0].photo?.[0]?.url) || "/images/noimage.jpg"
                   }
                   alt="대표 이미지"
                   width={400}
@@ -161,7 +160,7 @@ export default function MagazineList() {
                           alt="Card thumbnail"
                           className="object-cover w-[96px] h-[96px] min-w-[96px] min-h-[96px] rounded-none border border-gray-200"
                           src={
-                            getSupabaseImageUrl(item.photo?.[0]?.url, { width: 96, height: 96, quality: 70, resize: 'contain' }) || "/images/noimage.jpg"
+                            (item.photo?.[0]?.url) || "/images/noimage.jpg"
                           }
                           width={96}
                           height={96}
