@@ -348,7 +348,7 @@ function ExhibitionListContent() {
         >
           <FaArrowLeft className="text-xl" />
         </Button>
-        <h2 className="text-lg font-bold text-center flex-grow">아트샵</h2>
+        <h2 className="text-lg font-bold text-center flex-grow">국내최초 직거래 아트샵 (수수료 0%)</h2>
         <div className="w-10"></div>
       </div>
 
