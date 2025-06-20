@@ -81,10 +81,10 @@ export function ExhibitionCards({
                       <div className="w-20 h-20 relative">
                         <Image
                           src={getImageUrl(exhibition.photo)}
-                          alt={exhibition.title}
+                        alt={exhibition.title}
                           fill
                           className="object-cover rounded"
-                        />
+                      />
                       </div>
                     </div>
 
