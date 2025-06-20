@@ -446,8 +446,8 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
                       </div>
                       <div className="flex flex-col flex-grow ml-2">
                         <p className="text-[14px] font-medium line-clamp-1 text-[#606060]">{product.name}</p>
-                        <p className="text-[14px] font-medium line-clamp-1 text-[#606060]">{product.size} </p>
-                        <p className="text-[14px] font-medium line-clamp-1 text-[#606060]">₩{product.price?.toLocaleString()}</p>
+                        <p className="text-[12px] line-clamp-1 text-[#A0A0A0]">{product.size}</p>
+                        <p className="text-[12px] text-black font-medium line-clamp-1">₩{product.price?.toLocaleString()}</p>
                         
                       </div>
                       <div className="items-center bg-gray-300 rounded-lg p-2 h-[30px] w-[30px] flex justify-center items-center">
