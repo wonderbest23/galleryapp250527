@@ -338,8 +338,9 @@ function ExhibitionListContent() {
   };
   console.log("popularExhibitions", popularExhibitions);
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-[430px] mx-auto bg-white min-h-screen pb-24">
-      <div className="bg-white flex items-center w-[90%] justify-between mt-4 mb-2">
+    <div className="relative flex flex-col items-center justify-center w-full max-w-[430px] mx-auto bg-white min-h-screen pb-24 overflow-hidden">
+      {/* Decorative background shapes removed */}
+      <div className="flex items-center w-[90%] justify-between mt-4 mb-2 z-10 relative">
         <Button
           isIconOnly
           variant="light"
@@ -359,7 +360,7 @@ function ExhibitionListContent() {
           <TopArts />
         </div>
       </div>
-      <div className="w-[90%] mt-6 mb-6 flex flex-col items-center">
+      <div className="w-[90%] mt-4 mb-0 flex flex-col items-center">
         <div className="flex justify-between items-center mb-3 w-full">
           <h3 className="text-[18px] font-bold text-left">아티스트</h3>
           <div
@@ -382,7 +383,7 @@ function ExhibitionListContent() {
         </div>
       </div>
 
-      <Divider orientation="horizontal" className="w-[90%] my-8 bg-[#eee]" />
+      <Divider orientation="horizontal" className="w-[90%] my-4 bg-[#eee]" />
       <div className="w-[90%] flex flex-col justify-center items-center mb-24">
         <div className="w-full flex justify-between items-center mb-3">
           <h1 className="text-[18px] font-bold text-left">Top of Week</h1>
