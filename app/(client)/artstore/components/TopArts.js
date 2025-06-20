@@ -283,7 +283,7 @@ export default function TopArts() {
 
   return (
     <div className="flex flex-col justify-center items-center w-[90%] h-full ">
-      <div className="w-full h-full grid grid-cols-3 grid-rows-2 gap-2 mt-1">
+      <div className="w-full h-full grid grid-cols-3 grid-rows-2 gap-2 mt-1 mb-5">
         {categories.map((category) => (
           <Button
             key={category.id}
@@ -330,9 +330,9 @@ export default function TopArts() {
                     </div>
                     <CardBody className="p-0 mt-2" onClick={() => navigateToProduct(item.id)}>
                       <p className="text-[14px] font-medium line-clamp-1 text-[#606060]">{item.title || item.name || "작품명 없음"}</p>
-                      {/* artist_id?.name이 있을 때만 렌더링 */}
-                      {item.artist_id?.name && (
-                        <p className="text-[10px] text-[#606060]">{item.artist_id.name}</p>
+                      {/* 작품 사이즈 */}
+                      {item.size && (
+                        <p className="text-[12px] line-clamp-1 text-[#A0A0A0]">{item.size}</p>
                       )}
                       <p className="text-[14px] text-black font-bold mt-1">₩{item.price?.toLocaleString()}</p>
                     </CardBody>
