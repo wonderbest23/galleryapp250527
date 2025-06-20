@@ -54,6 +54,9 @@ export default function ArtistList() {
   const loadMore = () => {
     const newVisibleCount = visibleCount + 12;
     setVisibleCount(newVisibleCount);
+    setTimeout(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    }, 100);
   };
 
   return (
