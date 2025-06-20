@@ -41,7 +41,7 @@ export default function AllProductsPage(){
       const { data, error, count } = await query.range((currentPage-1)*10,currentPage*10-1);
       if(error){console.log(error);return;}
       const pageItems=(data||[]).filter(p=>p.artist_id && p.artist_id.isArtistApproval);
-      if(currentPage===1){setProducts(pageItems);}else{setProducts(prev=>[...prev,...pageItems]);}
+      setProducts(pageItems);
       if(count!==null){setTotalPages(Math.ceil(count/10));}
     }finally{setLoading(false);} 
   };
