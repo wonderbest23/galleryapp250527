@@ -142,6 +142,9 @@ export default function LowerCarousel() {
                 <p className="text-[14px] font-medium line-clamp-1 text-[#606060]">
                   {item.name}
                 </p>
+                {item.size && (
+                  <p className="text-[12px] line-clamp-1 text-[#A0A0A0]">{item.size}</p>
+                )}
                 <p className="text-[14px] text-black font-bold mt-1">
                   {item.price ? `₩${Number(item.price).toLocaleString()}` : ""}
                 </p>
