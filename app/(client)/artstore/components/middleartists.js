@@ -24,6 +24,8 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
   const [banners, setBanners] = useState([]);
   const [bannersLoading, setBannersLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const router = useRouter();
   const supabase = createClient();
   
@@ -115,11 +117,12 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
           return;
         }
         const approvedArtistIds = (approvedArtists || []).map(a => a.id);
-        // 2. 모든 상품 불러오기
-        const { data, error } = await supabase
+        // 2. 상품 불러오기 (페이지네이션 10개씩)
+        const { data, error, count } = await supabase
           .from('product')
-          .select('*')
-          .order('created_at', { ascending: false });
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .range((page - 1) * 10, page * 10 - 1);
         if (error) {
           console.log('상품 데이터를 불러오는 중 오류 발생:', error);
           setProducts([]);
@@ -127,7 +130,18 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
           return;
         }
         // 3. 승인된 작가의 상품만 남김
-        setProducts((data || []).filter(item => approvedArtistIds.includes(item.artist_id)));
+        const pageProducts = (data || []).filter(item => approvedArtistIds.includes(item.artist_id));
+        if (page === 1) {
+          setProducts(pageProducts);
+        } else {
+          setProducts(prev => [...prev, ...pageProducts]);
+        }
+        // hasMore 판단
+        if (count !== null) {
+          setHasMoreProducts(page * 10 < count);
+        } else {
+          setHasMoreProducts(pageProducts.length === 10);
+        }
         setProductsLoading(false);
       } catch (error) {
         console.log('상품 데이터 로딩 오류:', error);
@@ -137,7 +151,7 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
     };
 
     fetchProducts();
-  }, []);
+  }, [page]);
 
   // 북마크 데이터 가져오기
   useEffect(() => {
@@ -376,6 +390,12 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
 
   console.log('MiddleArtists products:', products);
 
+  const loadMoreProducts = () => {
+    if (hasMoreProducts) {
+      setPage(prev => prev + 1);
+    }
+  };
+
   return (
     <div className="w-full max-w-full overflow-hidden my-4">
       <div className="w-full">
@@ -474,6 +494,12 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
             ) : (
               <div className="w-full text-center text-gray-400 py-8">등록된 작품이 없습니다.</div>
             )
+          )}
+          {/* Load more button */}
+          {!productsLoading && (
+            <div className="flex justify-center mt-6">
+              <button onClick={() => router.push('/artstore/all')} className="text-[#0961F5] font-medium py-2 px-4 border border-[#0961F5] rounded-full">전체보기</button>
+            </div>
           )}
         </div>
       </div>
