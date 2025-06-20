@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useParams, useRouter } from "next/navigation";
-import { Button, Spinner, Divider, Avatar } from "@heroui/react";
+import { Button, Spinner, Divider, Avatar, addToast } from "@heroui/react";
 import { HiOutlineClock, HiOutlineUser, HiOutlineEye, HiOutlineStar, HiOutlineLink, HiOutlineChat } from "react-icons/hi";
 import Link from "next/link";
 
@@ -13,6 +13,7 @@ export default function CommunityDetail() {
 
   const [post, setPost] = useState(null);
   const [commentCnt, setCommentCnt] = useState(0);
+  const [authorName, setAuthorName] = useState("익명");
   const [loading, setLoading] = useState(true);
   const [likeLoading, setLikeLoading] = useState(false);
   const [copyMsg, setCopyMsg] = useState("");
@@ -40,6 +41,15 @@ export default function CommunityDetail() {
           .from("community_post")
           .update({ views: (data.views || 0) + 1 })
           .eq("id", id);
+        // 작성자 이름 조회 (profiles)
+        if (data.user_id) {
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("nickname")
+            .eq("id", data.user_id)
+            .maybeSingle();
+          if (prof?.nickname) setAuthorName(prof.nickname);
+        }
       }
     };
     if (id) fetchPost();
@@ -54,9 +64,16 @@ export default function CommunityDetail() {
       .update({ likes: post.likes + 1 })
       .eq("id", id)
       .select()
-      .single();
+      .maybeSingle();
     setLikeLoading(false);
-    if (!error && data) setPost(data);
+    if (error) {
+      addToast({ title: "추천 실패", description: error.message, color: "danger" });
+    } else if (data) {
+      setPost(data);
+    } else {
+      // RLS 등으로 업데이트 못한 경우
+      addToast({ title: "추천 실패", description: "권한이 없습니다", color: "warning" });
+    }
   };
 
   const handleCopyLink = async () => {
@@ -88,8 +105,8 @@ export default function CommunityDetail() {
 
         {/* 작성자 + 메타 정보 */}
         <div className="flex flex-wrap items-center gap-3 text-[13px] text-gray-700 mb-1">
-          <Avatar src={post.profile?.avatar_url || "/noimage.jpg"} size="sm" radius="sm" />
-          <span className="font-medium mr-2">{post.nickname || "익명"}</span>
+          <Avatar radius="sm" size="sm" icon={<HiOutlineUser className="w-4 h-4" />} />
+          <span className="font-medium mr-2">{post.nickname || authorName}</span>
           <span className="text-gray-500 text-[12px]">조회 수 {post.views || 0}</span>
           <span className="text-gray-500 text-[12px]">추천 수 {post.likes}</span>
           <span className="text-gray-500 text-[12px]">댓글 {commentCnt}</span>
