@@ -20,6 +20,7 @@ function CommunityPageContent() {
   const [totalCount, setTotalCount] = useState(0);
   const [searchField, setSearchField] = useState(searchParams.get("field") || "title_content");
   const [keyword, setKeyword] = useState(searchParams.get("q") || "");
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -62,6 +63,14 @@ function CommunityPageContent() {
     fetchPosts();
   }, [page]);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) setCurrentUser(session.user);
+    };
+    fetchUser();
+  }, []);
+
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const changePage = (newPage) => {
@@ -83,9 +92,13 @@ function CommunityPageContent() {
     <div className="flex flex-col items-center w-full max-w-[600px] mx-auto px-4 py-6">
       <div className="w-full flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">커뮤니티</h1>
-        <Link href="/community/write">
-          <Button color="primary">글쓰기</Button>
-        </Link>
+        <Button color="primary" onPress={() => {
+          if (currentUser) {
+            router.push('/community/write');
+          } else {
+            router.push('/mypage?redirect_to=/community/write');
+          }
+        }}>글쓰기</Button>
       </div>
 
       {/* 베스트 */}
