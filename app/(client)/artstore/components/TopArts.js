@@ -283,7 +283,7 @@ export default function TopArts() {
 
   return (
     <div className="flex flex-col justify-center items-center w-[90%] h-full ">
-      <div className="w-full h-full grid grid-cols-3 grid-rows-2 gap-2 mt-1">
+      <div className="w-full h-full grid grid-cols-3 grid-rows-2 gap-2 mt-1 mb-5">
         {categories.map((category) => (
           <Button
             key={category.id}
