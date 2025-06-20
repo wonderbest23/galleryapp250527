@@ -88,7 +88,9 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
           return;
         }
 
-        setArtists(data || []);
+        // 랜덤 순서 섞기
+        const shuffled = (data || []).sort(() => Math.random() - 0.5);
+        setArtists(shuffled);
         setIsLoading(false);
       } catch (error) {
         console.log('작가 데이터 로딩 오류:', error);
