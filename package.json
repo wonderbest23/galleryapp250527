@@ -63,7 +63,8 @@
     "stream-chat-react": "^12.15.0",
     "uuid": "^11.1.0",
     "xlsx": "^0.18.5",
-    "zustand": "^5.0.5"
+    "zustand": "^5.0.5",
+    "openai": "^4.38.2"
   },
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",
