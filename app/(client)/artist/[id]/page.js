@@ -269,7 +269,7 @@ export default function App() {
           <ModalHeader>
             <h2>활동 검증 자료</h2>
           </ModalHeader>
-          <ModalBody>
+          <ModalBody className="max-h-[60vh] overflow-auto">
             <div className="whitespace-pre-line">
               {profiles?.artist_proof || "활동 검증 자료가 없습니다."}
             </div>

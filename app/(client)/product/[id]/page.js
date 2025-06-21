@@ -441,7 +441,10 @@ export default function App() {
           </div>
           <Divider orientation="horizontal" className="w-[90%] my-2" />
           {/* Restaurant Info */}
-          <div className="w-[90%] flex flex-row justify-start items-center my-2 gap-x-4">
+          <div className="w-[90%] flex flex-row justify-start items-center my-2 gap-x-4 cursor-pointer" onClick={() => {
+            const artistId = product?.artist_id?.id ?? product?.artist_id;
+            if(artistId){ router.push(`/artist/${artistId}`); }
+          }}>
             <div className="relative w-[52px] h-[52px]">
               <Image
                 src={product?.artist_id?.avatar_url}

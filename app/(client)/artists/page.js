@@ -54,10 +54,13 @@ export default function ArtistList() {
   const loadMore = () => {
     const newVisibleCount = visibleCount + 12;
     setVisibleCount(newVisibleCount);
+    setTimeout(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    }, 100);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center">
+    <div className="flex flex-col items-center pb-28 min-h-screen">
       {isLoading ? (
         <div className="flex flex-col items-center justify-center w-full h-full gap-y-6 mt-12">
           {[...Array(5)].map((_, index) => (
