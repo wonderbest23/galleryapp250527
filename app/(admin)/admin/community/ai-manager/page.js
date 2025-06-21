@@ -203,8 +203,8 @@ export default function AiScheduleManagerPage() {
             <Input label="Cron 표현식" value={form.cron} onChange={(e)=>setForm({ ...form, cron: e.target.value })} />
             <Textarea label="프롬프트 템플릿" minRows={4} value={form.prompt_template} onChange={(e)=>setForm({ ...form, prompt_template: e.target.value })} />
             <div className="flex items-center gap-2">
-              <Switch isSelected={form.enabled} onChange={(v)=>setForm({ ...form, enabled: v })} /> 활성화
-              <Switch isSelected={form.auto_publish} onChange={(v)=>setForm({ ...form, auto_publish: v })} /> 자동 발행
+              <Switch isSelected={form.enabled} onValueChange={(v)=>setForm({ ...form, enabled: v })} /> 활성화
+              <Switch isSelected={form.auto_publish} onValueChange={(v)=>setForm({ ...form, auto_publish: v })} /> 자동 발행
             </div>
           </ModalBody>
           <ModalFooter>
