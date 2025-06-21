@@ -16,6 +16,7 @@ export default function Sidebar({ onItemClick }) {
     { icon: "lucide:newspaper", label: "소식등록", href: "/admin/magazine" },
     { icon: "lucide:image", label: "배너수정", href: "/admin/banner" },
     { icon: "lucide:message-square", label: "커뮤니티", href: "/admin/community" },
+    { icon: "lucide:bot", label: "AI스케줄", href: "/admin/community/ai-manager" },
     { icon: "lucide:ticket", label: "티켓구매내역", href: "/admin/payment-ticket" },
     { icon: "lucide:ticket-plus", label: "티켓수동발급", href: "/admin/payment-ticket/manual-issue" },
     { icon: "lucide:database", label: "DB관리", href: "/admin/db-manage" },
