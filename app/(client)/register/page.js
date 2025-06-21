@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Button, Skeleton, Input, Textarea, DatePicker, Spinner, useToast } from "@heroui/react";
+import { Button, Skeleton, Input, Textarea, DatePicker, Spinner, useToast, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Switch } from "@heroui/react";
 import { FaChevronLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { Card, CardBody, Divider, Image, CardFooter } from "@heroui/react";
@@ -32,6 +32,7 @@ export default function MagazineList() {
   const supabase = createClient();
   const [topCards, setTopCards] = useState([]);
   const [visibleTopCards, setVisibleTopCards] = useState([]);
+  const [showIntro, setShowIntro] = useState(true);
 
   const genres = [
     { id: 1, name: "현대미술" },
@@ -356,6 +357,26 @@ export default function MagazineList() {
         </div>
       ) : (
         <>
+          {/* 작가 등록 안내 모달 */}
+          <Modal isOpen={showIntro} onClose={() => setShowIntro(false)} size="lg" scrollBehavior="inside">
+            <ModalContent>
+              <ModalHeader className="font-bold text-lg">📌 작가 등록 전 꼭 확인해주세요</ModalHeader>
+              <ModalBody className="space-y-3 text-sm leading-relaxed max-h-[60vh] overflow-auto">
+                <p>본 플랫폼은 작가와 구매자가 직접 메시지로 소통해 직거래하는 시스템입니다.</p>
+                <p>작품 등록 및 연결은 무료이며, 저희가 <b>중개하거나 수수료를 받지 않습니다.</b></p>
+                <p>구매자는 작가님과 직접 거래하거나, 연결된 갤러리를 통해 위탁 판매하실 수 있습니다.</p>
+                <p>저작권은 전적으로 작가님께 있으며, 플랫폼은 <b>2차 가공 또는 상업적 활용을 하지 않습니다.</b></p>
+                <p>등록하신 작품 이미지는 플랫폼 내부에서만 노출되며, 외부로 공유되거나 사용되지 않습니다.</p>
+                <p>타사 플랫폼처럼 작가와의 계약 체결 없이 이용 가능하니, 안심하고 등록해 주세요.</p>
+                <p>추후에는 작품 설치 지원, 에스크로 연계 등의 기능도 순차적으로 제공될 예정입니다.</p>
+                <p className="pt-2">감사합니다.<br/>– 미술예술랭 드림</p>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="primary" onPress={() => setShowIntro(false)}>확인</Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+
           <div className="bg-white flex items-center w-[90%] justify-between">
             <Button
               isIconOnly
