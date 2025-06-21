@@ -11,10 +11,10 @@ export async function POST(req: NextRequest) {
   try {
     const { prompt, scheduleId, autoPublish = false } = await req.json();
 
-    const hfToken = process.env.HF_TOKEN;
-    if (!hfToken) {
-      console.log("HF_TOKEN env 가 필요합니다.");
-      return NextResponse.json({ error: "missing-hf-token" }, { status: 500 });
+    const repToken = process.env.REPLICATE_API_TOKEN;
+    if (!repToken) {
+      console.log("REPLICATE_API_TOKEN env 가 필요합니다.");
+      return NextResponse.json({ error: "missing-replicate-token" }, { status: 500 });
     }
 
     // 기본 프롬프트 템플릿
@@ -32,26 +32,30 @@ export async function POST(req: NextRequest) {
 
     const finalPrompt = basePrompt + newsSection;
 
-    // 1) HuggingFace Inference API 호출 (Flan-T5 Large 예시)
-    const hfRes = await fetch(
-      "https://api-inference.huggingface.co/models/google/flan-t5-large",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${hfToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ inputs: finalPrompt }),
+    // 1) Replicate API 호출 (Llama-3 70B instruct 예시)
+    const repRes = await fetch("https://api.replicate.com/v1/predictions", {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${repToken}`,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        version: "meta/llama-3-70b-instruct", // 모델 버전 ID
+        input: {
+          prompt: finalPrompt,
+          max_tokens: 400,
+        },
+      }),
+    });
 
-    if (!hfRes.ok) {
-      console.log("HF API error", await hfRes.text());
-      return NextResponse.json({ error: "hf-error" }, { status: 500 });
+    if (!repRes.ok) {
+      console.log("Replicate API error", await repRes.text());
+      return NextResponse.json({ error: "replicate-error" }, { status: 500 });
     }
 
-    const hfJson: any = await hfRes.json();
-    const rawText = hfJson?.[0]?.generated_text || "";
+    const repJson: any = await repRes.json();
+    // Replicate 응답 구조: { output: "generated text..." }
+    const rawText = repJson?.output || "";
 
     // 2) 간단 후처리 – 제목과 본문 분리 규칙: 첫 줄을 제목으로 간주
     const [firstLine, ...restLines] = rawText.split("\n").filter(Boolean);
