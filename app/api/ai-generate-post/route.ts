@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { fetchArtHeadlines } from "@/utils/fetchArtNews";
+import fetch from "node-fetch";
 
 // POST /api/ai-generate-post
 // Body: { scheduleId?: string, prompt?: string, autoPublish?: boolean }
@@ -10,33 +11,47 @@ export async function POST(req: NextRequest) {
   try {
     const { prompt, scheduleId, autoPublish = false } = await req.json();
 
-    if (!process.env.OPENAI_API_KEY) {
-      console.log("OPENAI_API_KEY 가 설정되어 있지 않습니다.");
-      return NextResponse.json({ error: "missing-openai-key" }, { status: 500 });
+    const hfToken = process.env.HF_TOKEN;
+    if (!hfToken) {
+      console.log("HF_TOKEN env 가 필요합니다.");
+      return NextResponse.json({ error: "missing-hf-token" }, { status: 500 });
     }
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-    // 기본 프롬프트(예시) – 실제 서비스에서는 schedule 테이블에서 읽어온 템플릿과 병합
-    const finalPrompt =
+    // 기본 프롬프트 템플릿
+    const basePrompt =
       prompt ||
       "너는 현대·클래식 미술 전문 큐레이터 겸 칼럼니스트다. 사람처럼 자연스러운 한국어로 400~600자 분량의 컬럼을 작성해라.";
 
-    // 1) GPT 호출
-    const chat = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // 사용 가능한 모델로 교체 가능
-      temperature: 0.9,
-      messages: [
-        {
-          role: "system",
-          content:
-            "너는 현대·클래식 미술 전문 큐레이터 겸 칼럼니스트다. 독자에게 친근하면서도 전문적인 톤으로 작성해라.",
-        },
-        { role: "user", content: finalPrompt },
-      ],
-    });
+    // 최신 미술 헤드라인 삽입
+    const headlines = await fetchArtHeadlines();
+    const newsSection = headlines.length
+      ? `\n\n[오늘의 미술 헤드라인]\n${headlines
+          .map((h, i) => `${i + 1}. ${h}`)
+          .join("\n")}\n\n`
+      : "";
 
-    const rawText = chat.choices[0]?.message?.content ?? "";
+    const finalPrompt = basePrompt + newsSection;
+
+    // 1) HuggingFace Inference API 호출 (Flan-T5 Large 예시)
+    const hfRes = await fetch(
+      "https://api-inference.huggingface.co/models/google/flan-t5-large",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${hfToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ inputs: finalPrompt }),
+      },
+    );
+
+    if (!hfRes.ok) {
+      console.log("HF API error", await hfRes.text());
+      return NextResponse.json({ error: "hf-error" }, { status: 500 });
+    }
+
+    const hfJson: any = await hfRes.json();
+    const rawText = hfJson?.[0]?.generated_text || "";
 
     // 2) 간단 후처리 – 제목과 본문 분리 규칙: 첫 줄을 제목으로 간주
     const [firstLine, ...restLines] = rawText.split("\n").filter(Boolean);
