@@ -195,7 +195,7 @@ export default function AiScheduleManagerPage() {
       </div>
 
       {/* Modal */}
-      <Modal open={modalOpen} onOpenChange={setModalOpen} size="lg">
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} size="lg">
         <ModalContent>
           <ModalHeader>{editing ? '스케줄 수정' : '새 스케줄'}</ModalHeader>
           <ModalBody className="space-y-3">
