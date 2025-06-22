@@ -32,15 +32,33 @@ export async function POST(req: NextRequest) {
 
     const finalPrompt = basePrompt + newsSection;
 
-    // 1) Replicate API 호출 (Llama-3 70B instruct 예시)
-    const repRes = await fetch("https://api.replicate.com/v1/predictions", {
+    // 1) Replicate API 호출
+    let repVersion = process.env.REPLICATE_MODEL_VERSION;
+
+    // env 가 없거나 40~64자 해시가 아닌 경우 최신 버전 조회
+    if (!repVersion || repVersion.length < 40) {
+      try {
+        const latestRes = await fetch("https://api.replicate.com/v1/models/meta/meta-llama-3-8b-instruct", {
+          headers: { Authorization: `Token ${repToken}` },
+        });
+        const latestJson: any = await latestRes.json();
+        repVersion = latestJson?.latest_version?.id;
+        console.log("Fetched latest repVersion", repVersion);
+      } catch (e) {
+        console.log("fetch latest version error", e);
+      }
+      if (!repVersion) {
+        return NextResponse.json({ error: "missing-replicate-version" }, { status: 500 });
+      }
+    }
+
+    const repRes = await fetch(`https://api.replicate.com/v1/models/meta/meta-llama-3-8b-instruct/versions/${repVersion}/predictions`, {
       method: "POST",
       headers: {
         Authorization: `Token ${repToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        version: "meta/llama-3-70b-instruct", // 모델 버전 ID
         input: {
           prompt: finalPrompt,
           max_tokens: 400,
@@ -53,9 +71,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "replicate-error" }, { status: 500 });
     }
 
-    const repJson: any = await repRes.json();
-    // Replicate 응답 구조: { output: "generated text..." }
-    const rawText = repJson?.output || "";
+    let repJson: any = await repRes.json();
+
+    // 작업이 완료될 때까지 최대 20초(2000ms * 10) 동안 폴링
+    let waitCount = 0;
+    while (repJson?.status && repJson.status !== "succeeded" && repJson.status !== "failed" && waitCount < 10) {
+      await new Promise((r) => setTimeout(r, 2000));
+      const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${repJson.id}`, {
+        headers: {
+          Authorization: `Token ${repToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+      repJson = await pollRes.json();
+      waitCount += 1;
+    }
+
+    if (repJson.status !== "succeeded") {
+      console.log("Replicate prediction not succeeded", repJson);
+      return NextResponse.json({ error: "replicate-processing" }, { status: 500 });
+    }
+
+    const rawText = repJson?.output?.join ? repJson.output.join("") : repJson.output || "";
 
     // 2) 간단 후처리 – 제목과 본문 분리 규칙: 첫 줄을 제목으로 간주
     const [firstLine, ...restLines] = rawText.split("\n").filter(Boolean);
