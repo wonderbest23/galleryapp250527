@@ -8,6 +8,9 @@ import fetch from "node-fetch";
 // Body: { scheduleId?: string, prompt?: string, autoPublish?: boolean }
 
 export async function POST(req: NextRequest) {
+  // verify service role key presence
+  console.log("SERVICE_KEY?", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+
   try {
     const { prompt, scheduleId, autoPublish = false } = await req.json();
 
