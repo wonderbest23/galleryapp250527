@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 import { fetchArtHeadlines } from "@/utils/fetchArtNews";
 import fetch from "node-fetch";
 
@@ -102,20 +101,12 @@ export async function POST(req: NextRequest) {
     const title = firstLine.replace(/^#*/g, "").trim();
     const content = restLines.join("\n").trim();
 
-    // 3) Supabase insert (draft)
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
+    // 3) Supabase insert (draft) - use admin client with service_role key (RLS 우회)
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll() {
-            /* no-op */
-          },
-        },
+        auth: { autoRefreshToken: false, persistSession: false },
       },
     );
 
