@@ -37,14 +37,9 @@ export default function CommunityDetail() {
         setCommentCnt(count || 0);
         setLoading(false);
         // 조회수 +1 (await 해서 실패 여부 확인 후 state 갱신)
-        const { data: updated, error: viewErr } = await supabase
-          .from("community_post")
-          .update({ views: (data.views || 0) + 1 })
-          .eq("id", id)
-          .select("views")
-          .single();
-        if (!viewErr && updated) {
-          setPost((prev) => ({ ...prev, views: updated.views }));
+        const { data: newCnt, error: viewErr } = await supabase.rpc("increment_view", { p_post_id: id });
+        if (!viewErr && typeof newCnt === "number") {
+          setPost((prev) => ({ ...prev, views: newCnt }));
         }
         // 작성자 이름 조회 (profiles)
         if (data.user_id) {
