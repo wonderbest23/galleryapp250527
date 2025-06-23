@@ -124,6 +124,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "db-error" }, { status: 500 });
     }
 
+    // autoPublish 시 community_post에도 추가
+    if (autoPublish) {
+      const { error: commErr } = await supabase.from("community_post").insert({
+        title,
+        content,
+        user_id: null, // 시스템 생성
+        likes: 0,
+        is_ai_generated: true,
+        created_at: new Date().toISOString(),
+      });
+      if (commErr) {
+        console.log("community insert error", commErr);
+      }
+    }
+
     return NextResponse.json({ ok: true, post: data });
   } catch (e: any) {
     console.log("ai-generate-post error", e);
