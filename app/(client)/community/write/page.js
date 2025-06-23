@@ -3,10 +3,10 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { Button, Input, Select } from "@heroui/react";
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 
 // FroalaEditorComponent 동적 임포트 (관리자용 컴포넌트 재사용)
-const FroalaEditorComponent = dynamic(() => import("@/app/(admin)/admin/components/Froala"), {
+const FroalaEditorComponent = dynamicImport(() => import("@/app/(admin)/admin/components/Froala"), {
   ssr: false,
 });
 
