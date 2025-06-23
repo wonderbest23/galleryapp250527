@@ -36,11 +36,16 @@ export default function CommunityDetail() {
           .eq("post_id", id);
         setCommentCnt(count || 0);
         setLoading(false);
-        // 조회수 +1
-        supabase
+        // 조회수 +1 (await 해서 실패 여부 확인 후 state 갱신)
+        const { data: updated, error: viewErr } = await supabase
           .from("community_post")
           .update({ views: (data.views || 0) + 1 })
-          .eq("id", id);
+          .eq("id", id)
+          .select("views")
+          .single();
+        if (!viewErr && updated) {
+          setPost((prev) => ({ ...prev, views: updated.views }));
+        }
         // 작성자 이름 조회 (profiles)
         if (data.user_id) {
           const { data: prof } = await supabase
