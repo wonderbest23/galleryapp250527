@@ -36,8 +36,24 @@ export default function CommunityDetail() {
           .eq("post_id", id);
         setCommentCnt(count || 0);
         setLoading(false);
-        // 조회수 +1 (await 해서 실패 여부 확인 후 state 갱신)
-        const { data: newCnt, error: viewErr } = await supabase.rpc("increment_view", { p_post_id: id });
+        // viewerId: 로그인 사용자는 user.id, 아니면 localStorage 에 저장된 anonId 사용
+        const getViewerId = () => {
+          const lsKey = "anonId";
+          if (currentUser?.id) return currentUser.id;
+          let anon = localStorage.getItem(lsKey);
+          if (!anon) {
+            anon = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+            localStorage.setItem(lsKey, anon);
+          }
+          return anon;
+        };
+
+        const viewerId = getViewerId();
+
+        const { data: newCnt, error: viewErr } = await supabase.rpc("increment_view", {
+          p_post_id: id,
+          p_viewer: viewerId,
+        });
         if (!viewErr && typeof newCnt === "number") {
           setPost((prev) => ({ ...prev, views: newCnt }));
         }
