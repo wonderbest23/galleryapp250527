@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "api/ai-fake-traffic",
-      "schedule": "*/30 * * * *"
+      "schedule": "* * * * *"
     }
   ]
 } 
