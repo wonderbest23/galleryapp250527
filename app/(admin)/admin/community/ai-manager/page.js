@@ -29,10 +29,12 @@ export default function AiScheduleManagerPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null); // null = new
 
+  const defaultPrompt = `제목과 본문을 한국어로 작성해주세요.\n\n규칙:\n1) 제목은 50자 이하\n2) 본문은 400~600자, 존댓말 사용\n3) 마지막 문장을 마침표로 끝내기\n\n제목:`;
+
   const [form, setForm] = useState({
     name: '',
     cron: '0 9 * * 1',
-    prompt_template: '',
+    prompt_template: defaultPrompt,
     enabled: true,
     auto_publish: false,
   });
@@ -61,7 +63,7 @@ export default function AiScheduleManagerPage() {
 
   const openNewModal = () => {
     setEditing(null);
-    setForm({ name: '', cron: '0 9 * * 1', prompt_template: '', enabled: true, auto_publish: false });
+    setForm({ name: '', cron: '0 9 * * 1', prompt_template: defaultPrompt, enabled: true, auto_publish: false });
     setModalOpen(true);
   };
 
@@ -201,7 +203,7 @@ export default function AiScheduleManagerPage() {
           <ModalBody className="space-y-3">
             <Input label="이름" value={form.name} onChange={(e)=>setForm({ ...form, name: e.target.value })} />
             <Input label="Cron 표현식" value={form.cron} onChange={(e)=>setForm({ ...form, cron: e.target.value })} />
-            <Textarea label="프롬프트 템플릿" minRows={4} value={form.prompt_template} onChange={(e)=>setForm({ ...form, prompt_template: e.target.value })} />
+            <Textarea label="프롬프트 템플릿" minRows={6} placeholder={defaultPrompt} value={form.prompt_template} onChange={(e)=>setForm({ ...form, prompt_template: e.target.value })} />
             <div className="flex items-center gap-2">
               <Switch isSelected={form.enabled} onValueChange={(v)=>setForm({ ...form, enabled: v })} /> 활성화
               <Switch isSelected={form.auto_publish} onValueChange={(v)=>setForm({ ...form, auto_publish: v })} /> 자동 발행

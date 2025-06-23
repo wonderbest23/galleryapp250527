@@ -36,11 +36,27 @@ export default function CommunityDetail() {
           .eq("post_id", id);
         setCommentCnt(count || 0);
         setLoading(false);
-        // 조회수 +1
-        supabase
-          .from("community_post")
-          .update({ views: (data.views || 0) + 1 })
-          .eq("id", id);
+        // viewerId: 로그인 사용자는 user.id, 아니면 localStorage 에 저장된 anonId 사용
+        const getViewerId = () => {
+          const lsKey = "anonId";
+          if (currentUser?.id) return currentUser.id;
+          let anon = localStorage.getItem(lsKey);
+          if (!anon) {
+            anon = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+            localStorage.setItem(lsKey, anon);
+          }
+          return anon;
+        };
+
+        const viewerId = getViewerId();
+
+        const { data: newCnt, error: viewErr } = await supabase.rpc("increment_view", {
+          p_post_id: id,
+          p_viewer: viewerId,
+        });
+        if (!viewErr && typeof newCnt === "number") {
+          setPost((prev) => ({ ...prev, views: newCnt }));
+        }
         // 작성자 이름 조회 (profiles)
         if (data.user_id) {
           const { data: prof } = await supabase

@@ -1,0 +1,1 @@
+alter table community_post add column if not exists views integer not null default 0; 
