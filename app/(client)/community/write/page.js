@@ -80,4 +80,6 @@ export default function CommunityWrite() {
       </Button>
     </div>
   );
-} 
+}
+
+export const dynamic = 'force-dynamic'; 
