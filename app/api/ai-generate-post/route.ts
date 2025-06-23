@@ -20,9 +20,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 기본 프롬프트 템플릿
-    const basePrompt =
-      prompt ||
-      "너는 현대·클래식 미술 전문 큐레이터 겸 칼럼니스트다. 사람처럼 자연스러운 한국어로 400~600자 분량의 컬럼을 작성해라.";
+    // 사용자 프롬프트가 존재해도 한국어 작성 지시를 확실히 포함시킨다.
+    const basePrompt = prompt
+      ? `다음 지시에 따라 반드시 한국어로 답변해라.\n\n${prompt}`
+      : "너는 현대·클래식 미술 전문 큐레이터 겸 칼럼니스트다. 사람처럼 자연스러운 한국어로 400~600자 분량의 컬럼을 작성해라.";
 
     // 최신 미술 헤드라인 삽입
     const headlines = await fetchArtHeadlines();
