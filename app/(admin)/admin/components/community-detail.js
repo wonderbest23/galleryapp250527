@@ -2,17 +2,28 @@
 import { useState } from "react";
 import { Button, Input, Textarea, addToast, Divider } from "@heroui/react";
 import { createClient } from "@/utils/supabase/client";
+import { createClient as createClientAdmin } from "@supabase/supabase-js";
 import Link from "next/link";
 
 export function CommunityDetail({ post, onUpdate, onDelete, onRefresh }) {
   const supabase = createClient();
+  const supabaseAdmin = createClientAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    },
+  );
   const [likes, setLikes] = useState(post.likes || 0);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const saveLikes = async () => {
     setUpdating(true);
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("community_post")
       .update({ likes })
       .eq("id", post.id)
@@ -31,7 +42,7 @@ export function CommunityDetail({ post, onUpdate, onDelete, onRefresh }) {
   const deletePost = async () => {
     if (!confirm("정말로 삭제하시겠습니까?")) return;
     setDeleting(true);
-    const { error } = await supabase.from("community_post").delete().eq("id", post.id);
+    const { error } = await supabaseAdmin.from("community_post").delete().eq("id", post.id);
     if (error) {
       addToast({ title: "삭제 실패", description: error.message, color: "danger" });
     } else {
