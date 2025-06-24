@@ -10,6 +10,7 @@ const nextConfig = {
       const empty = false;
       Object.assign(config.resolve.alias, {
         "react-froala-wysiwyg": empty,
+        "froala-editor": empty,
         "froala-editor/js/froala_editor.pkgd.min.js": empty,
         "froala-editor/js/plugins.pkgd.min.js": empty,
         "froala-editor/css/froala_style.min.css": empty,
