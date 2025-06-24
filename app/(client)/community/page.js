@@ -26,7 +26,7 @@ function CommunityPageContent() {
     const fetchPosts = async () => {
       setIsLoading(true);
 
-      // 베스트 4개
+      // 베스트 5개 (is_best=true)
       const {
         data: best,
         error: bestErr,
@@ -35,7 +35,7 @@ function CommunityPageContent() {
         .select("*, comments:community_comment(count)")
         .gte("likes", 10)
         .order("likes", { ascending: false })
-        .limit(4);
+        .limit(5);
 
       if (bestErr) console.log("bestErr", bestErr);
       setBestPosts(best || []);
