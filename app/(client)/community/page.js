@@ -5,6 +5,7 @@ import { Button, Divider, Spinner } from "@heroui/react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { HiOutlineClock, HiOutlineTag, HiOutlineUser, HiOutlineEye, HiOutlineStar } from "react-icons/hi";
+import classNames from "classnames";
 
 const PAGE_SIZE = 10;
 
@@ -21,12 +22,13 @@ function CommunityPageContent() {
   const [searchField, setSearchField] = useState(searchParams.get("field") || "title_content");
   const [keyword, setKeyword] = useState(searchParams.get("q") || "");
   const [currentUser, setCurrentUser] = useState(null);
+  const [tab, setTab] = useState("all");
 
   useEffect(() => {
     const fetchPosts = async () => {
       setIsLoading(true);
 
-      // 베스트 5개 (is_best=true)
+      // 베스트 5개 (likes>=10)
       const {
         data: best,
         error: bestErr,
@@ -40,11 +42,15 @@ function CommunityPageContent() {
       if (bestErr) console.log("bestErr", bestErr);
       setBestPosts(best || []);
 
-      // 최신글 + 페이징 (베스트 제외)
+      // 글 목록 (탭에 따라 달라짐)
       let query = supabase
         .from("community_post")
         .select("*, comments:community_comment(count)", { count: "exact" })
         .order("created_at", { ascending: false });
+
+      if (tab === "notice") {
+        query = query.eq("category", "공지");
+      }
 
       // 검색
       if (keyword) {
@@ -53,7 +59,9 @@ function CommunityPageContent() {
         else query = query.or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`);
       }
 
-      const { data: list, error: listErr, count } = await query.range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+      const { data: list, error: listErr, count } = tab === "best"
+        ? { data: [], error: null, count: 0 }
+        : await query.range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
       if (listErr) console.log("listErr", listErr);
       setPosts(list || []);
@@ -61,7 +69,7 @@ function CommunityPageContent() {
       setIsLoading(false);
     };
     fetchPosts();
-  }, [page]);
+  }, [page, tab]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -72,6 +80,13 @@ function CommunityPageContent() {
   }, []);
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  // reset page to 1 when tab changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", "1");
+    router.push(`/community?${params.toString()}`);
+  }, [tab]);
 
   const changePage = (newPage) => {
     if (newPage < 1 || newPage > totalPages) return;
@@ -89,9 +104,9 @@ function CommunityPageContent() {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-[600px] mx-auto px-2 py-6 pb-32">
+    <div className="flex flex-col items-center w-full max-w-[600px] mx-auto px-4 py-6 pb-32">
       <div className="w-full flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">커뮤니티</h1>
+        <h1 className="text-2xl font-bold pl-1">커뮤니티</h1>
         <Button color="primary" onPress={() => {
           if (currentUser) {
             router.push('/community/write');
@@ -101,9 +116,18 @@ function CommunityPageContent() {
         }}>글쓰기</Button>
       </div>
 
+      {/* 탭 선택 */}
+      <div className="flex items-center gap-6 border-b w-full mb-3 text-[15px] font-medium">
+        {['all','best','notice'].map(t=> (
+          <button key={t} onClick={()=>setTab(t)} className={classNames("relative py-2", tab===t?"text-blue-600":"text-gray-600")}>{t==='all'?'전체':t==='best'?'베스트':'공지'}
+            {tab===t && <span className="absolute left-0 -bottom-[1px] h-[2px] w-full bg-blue-600" />}
+          </button>
+        ))}
+      </div>
+
       {/* 베스트 */}
-      {bestPosts.length > 0 && (
-        <div className="w-full mb-0">
+      {tab!=='notice' && bestPosts.length > 0 && tab!=='best' && (
+        <div className="w-full mb-2">
           <ul className="flex flex-col gap-1 list-none">
             {bestPosts.map((p) => (
               <li key={p.id} className="bg-[#eef7ff] hover:bg-[#e0f0ff] border border-blue-200 rounded-sm px-3 py-2">
@@ -129,8 +153,31 @@ function CommunityPageContent() {
         </div>
       )}
 
-      {/* 최신글 */}
-      {isLoading ? (
+      {/* 목록 */}
+      {tab==='best' && (
+        <ul className="w-full flex flex-col gap-[2px] list-none">
+          {bestPosts.map((p)=>(
+            <li key={p.id} className="border-b border-gray-200 first:border-t px-3 py-[7px] hover:bg-gray-50">
+              <Link href={`/community/${p.id}`} className="flex flex-col gap-[2px]">
+                <div className="flex items-center gap-1 text-[14px]">
+                  <span className="font-medium break-keep">{p.title}</span>
+                  {p.comments?.[0]?.count>0 && <span className="text-gray-400 text-[12px]">[{p.comments[0].count}]</span>}
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-gray-600">
+                  <HiOutlineClock className="w-3 h-3" />{new Date(p.created_at).toLocaleDateString("ko-KR")}
+                  <HiOutlineTag className="w-3 h-3" />{p.category || "커뮤니티"}
+                  <HiOutlineUser className="w-3 h-3" />{p.nickname || "익명"}
+                  <HiOutlineEye className="w-3 h-3" />{p.views || 0}
+                  <HiOutlineStar className="w-3 h-3" />{p.likes}
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* 일반/공지 글 */}
+      {tab!=='best' && (isLoading ? (
         <Spinner variant="wave" />
       ) : (
         <ul className="w-full flex flex-col gap-[2px] list-none mt-0">
@@ -152,7 +199,7 @@ function CommunityPageContent() {
             </li>
           ))}
         </ul>
-      )}
+      ))}
 
       {/* 검색바 */}
       <div className="flex items-center gap-2 w-full border p-2 rounded">
