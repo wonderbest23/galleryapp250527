@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
-import { Button, Input, Select } from "@heroui/react";
+import { Button, Input, Select, SelectItem } from "@heroui/react";
 import dynamicImport from "next/dynamic";
 
 const FroalaEditorComponent = dynamicImport(() => import("@/app/(admin)/admin/components/Froala"), { ssr: false });
@@ -49,8 +49,15 @@ export default function CommunityWriteClient() {
   return (
     <div className="flex flex-col items-center w-full max-w-[600px] mx-auto px-4 py-6 gap-4">
       <h1 className="text-2xl font-bold">게시글 작성</h1>
-      <Select label="카테고리" selectedKeys={[category]} onSelectionChange={(keys)=>setCategory(Array.from(keys)[0])}>
-        {categories.map(c=>(<Select.Item key={c.value}>{c.label}</Select.Item>))}
+      <Select
+        label="카테고리"
+        selectedKeys={new Set([category])}
+        onSelectionChange={(keys)=>{
+          const first = Array.from(keys)[0];
+          if (first) setCategory(first);
+        }}
+      >
+        {categories.map(c=>(<SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>))}
       </Select>
       <Input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="제목" />
       <div className="w-full">
