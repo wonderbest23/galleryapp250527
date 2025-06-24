@@ -17,6 +17,10 @@ export default function CommunityDetail() {
   const [loading, setLoading] = useState(true);
   const [likeLoading, setLikeLoading] = useState(false);
   const [copyMsg, setCopyMsg] = useState("");
+  const [commentText, setCommentText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [replyTo, setReplyTo] = useState(null);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -35,6 +39,13 @@ export default function CommunityDetail() {
           .select("id", { count: "exact", head: true })
           .eq("post_id", id);
         setCommentCnt(count || 0);
+        // 댓글 목록 조회
+        const { data: commentList } = await supabase
+          .from("community_comment")
+          .select("id, content, created_at, likes, user_id, parent_id")
+          .eq("post_id", id)
+          .order("created_at", { ascending: true });
+        setComments(commentList || []);
         setLoading(false);
         // viewerId: 로그인 사용자는 user.id, 아니면 localStorage 에 저장된 anonId 사용
         const lsKey = "anonId";
@@ -105,6 +116,30 @@ export default function CommunityDetail() {
     }
   };
 
+  const handleComment = async () => {
+    if (!post) return;
+    setSending(true);
+    const { error } = await supabase
+      .from("community_comment")
+      .insert({
+        post_id: id,
+        content: commentText,
+        user_id: post.user_id,
+        parent_id: replyTo,
+      });
+    setSending(false);
+    if (error) {
+      addToast({ title: "댓글 등록 실패", description: error.message, color: "danger" });
+    } else {
+      setCommentText("");
+      setReplyTo(null);
+      // 목록에 바로 반영
+      const { data: { session } } = await supabase.auth.getSession();
+      setComments((prev) => [...prev, { id: Date.now(), content: commentText, likes: 0, created_at: new Date().toISOString(), user_id: session?.user?.id ?? null, parent_id: replyTo }]);
+      addToast({ title: "댓글 등록 성공", description: "댓글이 성공적으로 등록되었습니다.", color: "success" });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center w-full h-screen">
@@ -168,6 +203,77 @@ export default function CommunityDetail() {
       </div>
 
       {copyMsg && <div className="text-xs text-green-600 mt-1">{copyMsg}</div>}
+
+      {/* 댓글 목록 */}
+      {comments && comments.length > 0 && (
+        <div className="w-full flex flex-col gap-4">
+          <Divider className="bg-gray-300" />
+          {/* 원댓글 렌더링 */}
+          {comments.filter(cc=>!cc.parent_id).map((c) => (
+            <div key={c.id} className="flex flex-col gap-2 pb-3 border-b last:border-none">
+              {/* 원댓글 */}
+              <div className="flex items-start gap-2">
+                <HiOutlineUser className="w-6 h-6 text-gray-400 shrink-0" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                    <span className="font-medium text-gray-700">익명</span>
+                    <span>{new Date(c.created_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}</span>
+                    {/* like & reply icons */}
+                    <button onClick={async()=>{
+                      const { data, error } = await supabase.from("community_comment").update({ likes: c.likes+1 }).eq("id", c.id).select().maybeSingle();
+                      if(!error && data){setComments(prev=>prev.map(pc=>pc.id===c.id?data:pc));}
+                    }} className="flex items-center gap-1 text-gray-500 ml-auto text-[13px]">
+                      👍 <span>{c.likes}</span>
+                    </button>
+                    <button onClick={()=>{setReplyTo(c.id);}} className="text-gray-500 text-[13px]">💬 댓글</button>
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap break-words">{c.content}</p>
+                </div>
+              </div>
+              {/* 대댓글 목록 */}
+              {comments.filter(r=>r.parent_id===c.id).map(r=>(
+                <div key={r.id} className="flex items-start gap-2 pl-8 pt-2">
+                  <HiOutlineUser className="w-6 h-6 text-gray-400 shrink-0" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                      <span className="font-medium text-gray-700">익명</span>
+                      <span>{new Date(r.created_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}</span>
+                      <button onClick={async()=>{
+                        const { data, error } = await supabase.from("community_comment").update({ likes: r.likes+1 }).eq("id", r.id).select().maybeSingle();
+                        if(!error && data){setComments(prev=>prev.map(pc=>pc.id===r.id?data:pc));}
+                      }} className="flex items-center gap-1 text-gray-500 ml-auto text-[13px]">
+                        👍 <span>{r.likes}</span>
+                      </button>
+                    </div>
+                    <p className="text-sm whitespace-pre-wrap break-words">{r.content}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 댓글 쓰기 */}
+      <Divider className="bg-gray-300" />
+      <div className="w-full border rounded p-4 bg-gray-50">
+        <h2 className="font-semibold mb-2 text-[15px]">{replyTo?"답글 쓰기":"댓글 쓰기"}</h2>
+        <textarea
+          value={commentText}
+          onChange={(e)=>setCommentText(e.target.value)}
+          rows={4}
+          placeholder='욕설이나 비난 등은 자제 부탁드립니다.'
+          className="w-full border rounded px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+        />
+        <Button
+          color="primary"
+          className="w-full mt-3"
+          isLoading={sending}
+          onPress={handleComment}
+        >
+          등록
+        </Button>
+      </div>
     </div>
   );
 } 
