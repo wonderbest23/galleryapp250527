@@ -18,6 +18,7 @@ export function CommunityList({
   onSelectPost,
   selectedKeys,
   onSelectionChange,
+  refreshToggle = 0,
 }) {
   const supabase = createClient();
   const [posts, setPosts] = useState([]);
@@ -28,7 +29,7 @@ export function CommunityList({
 
   useEffect(() => {
     fetchPosts();
-  }, [page, search]);
+  }, [page, search, refreshToggle]);
 
   const fetchPosts = async () => {
     const offset = (page - 1) * itemsPerPage;
