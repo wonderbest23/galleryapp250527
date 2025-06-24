@@ -89,7 +89,7 @@ function CommunityPageContent() {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-[600px] mx-auto px-4 py-6 pb-32">
+    <div className="flex flex-col items-center w-full max-w-[600px] mx-auto px-2 py-6 pb-32">
       <div className="w-full flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">커뮤니티</h1>
         <Button color="primary" onPress={() => {
@@ -103,15 +103,14 @@ function CommunityPageContent() {
 
       {/* 베스트 */}
       {bestPosts.length > 0 && (
-        <div className="w-full mb-6">
-          <h2 className="text-lg font-bold mb-2">🔥 베스트 게시글</h2>
+        <div className="w-full mb-0">
           <ul className="flex flex-col gap-1 list-none">
             {bestPosts.map((p) => (
               <li key={p.id} className="bg-[#eef7ff] hover:bg-[#e0f0ff] border border-blue-200 rounded-sm px-3 py-2">
                 <Link href={`/community/${p.id}`} className="flex flex-col gap-[2px]">
                   {/* 1st row */}
                   <div className="flex items-center gap-1 text-[14px]">
-                    <span className="inline-block bg-blue-500 text-white text-[11px] px-1 py-[1px] rounded-sm">인기</span>
+                    <span className="inline-block bg-blue-500 text-white text-[11px] px-1 py-[1px] rounded-sm">베스트</span>
                     <span className="font-medium break-keep">{p.title}</span>
                     {p.comments?.[0]?.count > 0 && <span className="text-gray-400 text-[12px]">[{p.comments[0].count}]</span>}
                   </div>
@@ -127,16 +126,14 @@ function CommunityPageContent() {
               </li>
             ))}
           </ul>
-          <Divider className="my-6 bg-gray-300" />
         </div>
       )}
 
       {/* 최신글 */}
-      <h2 className="text-lg font-bold mb-2 w-full">최신 게시글</h2>
       {isLoading ? (
         <Spinner variant="wave" />
       ) : (
-        <ul className="w-full flex flex-col gap-[2px] list-none">
+        <ul className="w-full flex flex-col gap-[2px] list-none mt-0">
           {posts.map((p) => (
             <li key={p.id} className="border-b border-gray-200 first:border-t px-3 py-[7px] hover:bg-gray-50">
               <Link href={`/community/${p.id}`} className="flex flex-col gap-[2px]">
