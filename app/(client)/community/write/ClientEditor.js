@@ -9,9 +9,9 @@ const FroalaEditorComponent = dynamicImport(() => import("@/app/(admin)/admin/co
 
 export default function CommunityWriteClient() {
   const categories = [
-    { value: "free", label: "자유" },
-    { value: "issue", label: "유머/움짤/이슈" },
-    { value: "qa", label: "질문" },
+    { value: "자유", label: "자유" },
+    { value: "전시", label: "전시" },
+    { value: "질문", label: "질문" },
   ];
   const [category, setCategory] = useState(categories[0].value);
   const [title, setTitle] = useState("");
@@ -39,7 +39,10 @@ export default function CommunityWriteClient() {
       user_id: session.user.id,
     }).select().single();
     setIsSaving(false);
-    if (error) alert("저장 실패");
+    if (error) {
+      console.log("insert error", error);
+      alert("저장 실패: " + error.message);
+    }
     else router.replace(`/community/${data.id}`);
   };
 

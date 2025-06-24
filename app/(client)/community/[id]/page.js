@@ -37,18 +37,21 @@ export default function CommunityDetail() {
         setCommentCnt(count || 0);
         setLoading(false);
         // viewerId: 로그인 사용자는 user.id, 아니면 localStorage 에 저장된 anonId 사용
-        const getViewerId = () => {
-          const lsKey = "anonId";
-          if (currentUser?.id) return currentUser.id;
+        const lsKey = "anonId";
+        let viewerId;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          viewerId = session.user.id;
+        } else {
           let anon = localStorage.getItem(lsKey);
           if (!anon) {
-            anon = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+            anon = (typeof crypto !== "undefined" && crypto.randomUUID)
+              ? crypto.randomUUID()
+              : Math.random().toString(36).substring(2);
             localStorage.setItem(lsKey, anon);
           }
-          return anon;
-        };
-
-        const viewerId = getViewerId();
+          viewerId = anon;
+        }
 
         const { data: newCnt, error: viewErr } = await supabase.rpc("increment_view", {
           p_post_id: id,
@@ -136,9 +139,10 @@ export default function CommunityDetail() {
       <Divider className="bg-gray-300" />
 
       {/* 본문 */}
-      <div className="w-full whitespace-pre-wrap leading-relaxed text-[15px]">
-        {post.content}
-      </div>
+      <div
+        className="w-full leading-relaxed text-[15px] prose max-w-none"
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      />
 
       <Divider className="bg-gray-300" />
 
