@@ -155,36 +155,42 @@ export default function CommunityDetail() {
 
   return (
     <div className="flex flex-col items-center w-full max-w-[700px] mx-auto px-4 py-6 pb-32 gap-6">
-      {/* 제목 영역 */}
+      {/* 카테고리/Breadcrumb */}
       <div className="w-full">
+        <div className="flex items-center gap-2 text-[13px] text-gray-600 mb-3 border-y border-gray-300 py-2">
+          <Link href="/community" className="font-semibold hover:underline">커뮤니티</Link>
+          {post.category && (
+            <>
+              <span className="text-gray-300">|</span>
+              <span className="font-medium">{post.category}</span>
+            </>
+          )}
+        </div>
+
+        {/* 제목 영역 */}
         <div className="flex justify-between items-start gap-2 mb-2">
           <h1 className="text-[17px] font-semibold break-words flex-1 leading-snug">{post.title}</h1>
           <span className="text-[12px] text-gray-500 whitespace-nowrap">{new Date(post.created_at).toLocaleDateString("ko-KR")} {new Date(post.created_at).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"})}</span>
         </div>
 
         {/* 작성자 + 메타 정보 */}
-        <div className="flex flex-wrap items-center gap-3 text-[13px] text-gray-700 mb-1">
+        <div className="flex flex-wrap items-center gap-3 text-[13px] text-gray-700 pb-2 mb-4 border-b border-gray-300">
           <Avatar radius="sm" size="sm" icon={<HiOutlineUser className="w-4 h-4" />} />
           <span className="font-medium mr-2">{post.nickname || authorName}</span>
           <span className="text-gray-500 text-[12px]">조회 수 {post.views || 0}</span>
           <span className="text-gray-500 text-[12px]">추천 수 {post.likes}</span>
           <span className="text-gray-500 text-[12px]">댓글 {commentCnt}</span>
-          {/* 링크 복사 버튼 */}
           <button onClick={handleCopyLink} className="ml-auto flex items-center gap-1 text-gray-500 hover:underline text-[12px]">
-            <HiOutlineLink className="w-4 h-4" /> 복사
+            <HiOutlineLink className="w-4 h-4" /> 링크 복사
           </button>
         </div>
       </div>
-
-      <Divider className="bg-gray-300" />
 
       {/* 본문 */}
       <div
         className="w-full leading-relaxed text-[15px] prose max-w-none"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
-
-      <Divider className="bg-gray-300" />
 
       {/* 추천 버튼 */}
       <div className="w-full flex justify-center">
@@ -212,7 +218,6 @@ export default function CommunityDetail() {
       {/* 댓글 목록 */}
       {comments && comments.length > 0 && (
         <div className="w-full flex flex-col gap-4">
-          <Divider className="bg-gray-300" />
           {/* 원댓글 렌더링 */}
           {comments.filter(cc=>!cc.parent_id).map((c) => (
             <div key={c.id} className="flex flex-col gap-2 pb-3 border-b last:border-none">
@@ -260,7 +265,6 @@ export default function CommunityDetail() {
       )}
 
       {/* 댓글 쓰기 */}
-      <Divider className="bg-gray-300" />
       <div className="w-full border rounded p-4 bg-gray-50">
         <h2 className="font-semibold mb-2 text-[15px]">{replyTo?"답글 쓰기":"댓글 쓰기"}</h2>
         <textarea
