@@ -37,9 +37,6 @@ export default function CommunityWriteClient() {
       title,
       content,
       user_id: session.user.id,
-      likes: 0,
-      created_at: new Date().toISOString(),
-      views: 0,
     }).select().single();
     setIsSaving(false);
     if (error) alert("저장 실패");
