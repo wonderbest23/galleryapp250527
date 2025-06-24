@@ -112,7 +112,7 @@ function CommunityPageContent() {
                   {/* 1st row */}
                   <div className="flex items-center gap-1 text-[14px]">
                     <span className="inline-block bg-blue-500 text-white text-[11px] px-1 py-[1px] rounded-sm">인기</span>
-                    <span className="font-medium break-keep flex-1 text-blue-700">{p.title}</span>
+                    <span className="font-medium break-keep">{p.title}</span>
                     {p.comments?.[0]?.count > 0 && <span className="text-gray-400 text-[12px]">[{p.comments[0].count}]</span>}
                   </div>
                   {/* 2nd row */}
@@ -141,7 +141,7 @@ function CommunityPageContent() {
             <li key={p.id} className="border-b border-gray-200 first:border-t px-3 py-[7px] hover:bg-gray-50">
               <Link href={`/community/${p.id}`} className="flex flex-col gap-[2px]">
                 <div className="flex items-center gap-1 text-[14px]">
-                  <span className="font-medium flex-1 break-keep">{p.title}</span>
+                  <span className="font-medium break-keep">{p.title}</span>
                   {p.comments?.[0]?.count>0 && <span className="text-gray-400 text-[12px]">[{p.comments[0].count}]</span>}
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-gray-600">
