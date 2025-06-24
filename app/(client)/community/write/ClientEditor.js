@@ -65,7 +65,7 @@ export default function CommunityWriteClient() {
           value={content}
           onChange={setContent}
           height={400}
-          bucketName="community"
+          bucketName="notification"
         />
       </div>
       <Button color="primary" isLoading={isSaving} onPress={handleSubmit} className="w-full">등록</Button>

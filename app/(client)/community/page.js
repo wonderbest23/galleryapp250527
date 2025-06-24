@@ -89,7 +89,7 @@ function CommunityPageContent() {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-[600px] mx-auto px-4 py-6">
+    <div className="flex flex-col items-center w-full max-w-[600px] mx-auto px-4 py-6 pb-32">
       <div className="w-full flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">커뮤니티</h1>
         <Button color="primary" onPress={() => {
