@@ -9,12 +9,13 @@ import { FaCalendar } from "react-icons/fa6";
 import { FaMoneyBillWaveAlt } from "react-icons/fa";
 import dayjs from "dayjs";
 import { motion } from "framer-motion";
-import { toast } from "@heroui/toast";
+import { useToast } from "@/utils/toast";
 
 const OrderHistory = ({ user }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [visibleOrders, setVisibleOrders] = useState(4);
+  const { error: toastError } = useToast();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -95,7 +96,7 @@ const OrderHistory = ({ user }) => {
             const handleCardClick = (e) => {
               if (isExpired) {
                 e.preventDefault();
-                toast.error("사용불가", "전시가 종료되어 티켓 사용이 불가합니다.");
+                toastError("사용불가", "전시가 종료되어 티켓 사용이 불가합니다.");
                 return;
               }
             };
