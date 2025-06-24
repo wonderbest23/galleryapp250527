@@ -6,5 +6,5 @@ import dynamic from "next/dynamic";
 const CommunityWriteClient = dynamic(() => import("./ClientEditor"), { ssr: false });
 
 export default function CommunityWritePage() {
-  return <CommunityWriteClient />;
+  return <div className="pb-32"><CommunityWriteClient /></div>;
 } 

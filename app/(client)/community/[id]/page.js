@@ -154,7 +154,7 @@ export default function CommunityDetail() {
   }
 
   return (
-    <div className="flex flex-col items-center w-full max-w-[700px] mx-auto px-4 py-6 gap-6">
+    <div className="flex flex-col items-center w-full max-w-[700px] mx-auto px-4 py-6 pb-32 gap-6">
       {/* 제목 영역 */}
       <div className="w-full">
         <div className="flex justify-between items-start gap-2 mb-2">
