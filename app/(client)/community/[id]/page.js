@@ -88,21 +88,26 @@ export default function CommunityDetail() {
   const handleLike = async () => {
     if (!post) return;
     setLikeLoading(true);
-    // 증가 후 값을 돌려받기 위해 row_level update
-    const { data, error } = await supabase
-      .from("community_post")
-      .update({ likes: post.likes + 1 })
-      .eq("id", id)
-      .select()
-      .maybeSingle();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) {
+      addToast({ title: "로그인 필요", description: "추천하려면 로그인하세요", color: "warning" });
+      setLikeLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.rpc("like_post_once", {
+      p_post_id: id,
+      p_user_id: session.user.id,
+    });
     setLikeLoading(false);
     if (error) {
-      addToast({ title: "추천 실패", description: error.message, color: "danger" });
-    } else if (data) {
-      setPost(data);
+      if (error.code === "23505" || error.message?.includes("unique")) {
+        addToast({ title: "이미 추천했습니다" });
+      } else {
+        addToast({ title: "추천 실패", description: error.message, color: "danger" });
+      }
     } else {
-      // RLS 등으로 업데이트 못한 경우
-      addToast({ title: "추천 실패", description: "권한이 없습니다", color: "warning" });
+      setPost((prev) => ({ ...prev, likes: prev.likes + 1 }));
     }
   };
 
