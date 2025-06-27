@@ -124,12 +124,13 @@ export default function CommunityDetail() {
   const handleComment = async () => {
     if (!post) return;
     setSending(true);
+    const { data: { session } } = await supabase.auth.getSession();
     const { error } = await supabase
       .from("community_comment")
       .insert({
         post_id: id,
         content: commentText,
-        user_id: post.user_id,
+        user_id: session?.user?.id || null,
         parent_id: replyTo,
       });
     setSending(false);
@@ -139,7 +140,6 @@ export default function CommunityDetail() {
       setCommentText("");
       setReplyTo(null);
       // 목록에 바로 반영
-      const { data: { session } } = await supabase.auth.getSession();
       setComments((prev) => [...prev, { id: Date.now(), content: commentText, likes: 0, created_at: new Date().toISOString(), user_id: session?.user?.id ?? null, parent_id: replyTo }]);
       addToast({ title: "댓글 등록 성공", description: "댓글이 성공적으로 등록되었습니다.", color: "success" });
     }
