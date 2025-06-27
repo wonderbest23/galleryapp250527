@@ -215,9 +215,18 @@ function CommunityPageContent() {
       {/* 액션 버튼 */}
       <div className="flex justify-between w-full mt-3">
         <button className="border px-4 py-1 text-sm rounded bg-white hover:bg-gray-50">인기글</button>
-        <Link href="/community/write" className="border px-4 py-1 text-sm rounded bg-white hover:bg-gray-50 flex items-center gap-1">
+        <button
+          className="border px-4 py-1 text-sm rounded bg-white hover:bg-gray-50 flex items-center gap-1"
+          onClick={() => {
+            if (currentUser) {
+              router.push('/community/write');
+            } else {
+              router.push('/mypage?redirect_to=/community/write');
+            }
+          }}
+        >
           ✏️ 쓰기
-        </Link>
+        </button>
       </div>
 
       {/* 페이지네이션 */}
