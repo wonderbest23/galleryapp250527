@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "missing-replicate-token" }, { status: 500 });
     }
 
-    // Supabase 클라이언트 – 이후 샘플 인기글 추출에 사용
+    // Supabase 클라이언트 – 이후 샘플 인기글 추출 및 schedule 조회에 사용
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -27,6 +27,35 @@ export async function POST(req: NextRequest) {
         auth: { autoRefreshToken: false, persistSession: false },
       },
     );
+
+    // 0) 스케줄 mode 확인
+    let mode: "ai" | "scrape" | "mix" = "ai";
+    if (scheduleId) {
+      const { data: sch } = await supabase.from("ai_post_schedules").select("mode").eq("id", scheduleId).maybeSingle();
+      if (sch?.mode) mode = sch.mode as any;
+    }
+
+    // scrape-only 모드
+    if (mode === "scrape") {
+      const { publishScraped } = await import("@/utils/publishScraped");
+      const res = await publishScraped();
+      return NextResponse.json({ ok: true, mode: "scrape", res });
+    }
+
+    // mix 모드: 50% 확률 스크랩 먼저 시도
+    if (mode === "mix" && Math.random() < 0.5) {
+      try {
+        const { publishScraped } = await import("@/utils/publishScraped");
+        const res = await publishScraped();
+        if (!res.skip) {
+          return NextResponse.json({ ok: true, mode: "scrape", res });
+        }
+      } catch (e) {
+        console.log("publishScraped error, fallback to AI", e);
+      }
+    }
+
+    // 1) 이후는 AI 생성 로직 -------------------------------------------------
 
     // 커뮤니티 인기글 샘플 (few-shot) 삽입
     let samples = "";
@@ -50,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     const finalPrompt = basePrompt + newsSection;
 
-    // 1) Replicate API 호출
+    // 2) Replicate API 호출
     let repVersion = process.env.REPLICATE_MODEL_VERSION;
 
     // env 가 없거나 40~64자 해시가 아닌 경우 최신 버전 조회
