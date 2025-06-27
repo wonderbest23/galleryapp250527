@@ -206,7 +206,14 @@ export default function AiScheduleManagerPage() {
           <ModalBody className="space-y-3">
             <Input label="이름" value={form.name} onChange={(e)=>setForm({ ...form, name: e.target.value })} />
             <Input label="Cron 표현식" value={form.cron} onChange={(e)=>setForm({ ...form, cron: e.target.value })} />
-            <Textarea label="프롬프트 템플릿" minRows={6} placeholder={defaultPrompt} value={form.prompt_template} onChange={(e)=>setForm({ ...form, prompt_template: e.target.value })} />
+            <Textarea
+              label="프롬프트 템플릿"
+              minRows={6}
+              placeholder={form.mode==='scrape' ? '스크랩 모드에서는 프롬프트가 사용되지 않습니다.' : defaultPrompt}
+              value={form.prompt_template}
+              isDisabled={form.mode==='scrape'}
+              onChange={(e)=>setForm({ ...form, prompt_template: e.target.value })}
+            />
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">모드</label>
               <select value={form.mode} onChange={(e)=>setForm({ ...form, mode: e.target.value })} className="border px-2 py-1 rounded text-sm">
