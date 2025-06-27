@@ -29,7 +29,7 @@ export default function CommunityWriteClient() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       alert("로그인이 필요합니다");
-      router.push("/login");
+      router.push("/mypage?redirect_to=/community/write");
       return;
     }
     const { error, data } = await supabase.from("community_post").insert({
