@@ -5,7 +5,7 @@ import { uploadImageToStorage, saveScrapedPost } from "./savePost";
 const LIST_URL = "https://korean.visitseoul.net/exhibition#tabAll";
 
 export async function scrapeVisitSeoul(){
-  const browser = await puppeteer.launch({ headless: "new" });
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   await page.goto(LIST_URL, { waitUntil: "domcontentloaded" });
   const links: string[] = await page.$$eval("ul.content_list li a", (as: Element[]) => (as.map((a: Element)=> (a as HTMLAnchorElement).getAttribute("href") || "").filter(Boolean)));
