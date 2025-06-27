@@ -1,25 +1,30 @@
-// @ts-ignore - puppeteer 타입 선언
-import puppeteer from "puppeteer";
+import fetch from "node-fetch";
+import * as cheerio from "cheerio";
 import { uploadImageToStorage, saveScrapedPost } from "./savePost";
 
-const LIST_URL = "https://korean.visitseoul.net/exhibition#tabAll";
+const LIST_URL = "https://korean.visitseoul.net/exhibition";
 
 export async function scrapeVisitSeoul(){
-  const browser = await puppeteer.launch({ headless: true });
-  const page = await browser.newPage();
-  await page.goto(LIST_URL, { waitUntil: "domcontentloaded" });
-  const links: string[] = await page.$$eval("ul.content_list li a", (as: Element[]) => (as.map((a: Element)=> (a as HTMLAnchorElement).getAttribute("href") || "").filter(Boolean)));
-  for(const href of links.slice(0,20)){
-    const url = href.startsWith("http")?href:`https://korean.visitseoul.net${href}`;
-    try{
-      await page.goto(url, { waitUntil: "domcontentloaded" });
-      const title = await page.$eval("h2.tit", (el: Element)=>el.textContent?.trim() || "");
-      if(!/전시|미술|아트|갤러리/i.test(title)) continue;
-      const imgSrc = await page.$eval(".visual img", (el: Element)=> (el as HTMLImageElement).getAttribute("src")||"").catch(()=>"");
-      const desc = await page.$eval(".desc", (el: Element)=>el.textContent?.trim()||"").catch(()=>"").then((t:string)=>t.slice(0,140));
-      const thumbUrl = await uploadImageToStorage(imgSrc);
-      await saveScrapedPost({ source:"visitseoul", post_url:url, title, thumb_url: thumbUrl??undefined, summary:desc, score:1 });
-    }catch(e){ console.log("visitSeoul item error", e); }
-  }
-  await browser.close();
+  try{
+    const html = await fetch(LIST_URL, { headers:{"user-agent":"Mozilla/5.0"}}).then(r=>r.text());
+    const $ = cheerio.load(html);
+    const items: {url:string,title:string}[] = [];
+    $("ul.content_list li a").each((_:any,el:any)=>{
+      const href = $(el).attr("href")||"";
+      const title = $(el).find(".tit").text().trim() || $(el).text().trim();
+      if(href && title) items.push({url: href.startsWith("http")?href:`https://korean.visitseoul.net${href}`, title});
+    });
+
+    for(const itm of items.slice(0,20)){
+      if(!/전시|미술|아트|갤러리/i.test(itm.title)) continue;
+      try{
+        const detail = await fetch(itm.url,{headers:{"user-agent":"Mozilla/5.0"}}).then(r=>r.text());
+        const $$ = cheerio.load(detail);
+        const imgSrc = $$(".visual img").first().attr("src")||"";
+        const desc = $$(".desc").text().trim().slice(0,140);
+        const thumb = await uploadImageToStorage(imgSrc);
+        await saveScrapedPost({ source:"visitseoul", post_url: itm.url, title: itm.title, thumb_url: thumb??undefined, summary: desc, score: 1 });
+      }catch(e){console.log("visitSeoul detail error",e);}  
+    }
+  }catch(e){console.log("visitSeoul list error",e);} 
 } 
