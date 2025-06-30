@@ -37,6 +37,7 @@ export default function AiScheduleManagerPage() {
     prompt_template: defaultPrompt,
     enabled: true,
     auto_publish: false,
+    mode: 'ai',
   });
 
   const itemsPerPage = 10;
@@ -63,7 +64,7 @@ export default function AiScheduleManagerPage() {
 
   const openNewModal = () => {
     setEditing(null);
-    setForm({ name: '', cron: '0 9 * * 1', prompt_template: defaultPrompt, enabled: true, auto_publish: false });
+    setForm({ name: '', cron: '0 9 * * 1', prompt_template: defaultPrompt, enabled: true, auto_publish: false, mode: 'ai' });
     setModalOpen(true);
   };
 
@@ -75,6 +76,7 @@ export default function AiScheduleManagerPage() {
       prompt_template: sch.prompt_template,
       enabled: sch.enabled,
       auto_publish: sch.auto_publish,
+      mode: sch.mode,
     });
     setModalOpen(true);
   };
@@ -95,6 +97,7 @@ export default function AiScheduleManagerPage() {
       prompt_template: form.prompt_template,
       enabled: form.enabled,
       auto_publish: form.auto_publish,
+      mode: form.mode,
     };
 
     let result;
@@ -203,7 +206,22 @@ export default function AiScheduleManagerPage() {
           <ModalBody className="space-y-3">
             <Input label="이름" value={form.name} onChange={(e)=>setForm({ ...form, name: e.target.value })} />
             <Input label="Cron 표현식" value={form.cron} onChange={(e)=>setForm({ ...form, cron: e.target.value })} />
-            <Textarea label="프롬프트 템플릿" minRows={6} placeholder={defaultPrompt} value={form.prompt_template} onChange={(e)=>setForm({ ...form, prompt_template: e.target.value })} />
+            <Textarea
+              label="프롬프트 템플릿"
+              minRows={6}
+              placeholder={form.mode==='scrape' ? '스크랩 모드에서는 프롬프트가 사용되지 않습니다.' : defaultPrompt}
+              value={form.prompt_template}
+              isDisabled={form.mode==='scrape'}
+              onChange={(e)=>setForm({ ...form, prompt_template: e.target.value })}
+            />
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">모드</label>
+              <select value={form.mode} onChange={(e)=>setForm({ ...form, mode: e.target.value })} className="border px-2 py-1 rounded text-sm">
+                <option value="ai">AI</option>
+                <option value="scrape">스크랩</option>
+                <option value="mix">Mix</option>
+              </select>
+            </div>
             <div className="flex items-center gap-2">
               <Switch isSelected={form.enabled} onValueChange={(v)=>setForm({ ...form, enabled: v })} /> 활성화
               <Switch isSelected={form.auto_publish} onValueChange={(v)=>setForm({ ...form, auto_publish: v })} /> 자동 발행

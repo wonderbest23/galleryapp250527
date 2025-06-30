@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "missing-replicate-token" }, { status: 500 });
     }
 
-    // Supabase 클라이언트 – 이후 샘플 인기글 추출에 사용
+    // Supabase 클라이언트 – 이후 샘플 인기글 추출 및 schedule 조회에 사용
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -27,6 +27,35 @@ export async function POST(req: NextRequest) {
         auth: { autoRefreshToken: false, persistSession: false },
       },
     );
+
+    // 0) 스케줄 mode 확인
+    let mode: "ai" | "scrape" | "mix" = "ai";
+    if (scheduleId) {
+      const { data: sch } = await supabase.from("ai_post_schedules").select("mode").eq("id", scheduleId).maybeSingle();
+      if (sch?.mode) mode = sch.mode as any;
+    }
+
+    // scrape-only 모드
+    if (mode === "scrape") {
+      const { publishScraped } = await import("@/utils/publishScraped");
+      const res = await publishScraped();
+      return NextResponse.json({ ok: true, mode: "scrape", res });
+    }
+
+    // mix 모드: 50% 확률 스크랩 먼저 시도
+    if (mode === "mix" && Math.random() < 0.5) {
+      try {
+        const { publishScraped } = await import("@/utils/publishScraped");
+        const res = await publishScraped();
+        if (!res.skip) {
+          return NextResponse.json({ ok: true, mode: "scrape", res });
+        }
+      } catch (e) {
+        console.log("publishScraped error, fallback to AI", e);
+      }
+    }
+
+    // 1) 이후는 AI 생성 로직 -------------------------------------------------
 
     // 커뮤니티 인기글 샘플 (few-shot) 삽입
     let samples = "";
@@ -37,8 +66,8 @@ export async function POST(req: NextRequest) {
 
     // 기본 프롬프트 템플릿 – 예시 포함, AI 티 금지 지침 포함
     const basePrompt = `다음 규칙에 따라 한국어로 글을 작성해라.\n\n${
-      samples ? `다음은 인기글 예시이다. 같은 톤을 참고해라.\n${samples}\n\n` : ""
-    }${prompt ? `${prompt}\n\n` : ""}규칙:\n1) 마크다운 기호(**, # 등) 사용 금지\n2) AI 언급·서술형 문장 금지\n3) 자연스러운 커뮤니티 말투 사용\n4) 글자 수 제한 없음\n\n제목:`;
+      samples ? `다음은 인기 커뮤니티 글 예시이다. 문체·분위기를 참고하되 문장과 표현은 절대 복사하지 마라.\n${samples}\n\n` : ""
+    }${prompt ? `${prompt}\n\n` : ""}규칙:\n1) 제목은 핵심을 50자 이내로 요약\n2) 본문은 400~600자, 자연스러운 커뮤니티 말투(존댓말/반말 혼용 가능)\n3) 마크다운 기호(**, # 등)와 이모티콘 사용 금지\n4) AI·챗봇·모델 등의 단어 금지\n5) 문단을 2~4개로 구분하고, 마지막 문장은 마침표로 끝냄\n6) 표절 금지, 반드시 창작문 작성\n\n제목:`;
 
     // 최신 미술 헤드라인 삽입
     const headlines = await fetchArtHeadlines();
@@ -50,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     const finalPrompt = basePrompt + newsSection;
 
-    // 1) Replicate API 호출
+    // 2) Replicate API 호출
     let repVersion = process.env.REPLICATE_MODEL_VERSION;
 
     // env 가 없거나 40~64자 해시가 아닌 경우 최신 버전 조회
@@ -79,6 +108,8 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         input: {
           prompt: finalPrompt,
+          temperature: 1.0,
+          top_p: 0.9,
           max_tokens: 400,
         },
       }),

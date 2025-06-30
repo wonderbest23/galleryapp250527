@@ -1,0 +1,1 @@
+ALTER TABLE ai_post_schedules ADD COLUMN IF NOT EXISTS mode TEXT DEFAULT 'ai' CHECK (mode in ('ai','scrape','mix')); 

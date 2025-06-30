@@ -3,6 +3,14 @@
     {
       "path": "/api/ai-fake-traffic",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/run-scrapers",
+      "schedule": "0,30 * * * *"
+    },
+    {
+      "path": "/api/publish-scraped",
+      "schedule": "5,35 * * * *"
     }
   ]
 } 
