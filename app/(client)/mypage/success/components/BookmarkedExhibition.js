@@ -113,7 +113,18 @@ export default function BookmarkedExhibition({ user, alarmExhibition }) {
         );
         
         // null 값 제거 후 상태 업데이트
-        const validExhibitions = exhibitionsData.filter(item => item !== null);
+        const today = new Date().setHours(0,0,0,0);
+        const validExhibitions = exhibitionsData.filter(item => {
+          if(!item) return false;
+          // 전시 종료일(end_date) 필드가 있고 오늘 이전이면 제외
+          if(item.end_date){
+            try{
+              const end=new Date(item.end_date).setHours(0,0,0,0);
+              if(end<today) return false; // 종료된 전시 제외
+            }catch(e){/* parsing fail -> include */}
+          }
+          return true;
+        });
         const validGalleries = galleriesData.filter(item => item !== null);
         const validProducts = productsData.filter(item => item !== null);
         setBookmarkedExhibitions([...validExhibitions, ...validGalleries, ...validProducts]);
