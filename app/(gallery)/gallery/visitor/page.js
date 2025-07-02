@@ -90,6 +90,13 @@ export default function VisitorPage() {
     fetchTicketsAndNames();
   }, [selectedExhibition]);
 
+  /* 전시회 목록이 로드되고 아직 선택되지 않았을 때 첫 번째 전시를 자동 선택 */
+  useEffect(()=>{
+    if(exhibitions.length>0 && !selectedExhibition){
+      setSelectedExhibition(String(exhibitions[0].id));
+    }
+  },[exhibitions, selectedExhibition]);
+
   return (
     <div className="w-full h-full p-8">
       {/* 탭 메뉴 */}
