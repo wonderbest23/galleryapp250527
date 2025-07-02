@@ -1,7 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 
+// 조회수 시뮬레이션 주기 실행 (최대 1회/5분)
+let lastViewSim = 0;
+async function maybeSimulateViews(){
+  const now = Date.now();
+  if(now - lastViewSim < 5*60*1000) return;
+  lastViewSim = now;
+  try {
+    const { simulateViews } = await import("@/utils/simulateViews");
+    await simulateViews();
+  } catch(e){ console.log('simulateViews error', e); }
+}
+
 export async function middleware(request: NextRequest) {
+  // 주기적으로 조회수 시뮬레이터 실행 (비동기, 응답 지연 없음)
+  maybeSimulateViews();
   const { pathname } = request.nextUrl;
   
   // admin 또는 gallery 페이지 접근 확인
