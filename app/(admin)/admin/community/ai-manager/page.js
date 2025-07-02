@@ -38,6 +38,8 @@ export default function AiScheduleManagerPage() {
     enabled: true,
     auto_publish: false,
     mode: 'ai',
+    sources: { brave: true, visitseoul: false },
+    visitSeoulMonth: '',
   });
 
   const itemsPerPage = 10;
@@ -64,12 +66,25 @@ export default function AiScheduleManagerPage() {
 
   const openNewModal = () => {
     setEditing(null);
-    setForm({ name: '', cron: '0 9 * * 1', prompt_template: defaultPrompt, enabled: true, auto_publish: false, mode: 'ai' });
+    setForm({
+      name: '',
+      cron: '0 9 * * 1',
+      prompt_template: defaultPrompt,
+      enabled: true,
+      auto_publish: false,
+      mode: 'ai',
+      sources: { brave: true, visitseoul: false },
+      visitSeoulMonth: '',
+    });
     setModalOpen(true);
   };
 
   const openEditModal = (sch) => {
     setEditing(sch);
+    let extra = null;
+    if (sch.mode === 'scrape') {
+      try { extra = JSON.parse(sch.prompt_template || '{}'); } catch {}
+    }
     setForm({
       name: sch.name,
       cron: sch.cron,
@@ -77,6 +92,11 @@ export default function AiScheduleManagerPage() {
       enabled: sch.enabled,
       auto_publish: sch.auto_publish,
       mode: sch.mode,
+      sources: extra?.sources ? {
+        brave: extra.sources.includes('brave'),
+        visitseoul: extra.sources.includes('visitseoul'),
+      } : { brave: true, visitseoul: false },
+      visitSeoulMonth: extra?.visitSeoulMonth || '',
     });
     setModalOpen(true);
   };
@@ -86,15 +106,25 @@ export default function AiScheduleManagerPage() {
       addToast({ title: '이름을 입력하세요', color: 'warning' });
       return;
     }
-    if (!form.prompt_template.trim()) {
+    if (form.mode !== 'scrape' && !form.prompt_template.trim()) {
       addToast({ title: '프롬프트를 입력하세요', color: 'warning' });
       return;
+    }
+
+    let promptTemplateToSave = form.prompt_template;
+    if (form.mode === 'scrape') {
+      const extra = {
+        keyword: form.name,
+        sources: Object.entries(form.sources).filter(([k,v])=>v).map(([k])=>k),
+        visitSeoulMonth: form.visitSeoulMonth||undefined,
+      };
+      promptTemplateToSave = JSON.stringify(extra);
     }
 
     const payload = {
       name: form.name,
       cron: form.cron,
-      prompt_template: form.prompt_template,
+      prompt_template: promptTemplateToSave,
       enabled: form.enabled,
       auto_publish: form.auto_publish,
       mode: form.mode,
@@ -140,7 +170,7 @@ export default function AiScheduleManagerPage() {
     const res = await fetch('/api/ai-generate-post', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scheduleId: sch.id, prompt: sch.prompt_template, autoPublish: sch.auto_publish }),
+      body: JSON.stringify({ scheduleId: sch.id, autoPublish: sch.auto_publish, extra: sch.prompt_template }),
     });
     if (res.ok) {
       addToast({ title: '생성 완료', description: 'AI 글이 생성되었습니다.', color: 'success' });
@@ -206,14 +236,26 @@ export default function AiScheduleManagerPage() {
           <ModalBody className="space-y-3">
             <Input label="이름" value={form.name} onChange={(e)=>setForm({ ...form, name: e.target.value })} />
             <Input label="Cron 표현식" value={form.cron} onChange={(e)=>setForm({ ...form, cron: e.target.value })} />
-            <Textarea
-              label="프롬프트 템플릿"
-              minRows={6}
-              placeholder={form.mode==='scrape' ? '스크랩 모드에서는 프롬프트가 사용되지 않습니다.' : defaultPrompt}
-              value={form.prompt_template}
-              isDisabled={form.mode==='scrape'}
-              onChange={(e)=>setForm({ ...form, prompt_template: e.target.value })}
-            />
+            {form.mode!=='scrape' ? (
+              <Textarea
+                label="프롬프트 템플릿"
+                minRows={6}
+                placeholder={defaultPrompt}
+                value={form.prompt_template}
+                onChange={(e)=>setForm({ ...form, prompt_template: e.target.value })}
+              />
+            ) : (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">스크레이퍼 선택</label>
+                <div className="flex gap-4 items-center text-sm">
+                  <label><input type="checkbox" checked={form.sources.brave} onChange={(e)=>setForm({...form,sources:{...form.sources, brave:e.target.checked}})} /> Brave 검색</label>
+                  <label><input type="checkbox" checked={form.sources.visitseoul} onChange={(e)=>setForm({...form,sources:{...form.sources, visitseoul:e.target.checked}})} /> VisitSeoul 전시</label>
+                  {form.sources.visitseoul && (
+                    <input type="text" placeholder="YYYYMM" value={form.visitSeoulMonth} maxLength={6} className="border px-2 py-1 rounded" onChange={(e)=>setForm({...form, visitSeoulMonth:e.target.value.replace(/[^0-9]/g,'').slice(0,6)})} />
+                  )}
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">모드</label>
               <select value={form.mode} onChange={(e)=>setForm({ ...form, mode: e.target.value })} className="border px-2 py-1 rounded text-sm">

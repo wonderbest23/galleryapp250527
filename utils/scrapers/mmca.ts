@@ -1,27 +1,46 @@
-import fetch from "node-fetch";
-import * as cheerio from "cheerio";
 import { uploadImageToStorage, saveScrapedPost } from "./savePost";
 
 const LIST_URL = "https://www.mmca.go.kr/exhibitions/progressList.do";
 
 export async function scrapeMMCA() {
+  let browser: any;
   try {
-    const html = await fetch(LIST_URL, { headers: { "user-agent": "Mozilla/5.0" } }).then(r => r.text());
-    const $ = cheerio.load(html);
-    $(".list_box ul li").each(async (_idx: any, el: any) => {
-      const link = $(el).find("a").attr("href") || "";
-      if (!link) return;
-      const url = link.startsWith("http") ? link : `https://www.mmca.go.kr${link}`;
-      const title = $(el).find(".tit").text().trim();
-      if (!/전시|미술|아트|갤러리/i.test(title)) return;
-      try {
-        const detail = await fetch(url, { headers: { "user-agent": "Mozilla/5.0" } }).then(r => r.text());
-        const $$ = cheerio.load(detail);
-        const imgSrc = $$(".exhibition_view .img img").first().attr("src") || "";
-        const summary = $$(".exhibition_view .txt").text().trim().slice(0, 140);
-        const thumb = await uploadImageToStorage(imgSrc);
-        await saveScrapedPost({ source: "mmca", post_url: url, title, thumb_url: thumb ?? undefined, summary, score: 1 });
-      } catch (e) { console.log("mmca detail error", e); }
+    const puppeteer = await import("puppeteer");
+    browser = await puppeteer.launch({ args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+    const page = await browser.newPage();
+    await page.goto(LIST_URL, { waitUntil: "networkidle0" });
+
+    const items: { url: string; title: string }[] = await page.evaluate(() => {
+      const arr: any[] = [];
+      document.querySelectorAll(".list_box ul li a").forEach((a) => {
+        const href = (a as HTMLAnchorElement).href;
+        const title = (a.querySelector(".tit")?.textContent || a.textContent || "").trim();
+        if (href && title) arr.push({ url: href, title });
+      });
+      return arr;
     });
-  } catch (e) { console.log("mmca list error", e); }
+
+    for (const itm of items.slice(0, 20)) {
+      if (!/전시|미술|아트|갤러리/i.test(itm.title)) continue;
+      try {
+        await page.goto(itm.url, { waitUntil: "networkidle0" });
+        const { imgSrc, desc } = await page.evaluate(() => {
+          const img = document.querySelector(".exhibition_view .img img") as HTMLImageElement | null;
+          const summary = document.querySelector(".exhibition_view .txt");
+          return {
+            imgSrc: img?.src || "",
+            desc: (summary?.textContent || "").trim().slice(0, 140),
+          };
+        });
+        const thumb = await uploadImageToStorage(imgSrc);
+        await saveScrapedPost({ source: "mmca", post_url: itm.url, title: itm.title, thumb_url: thumb ?? undefined, summary: desc, score: 1 });
+      } catch (e) {
+        console.log("mmca detail error", e);
+      }
+    }
+  } catch (e) {
+    console.log("mmca scrape error", e);
+  } finally {
+    try { await browser?.close(); } catch {}
+  }
 } 

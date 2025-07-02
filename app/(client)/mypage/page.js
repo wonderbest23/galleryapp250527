@@ -220,24 +220,17 @@ function MyPageContent() {
           alt="google"
         />
         {/* 개인정보 처리방침 모달 */}
-        <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-          <ModalContent>
-            {(onClose) => (
-              <>
-                <ModalHeader className="flex flex-col gap-1">{policyTitle}</ModalHeader>
-                <ModalBody className="max-h-[80vh] overflow-y-auto">
-                  <div
-                    className="text-sm"
-                    dangerouslySetInnerHTML={{ __html: policyContent }}
-                  />
-                </ModalBody>
-                <ModalFooter>
-                  <Button color="primary" onPress={onClose}>
-                    확인
-                  </Button>
-                </ModalFooter>
-              </>
-            )}
+        <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="sm">
+          <ModalContent className="max-w-sm">
+            <ModalHeader className="flex flex-col gap-1 text-sm">{policyTitle}</ModalHeader>
+            <ModalBody className="max-h-[60vh] overflow-y-auto text-xs">
+              <div dangerouslySetInnerHTML={{ __html: policyContent }} />
+            </ModalBody>
+            <ModalFooter>
+              <Button color="primary" onPress={onOpenChange}>
+                확인
+              </Button>
+            </ModalFooter>
           </ModalContent>
         </Modal>
         {/* 개인정보 처리방침 최초 1회 동의용 팝업 */}

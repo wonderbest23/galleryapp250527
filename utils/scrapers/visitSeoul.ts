@@ -1,30 +1,42 @@
-import fetch from "node-fetch";
-import * as cheerio from "cheerio";
 import { uploadImageToStorage, saveScrapedPost } from "./savePost";
 
-const LIST_URL = "https://korean.visitseoul.net/exhibition";
+export async function scrapeVisitSeoul(month:string|undefined=""){
+  const m = month && /20\d{4}/.test(month) ? month : new Date().toISOString().slice(0,7).replace('-','');
+  const LIST_URL = `https://korean.visitseoul.net/exhibition?selectedMonth=${m}`;
+  let browser: any;
+  try {
+    const puppeteer = await import("puppeteer");
+    browser = await puppeteer.launch({ args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+    const page = await browser.newPage();
+    await page.goto(LIST_URL, { waitUntil: "networkidle0" });
 
-export async function scrapeVisitSeoul(){
-  try{
-    const html = await fetch(LIST_URL, { headers:{"user-agent":"Mozilla/5.0"}}).then(r=>r.text());
-    const $ = cheerio.load(html);
-    const items: {url:string,title:string}[] = [];
-    $("ul.content_list li a").each((_:any,el:any)=>{
-      const href = $(el).attr("href")||"";
-      const title = $(el).find(".tit").text().trim() || $(el).text().trim();
-      if(href && title) items.push({url: href.startsWith("http")?href:`https://korean.visitseoul.net${href}`, title});
-    });
+    // 전시/공연 탭 클릭 (hash 기반)
+    try {
+      await page.click('a[href*="#tabAll"]');
+      await page.waitForTimeout(500);
+    }catch{}
 
-    for(const itm of items.slice(0,20)){
-      if(!/전시|미술|아트|갤러리/i.test(itm.title)) continue;
+    // 스크롤하여 lazy load 카드 가져오기
+    await page.evaluate(async ()=>{ window.scrollTo(0,document.body.scrollHeight); await new Promise(r=>setTimeout(r,800)); });
+
+    const items = await page.$$eval("ul.content_list li a", (els:any) => els.map((el:any)=>({url:(el as HTMLAnchorElement).href, title:(el.querySelector('.tit')?.textContent||el.textContent||'').trim()})) as any);
+
+    for(const itm of (items as any[]).slice(0,30)){
+      if(!/(전시|미술|art|exhibition)/i.test(itm.title)) continue;
       try{
-        const detail = await fetch(itm.url,{headers:{"user-agent":"Mozilla/5.0"}}).then(r=>r.text());
-        const $$ = cheerio.load(detail);
-        const imgSrc = $$(".visual img").first().attr("src")||"";
-        const desc = $$(".desc").text().trim().slice(0,140);
-        const thumb = await uploadImageToStorage(imgSrc);
-        await saveScrapedPost({ source:"visitseoul", post_url: itm.url, title: itm.title, thumb_url: thumb??undefined, summary: desc, score: 1 });
-      }catch(e){console.log("visitSeoul detail error",e);}  
+        await page.goto(itm.url,{waitUntil:"networkidle2"});
+        const {imgSrc,desc} = await page.evaluate(()=>{
+          const img = document.querySelector('meta[property="og:image"]')?.getAttribute('content') || (document.querySelector('.visual img') as HTMLImageElement)?.src;
+          const d = (document.querySelector('.desc')?.textContent||'').trim();
+          return {imgSrc:imgSrc??img, desc:d.slice(0,140)};
+        });
+        const thumb = await uploadImageToStorage(imgSrc||'');
+        await saveScrapedPost({source:"visitseoul",post_url:itm.url,title:itm.title,thumb_url:thumb||undefined,summary:desc,score:2});
+      }catch(e){console.log('visitSeoul detail error',e);} 
     }
-  }catch(e){console.log("visitSeoul list error",e);} 
+  } catch (e) {
+    console.log("visitSeoul scrape error", e);
+  } finally {
+    try { await browser?.close(); } catch {}
+  }
 } 

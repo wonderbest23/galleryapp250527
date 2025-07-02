@@ -43,7 +43,15 @@ export default function CommunityWriteClient() {
       console.log("insert error", error);
       alert("저장 실패: " + error.message);
     }
-    else router.replace(`/community/${data.id}`);
+    else {
+      // 작성 성공 후 AI 댓글 생성 트리거 (비동기)
+      fetch('/api/ai-generate-comment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: data.id })
+      }).catch(()=>{});
+      router.replace(`/community/${data.id}`);
+    }
   };
 
   return (

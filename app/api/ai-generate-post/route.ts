@@ -4,20 +4,14 @@ import { fetchArtHeadlines } from "@/utils/fetchArtNews";
 import fetch from "node-fetch";
 
 // POST /api/ai-generate-post
-// Body: { scheduleId?: string, prompt?: string, autoPublish?: boolean, boardId?: string }
+// Body: { scheduleId?: string, prompt?: string, autoPublish?: boolean, boardId?: string, extra?: string }
 
 export async function POST(req: NextRequest) {
   // verify service role key presence
   console.log("SERVICE_KEY?", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   try {
-    const { prompt, scheduleId, autoPublish = false, boardId } = await req.json();
-
-    const repToken = process.env.REPLICATE_API_TOKEN;
-    if (!repToken) {
-      console.log("REPLICATE_API_TOKEN env 가 필요합니다.");
-      return NextResponse.json({ error: "missing-replicate-token" }, { status: 500 });
-    }
+    const { prompt, scheduleId, autoPublish = false, boardId, extra } = await req.json();
 
     // Supabase 클라이언트 – 이후 샘플 인기글 추출 및 schedule 조회에 사용
     const supabase = createClient(
@@ -35,11 +29,36 @@ export async function POST(req: NextRequest) {
       if (sch?.mode) mode = sch.mode as any;
     }
 
-    // scrape-only 모드
+    // scrape-only 모드 (Replicate 토큰 불필요)
     if (mode === "scrape") {
-      const { publishScraped } = await import("@/utils/publishScraped");
-      const res = await publishScraped();
-      return NextResponse.json({ ok: true, mode: "scrape", res });
+      // extra JSON 파싱
+      let extraObj: any = {};
+      if (extra) {
+        try { extraObj = typeof extra === 'string' ? JSON.parse(extra) : extra; } catch {}
+      } else if (scheduleId) {
+        // 스케줄 행의 prompt_template 에 JSON 이 있을 수 있음
+        const { data: schRow } = await supabase.from('ai_post_schedules').select('prompt_template').eq('id', scheduleId).maybeSingle();
+        try { extraObj = JSON.parse(schRow?.prompt_template || '{}'); } catch {}
+      }
+
+      const keyword = extraObj.keyword || "한국 미술 전시";
+      const sources: string[] = extraObj.sources || ["brave"];
+
+      // 스크레이퍼 실행
+      if (sources.includes('brave')) {
+        const { scrapeBrave } = await import("@/utils/scrapers/braveSearch");
+        await scrapeBrave(keyword);
+      }
+      if (sources.includes('visitseoul')) {
+        const { scrapeVisitSeoul } = await import("@/utils/scrapers/visitSeoul");
+        await scrapeVisitSeoul(extraObj.visitSeoulMonth);
+      }
+
+      // 2) 오늘 하루치 발행 스케줄 생성
+      const { generateScheduleForToday } = await import("@/utils/scheduleGenerator");
+      await generateScheduleForToday();
+
+      return NextResponse.json({ ok: true, mode: "scrape", sources });
     }
 
     // mix 모드: 50% 확률 스크랩 먼저 시도
@@ -56,6 +75,11 @@ export async function POST(req: NextRequest) {
     }
 
     // 1) 이후는 AI 생성 로직 -------------------------------------------------
+    const repToken = process.env.REPLICATE_API_TOKEN;
+    if (!repToken) {
+      console.log("REPLICATE_API_TOKEN env 가 필요합니다.");
+      return NextResponse.json({ error: "missing-replicate-token" }, { status: 500 });
+    }
 
     // 커뮤니티 인기글 샘플 (few-shot) 삽입
     let samples = "";
@@ -187,6 +211,18 @@ export async function POST(req: NextRequest) {
       });
       if (commErr) {
         console.log("community insert error", commErr);
+      } else {
+        // 댓글 자동 생성 (실패 시 로깅만)
+        try {
+          const port = process.env.PORT || '3000';
+          await fetch(`http://127.0.0.1:${port}/api/ai-generate-comment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ postId: data.id })
+          });
+        } catch (e) {
+          console.log('auto comment error', e);
+        }
       }
     }
 
