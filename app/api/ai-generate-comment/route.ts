@@ -1,3 +1,5 @@
+export const runtime = "nodejs"; // Edge 환경에서 env 미노출 문제 방지
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import fetch from 'node-fetch';
