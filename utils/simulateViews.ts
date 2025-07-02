@@ -46,6 +46,10 @@ export async function simulateViews() {
     const maxInc = Math.max(10, Math.floor(remaining * 0.08));
     const inc = rand(minInc, Math.min(maxInc, 200));
 
+    // 확률적으로 건너뛰어 일부 게시글은 이번 주기에 변경되지 않도록
+    const prob = (p.likes ?? 0) >= 10 ? 0.9 : (p.likes ?? 0) >= 5 ? 0.7 : 0.4;
+    if (Math.random() > prob) continue;
+
     try {
       // fast update – no viewer table, just numeric add (two overloads may exist)
       await supabaseAdmin.rpc("increment_view", { p_post_id: p.id });

@@ -188,19 +188,19 @@ export default function CommunityDetail() {
 
       {/* 본문 */}
       <div
-        className="w-full leading-relaxed text-[15px] prose max-w-none"
+        className="w-full leading-relaxed text-[15px] prose max-w-none mb-6 min-h-[220px]"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
-      {/* 추천 버튼 */}
-      <div className="w-full flex justify-center">
+      {/* 추천 버튼 – 본문과 댓글 사이 중앙 배치 */}
+      <div className="w-full flex justify-center mt-8 mb-6">
         <Button
           color="warning"
           size="lg"
           radius="sm"
           isLoading={likeLoading}
           onPress={handleLike}
-          className="font-semibold px-8 py-3 text-[15px]"
+          className="font-semibold w-1/4 max-w-[180px] py-2.5 text-[14px]"
         >
           👍 추천하기 ({post.likes})
         </Button>
