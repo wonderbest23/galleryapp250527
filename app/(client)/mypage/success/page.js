@@ -92,23 +92,33 @@ const Success = () => {
           if (profileData) {
             setIsArtist(profileData.isArtist);
             setProfile(profileData);
-          }
-          // 알림 불러오기
-          const { data: notiData } = await createClient()
-            .from("notification")
-            .select("*")
-            .eq("user_id", currentUser.id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-          setNotifications(notiData || []);
-          // 전시회 정보도 함께 조회
-          if (notiData && notiData.length > 0) {
-            const { data: exhibition } = await createClient()
-              .from("exhibition")
-              .select("*, gallery(*)")
-              .eq("id", notiData[0].exhibition_id)
-              .single();
-            setAlarmExhibition(exhibition);
+
+            // 반려 상태 확인 → 경고 후 재등록 페이지로 이동
+            if (profileData.is_artist_rejected) {
+              alert(profileData.reject_reason || "작가 신청이 반려되었습니다. 정보를 수정해 다시 신청해 주세요.");
+              router.push("/register");
+              return;
+            }
+
+            // 알림 불러오기
+            const { data: notiData } = await createClient()
+              .from("notification")
+              .select("*")
+              .eq("user_id", currentUser.id)
+              .order("created_at", { ascending: false })
+              .limit(1);
+            setNotifications(notiData || []);
+            // 전시회 정보도 함께 조회
+            if (notiData && notiData.length > 0) {
+              const { data: exhibition } = await createClient()
+                .from("exhibition")
+                .select("*, gallery(*)")
+                .eq("id", notiData[0].exhibition_id)
+                .single();
+              setAlarmExhibition(exhibition);
+            }
+          } else {
+            router.push("/mypage");
           }
         } else {
           router.push("/mypage");
