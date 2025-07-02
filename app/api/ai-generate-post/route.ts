@@ -1,3 +1,5 @@
+export const runtime = "nodejs"; // 환경변수 접근을 위해 Node.js 런타임 고정
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { fetchArtHeadlines } from "@/utils/fetchArtNews";
