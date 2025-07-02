@@ -22,12 +22,40 @@ import {
 } from '@heroui/react';
 import { createClient } from '@/utils/supabase/client';
 
+// One-click helper
+function useApiCaller() {
+  const [busy, setBusy] = useState("");
+  const call = async (path, body = {}) => {
+    try {
+      setBusy(path);
+      const res = await fetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const j = await res.json();
+      if (!res.ok) {
+        addToast({ title: '실패', description: j.error || 'error', color: 'danger' });
+      } else {
+        addToast({ title: '완료', description: path + ' OK', color: 'success' });
+      }
+    } catch (e) {
+      addToast({ title: '오류', description: e.message, color: 'danger' });
+    } finally {
+      setBusy("");
+    }
+  };
+  return { busy, call };
+}
+
 export default function AiScheduleManagerPage() {
   const supabase = createClient();
+  const { busy, call } = useApiCaller();
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null); // null = new
+  const [keyword, setKeyword] = useState("한국 미술 전시");
 
   const defaultPrompt = `제목과 본문을 한국어로 작성해주세요.\n\n규칙:\n1) 제목은 50자 이하\n2) 본문은 400~600자, 존댓말 사용\n3) 마지막 문장을 마침표로 끝내기\n\n제목:`;
 
@@ -189,6 +217,17 @@ export default function AiScheduleManagerPage() {
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">AI 글 스케줄 관리</h1>
           <Button color="primary" size="sm" onPress={openNewModal}>+ 새 스케줄</Button>
+        </div>
+
+        {/* 원클릭 뉴스 자동화 패널 */}
+        <div className="border p-4 rounded bg-gray-50 space-y-3">
+          <h2 className="font-semibold text-[15px]">원클릭 뉴스 자동화</h2>
+          <div className="flex flex-wrap gap-3">
+            <Input size="sm" className="w-60" value={keyword} onChange={(e)=>setKeyword(e.target.value)} placeholder="스크랩 키워드" />
+            <Button color="secondary" size="sm" isLoading={busy === '/api/run-scrapers'} onPress={() => call('/api/run-scrapers',{ keyword })}>① 기사 스크랩</Button>
+            <Button color="warning" size="sm" isLoading={busy === '/api/generate-daily-news'} onPress={() => call('/api/generate-daily-news')}>② 30개 뉴스 즉시 발행</Button>
+            <Button color="primary" size="sm" isLoading={busy === '/api/schedule-daily-news'} onPress={() => call('/api/schedule-daily-news', { prompt: '한국 미술/예술 최신 뉴스 30개' })}>③ 일일 랜덤 발행 스케줄</Button>
+          </div>
         </div>
 
         {loading ? (
