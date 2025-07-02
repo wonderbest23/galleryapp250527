@@ -33,9 +33,11 @@ import Messages from "./components/Messages";
 import { MdCircleNotifications } from "react-icons/md";
 import Link from "next/link";
 import { useUserStore } from "@/stores/userStore";
+import { useDisclosure as useDisclosure2 } from "@heroui/react";
 
 const Success = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen: isRejectOpen, onOpen: openReject, onOpenChange: onRejectChange } = useDisclosure();
   const router = useRouter();
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
@@ -50,6 +52,7 @@ const Success = () => {
   const [isArtist, setIsArtist] = useState(false);
   const [profile, setProfile] = useState(null);
   const [notifications, setNotifications] = useState([]);
+  const [rejectReason, setRejectReason] = useState("");
   const [alarmExhibition, setAlarmExhibition] = useState(null);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [withdrawLoading, setWithdrawLoading] = useState(false);
@@ -95,9 +98,7 @@ const Success = () => {
 
             // 반려 상태 확인 → 경고 후 재등록 페이지로 이동
             if (profileData.is_artist_rejected) {
-              alert(profileData.reject_reason || "작가 신청이 반려되었습니다. 정보를 수정해 다시 신청해 주세요.");
-              router.push("/register");
-              return;
+              setRejectReason(profileData.reject_reason || "작가 신청이 반려되었습니다. 정보를 수정해 다시 신청해 주세요.");
             }
 
             // 알림 불러오기
@@ -367,7 +368,7 @@ const Success = () => {
               ) : (
                 <button
                   className="px-4 py-2 rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-semibold flex items-center gap-2 shadow-sm hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300"
-              onClick={() => router.push("/register")}
+                onClick={() => router.push("/register")}
                   type="button"
                 >
                   <FaCheckCircle className="text-blue-500 text-sm" /> 작가 정보 수정하기
@@ -568,6 +569,27 @@ const Success = () => {
               </ModalFooter>
             </>
           )}
+        </ModalContent>
+      </Modal>
+
+      {/* 작가 반려 재등록 버튼 */}
+      {profile?.is_artist_rejected && (
+        <div className="fixed bottom-24 right-4">
+          <Button color="warning" onPress={openReject}>작가 재등록</Button>
+        </div>
+      )}
+
+      <Modal isOpen={isRejectOpen} onOpenChange={onRejectChange} placement="center">
+        <ModalContent>
+          {(onClose)=>(<>
+            <ModalHeader>작가 등록 전 꼭 확인해주세요</ModalHeader>
+            <ModalBody>
+              <p className="whitespace-pre-wrap text-sm text-gray-700">{rejectReason}</p>
+            </ModalBody>
+            <ModalFooter>
+              <Button color="primary" onPress={()=>{ onClose(); router.push('/register'); }}>확인</Button>
+            </ModalFooter>
+          </>)}
         </ModalContent>
       </Modal>
     </div>
