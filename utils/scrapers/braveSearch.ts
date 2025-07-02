@@ -28,16 +28,35 @@ export async function scrapeBrave(keyword: string = "한국 미술 전시", limi
     const yearMatch = keyword.match(/20\d{2}/)?.[0];
 
     for (const r of results) {
-      const postUrl: string = r.url;
-      const title: string = r.title || '';
-      const desc: string = r.description || '';
+      const title:string = (r.title||'').trim();
+      let desc:string = (r.description||'').trim();
 
-      // 전시/예술 관련 키워드 포함 필터
-      if(!/(전시|exhibition|art|미술)/i.test(title+desc)) continue;
+      // 1) 제목/요약 길이 & 키워드 필터
+      if(title.length<10) continue;
+      if(!/(전시|exhibition|art|미술|아트|갤러리|뮤지엄)/i.test(title+desc)) continue;
 
-      // 검색 키워드에 연도가 포함돼 있으면 결과에도 포함되는지 체크
+      // 2) 연도 필터 – 키워드 또는 최근 3년(2023~2026)
+      const recentYear = /202[4-6]/;
       if(yearMatch && !title.includes(yearMatch) && !desc.includes(yearMatch)) continue;
+      if(!yearMatch && !recentYear.test(title+desc)) continue;
 
+      // 3) ellipsis 제거 – '…' 로 끝나는 짧은 스니펫은 페이지에서 보강 시도
+      if(/…$/.test(desc) || desc.length<60){
+        try{
+          const html = await fetch(r.url).then(res=>res.text());
+          const $ = (await import('cheerio')).load(html);
+          const ogDesc = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content');
+          if(ogDesc) desc = ogDesc.trim();
+        }catch{}
+      }
+
+      // 4) 도메인 화이트리스트 (미술관·언론 위주) – 필요시 주석 처리
+      try{
+        const host = new URL(r.url).hostname;
+        if(!/(mmca|sema|artmap|korean\.visitseoul|leeum|museum|gallery)/i.test(host)) continue;
+      }catch{}
+
+      const postUrl: string = r.url;
       const summary: string = desc.slice(0,140);
 
       // OpenGraph 이미지 추출 시도 (5초 타임아웃)
