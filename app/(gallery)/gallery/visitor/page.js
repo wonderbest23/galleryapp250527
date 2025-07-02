@@ -12,7 +12,6 @@ export default function VisitorPage() {
   const [userNames, setUserNames] = useState({});
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
-  const [view, setView] = useState("visitor"); // visitor | promo
   const supabase = createClient();
   const { userInfo } = useUserInfoStore();
 
@@ -99,21 +98,8 @@ export default function VisitorPage() {
 
   return (
     <div className="w-full h-full p-8">
-      {/* 탭 메뉴 */}
-      <div className="flex gap-4 mb-6 mt-16 sm:mt-0">
-        <button
-          onClick={()=>setView("visitor")}
-          className={`px-3 py-2 rounded-md text-sm font-medium ${view==='visitor'?'bg-black text-white':'bg-gray-200 text-gray-700'}`}
-        >관람객 관리</button>
-        <button
-          onClick={()=>setView("promo")}
-          className={`px-3 py-2 rounded-md text-sm font-medium ${view==='promo'?'bg-black text-white':'bg-gray-200 text-gray-700'}`}
-        >프로모션</button>
-      </div>
+      <h1 className="text-2xl font-bold mb-6 mt-16 sm:mt-0">관람객 관리</h1>
 
-      {view==='visitor' && (
-      <>
-      <h2 className="text-lg font-semibold mb-2">티켓 구매자 리스트</h2>
       <div className="mb-4">
         <label htmlFor="exhibition-select" className="mr-2 font-medium">전시회 선택:</label>
         <select
@@ -156,16 +142,6 @@ export default function VisitorPage() {
         </TableBody>
       </Table>
       <div className="text-xs text-gray-400 mt-4">※ 이름, 구매시간, 사용여부만 표시합니다.</div>
-      </>
-      )}
-
-      {view==='promo' && (
-        <div className="p-4 border rounded-lg bg-gray-50">
-          <h3 className="font-semibold mb-2">프로모션 발송 (준비중)</h3>
-          <p className="text-sm text-gray-600 mb-4">기존 관람객에게 할인·신규 전시 안내 알림톡을 보낼 수 있는 기능입니다. 현재 베타 단계로, 곧 유료 서비스로 전환될 예정입니다.</p>
-          <button disabled className="px-4 py-2 rounded bg-gray-300 text-white cursor-not-allowed" title="준비중">알림톡 발송 (준비중)</button>
-        </div>
-      )}
     </div>
   );
 } 
