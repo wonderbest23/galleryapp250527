@@ -24,9 +24,20 @@ export async function POST(req: NextRequest) {
 
     // 0) 스케줄 mode 확인
     let mode: "ai" | "scrape" | "mix" = "ai";
+    let scheduleRow:any=null;
     if (scheduleId) {
-      const { data: sch } = await supabase.from("ai_post_schedules").select("mode").eq("id", scheduleId).maybeSingle();
-      if (sch?.mode) mode = sch.mode as any;
+      const { data: sch } = await supabase.from("ai_post_schedules").select("*").eq("id", scheduleId).maybeSingle();
+      if (sch){ scheduleRow=sch; if(sch.mode) mode = sch.mode as any; }
+    }
+
+    // run_at_list 스케줄링: 가장 이른 시간이 아직 도래하지 않았으면 skip
+    if(scheduleRow?.run_at_list?.length){
+      const first=new Date(scheduleRow.run_at_list[0]);
+      if(first>new Date()){
+        return NextResponse.json({skip:true,reason:"not-due"});
+      }
+      // pop first
+      await supabase.from("ai_post_schedules").update({run_at_list:scheduleRow.run_at_list.slice(1)}).eq("id",scheduleId);
     }
 
     // scrape-only 모드 (Replicate 토큰 불필요)

@@ -1,0 +1,1 @@
+alter table ai_post_schedules add column if not exists run_at_list timestamptz[]; 
