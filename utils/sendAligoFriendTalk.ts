@@ -35,9 +35,15 @@ export interface AligoButton {
  * @param to 수신자 번호 (하이픈 없이)
  * @param text 메시지 본문 (1,000자 이내)
  * @param buttons 버튼 배열 (선택)
+ * @param templateCode 템플릿 코드 (선택)
  * @returns 성공 여부 boolean
  */
-export async function sendAligoFriendTalk(to: string, text: string, buttons?: AligoButton[]) {
+export async function sendAligoFriendTalk(
+  to: string,
+  text: string,
+  buttons?: AligoButton[],
+  templateCode?: string,
+) {
   if (!process.env.ALIGO_API_KEY || !process.env.ALIGO_USER_ID || !process.env.ALIGO_SENDER_KEY) {
     console.log("[Aligo] env vars missing");
     return false;
@@ -51,7 +57,7 @@ export async function sendAligoFriendTalk(to: string, text: string, buttons?: Al
       userid: process.env.ALIGO_USER_ID,
       token,
       senderkey: process.env.ALIGO_SENDER_KEY,
-      tpl_code: process.env.ALIGO_FT_TEMPLATE_ID || "",
+      tpl_code: templateCode || process.env.ALIGO_FT_TEMPLATE_ID || "",
       sender: process.env.ALIGO_SENDER_PHONE || "01000000000", // 사전 등록된 발신번호
       receiver_1: to,
       message_1: text,
