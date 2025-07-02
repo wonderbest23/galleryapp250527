@@ -5,7 +5,7 @@ import { updateSession } from "@/utils/supabase/middleware";
 let lastViewSim = 0;
 async function maybeSimulateViews(){
   const now = Date.now();
-  if(now - lastViewSim < 5*60*1000) return;
+  if(now - lastViewSim < 60*1000) return;
   lastViewSim = now;
   try {
     const { simulateViews } = await import("@/utils/simulateViews");
