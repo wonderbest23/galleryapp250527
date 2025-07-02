@@ -31,14 +31,14 @@ export async function scrapeBrave(keyword: string = "한국 미술 전시", limi
       const title:string = (r.title||'').trim();
       let desc:string = (r.description||'').trim();
 
-      // 1) 제목/요약 길이 & 키워드 필터
-      if(title.length<10) continue;
+      // 1) 키워드 필터 (제목 길이 제한 제거)
       if(!/(전시|exhibition|art|미술|아트|갤러리|뮤지엄)/i.test(title+desc)) continue;
 
       // 2) 연도 필터 – 키워드 또는 최근 3년(2023~2026)
       const recentYear = /202[4-6]/;
-      if(yearMatch && !title.includes(yearMatch) && !desc.includes(yearMatch)) continue;
-      if(!yearMatch && !recentYear.test(title+desc)) continue;
+      // 최근 연도 체크는 선택적으로만 사용 – 주석 처리
+      // if(yearMatch && !title.includes(yearMatch) && !desc.includes(yearMatch)) continue;
+      // if(!yearMatch && !recentYear.test(title+desc)) continue;
 
       // 3) ellipsis 제거 – '…' 로 끝나는 짧은 스니펫은 페이지에서 보강 시도
       if(/…$/.test(desc) || desc.length<60){
@@ -50,11 +50,7 @@ export async function scrapeBrave(keyword: string = "한국 미술 전시", limi
         }catch{}
       }
 
-      // 4) 도메인 화이트리스트 (미술관·언론 위주) – 필요시 주석 처리
-      try{
-        const host = new URL(r.url).hostname;
-        if(!/(mmca|sema|artmap|korean\.visitseoul|leeum|museum|gallery)/i.test(host)) continue;
-      }catch{}
+      // 4) 도메인 화이트리스트는 참고용 – 필요 시 활성화
 
       const postUrl: string = r.url;
       const summary: string = desc.slice(0,140);
