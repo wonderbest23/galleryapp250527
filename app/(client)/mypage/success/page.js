@@ -16,7 +16,7 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@heroui/react";
-import { FaChevronLeft, FaFileContract, FaCheckCircle, FaClock, FaUserSlash } from "react-icons/fa";
+import { FaChevronLeft, FaFileContract, FaCheckCircle, FaClock, FaUserSlash, FaPlus } from "react-icons/fa";
 import { BiSupport } from "react-icons/bi";
 import { FiLogOut } from "react-icons/fi";
 import { useRouter } from "next/navigation";
@@ -357,22 +357,31 @@ const Success = () => {
           </div>
           <div className="flex flex-row items-center text-sm justify-center gap-x-1 mt-2">
             {isArtist ? (
-              profile?.isArtistApproval === false ? (
+              profile?.is_artist_rejected ? (
                 <button
-                  className="px-4 py-2 rounded-lg border border-yellow-400 bg-yellow-50 text-yellow-700 font-semibold flex items-center gap-2 cursor-not-allowed select-none"
+                  className="px-4 py-2 rounded-lg border border-orange-400 bg-orange-50 text-orange-700 font-semibold flex items-center gap-2 shadow-sm hover:bg-orange-100 transition-colors"
+                  onClick={openReject}
                   type="button"
-                  disabled
                 >
-                  <FaClock className="text-yellow-500 text-sm animate-pulse" /> 승인 대기중
+                  <FaPlus className="text-orange-500 text-sm" /> 작가 재등록
                 </button>
               ) : (
-                <button
-                  className="px-4 py-2 rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-semibold flex items-center gap-2 shadow-sm hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300"
-                onClick={() => router.push("/register")}
-                  type="button"
-                >
-                  <FaCheckCircle className="text-blue-500 text-sm" /> 작가 정보 수정하기
-                </button>
+                profile?.isArtistApproval === false ? (
+                  <button
+                    className="px-4 py-2 rounded-lg border border-yellow-400 bg-yellow-50 text-yellow-700 font-semibold flex items-center gap-2 cursor-not-allowed select-none"
+                    type="button" disabled
+                  >
+                    <FaClock className="text-yellow-500 text-sm animate-pulse" /> 승인 대기중
+                  </button>
+                ) : (
+                  <button
+                    className="px-4 py-2 rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-semibold flex items-center gap-2 shadow-sm hover:bg-blue-100 transition-colors"
+                    onClick={() => router.push('/register')}
+                    type="button"
+                  >
+                    <FaCheckCircle className="text-blue-500 text-sm" /> 작가 정보 수정하기
+                  </button>
+                )
               )
             ) : (
               <button
