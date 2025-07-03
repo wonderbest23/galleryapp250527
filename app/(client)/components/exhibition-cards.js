@@ -247,8 +247,14 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
         let query = supabase
           .from("exhibition")
           .select("*,naver_gallery_url(*)", { count: "exact" })
-          .gte("end_date", new Date().toISOString())
-          .order("review_count", { ascending: false });
+          .gte("end_date", new Date().toISOString());
+
+        // 정렬: 전체전시는 종료일이 임박한 순, 그 외 카테고리는 기존 로직 유지
+        if (exhibitionCategory === "all") {
+          query = query.order("end_date", { ascending: true });
+        } else {
+          query = query.order("review_count", { ascending: false });
+        }
 
         // exhibitionCategory에 따라 필터 적용
         if (exhibitionCategory === "free") {
