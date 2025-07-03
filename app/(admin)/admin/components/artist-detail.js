@@ -235,7 +235,9 @@ export function ArtistDetail({
         artist_genre: editedArtist.artist_genre || "",
         artist_proof: editedArtist.artist_proof || "",
         artist_credit: artistCredit,
-        isArtistApproval: editedArtist.isArtistApproval || false,
+        isArtistApproval: editedArtist.is_artist_rejected ? false : (editedArtist.isArtistApproval || false),
+        is_artist_rejected: editedArtist.is_artist_rejected || false,
+        reject_reason: editedArtist.is_artist_rejected ? (editedArtist.reject_reason || "") : null,
         avatar_url: avatar_url || "", // 업로드된 이미지 URL 추가
       };
       
@@ -486,10 +488,27 @@ export function ArtistDetail({
             <Checkbox
               id="isArtistApproval"
               isSelected={editedArtist.isArtistApproval || false}
-              onChange={(e) => setEditedArtist((prev) => ({ ...prev, isArtistApproval: e.target.checked }))}
+              onChange={(e) => setEditedArtist((prev) => ({ ...prev, isArtistApproval: e.target.checked, is_artist_rejected: false }))}
             >
               작가 인증 승인
             </Checkbox>
+
+            <Checkbox
+              id="isArtistRejected"
+              isSelected={editedArtist.is_artist_rejected || false}
+              onChange={(e)=> setEditedArtist(prev=>({ ...prev, is_artist_rejected: e.target.checked, isArtistApproval: false }))}
+            >
+              작가 비승인 (재검토)
+            </Checkbox>
+
+            {editedArtist.is_artist_rejected && (
+              <Textarea
+                name="reject_reason"
+                label="반려 사유"
+                value={editedArtist.reject_reason || ""}
+                onChange={e=> setEditedArtist(prev=>({...prev, reject_reason: e.target.value }))}
+              />
+            )}
           </div>
         </div>
 

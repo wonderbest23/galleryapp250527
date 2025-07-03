@@ -15,19 +15,36 @@ export default function VisitorPage() {
   const supabase = createClient();
   const { userInfo } = useUserInfoStore();
 
-  // 1. 갤러리 url로 전시회 목록 조회
+  /* 1. 갤러리 URL 로 전시회 목록 조회 – 프로필을 로컬에서 다시 읽어와 first-load 문제 해결 */
   useEffect(() => {
-    if (!userInfo?.url) return;
     const fetchExhibitions = async () => {
-      const { data, error } = await supabase
-        .from("exhibition")
-        .select("id, contents")
-        .eq("naver_gallery_url", userInfo.url);
-      if (!error && data) setExhibitions(data);
-      else setExhibitions([]);
+      setLoading(true);
+      try {
+        // 현재 로그인 갤러리 프로필 직접 조회 (store 의존 제거)
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user?.id) return;
+
+        const {
+          data: profile,
+        } = await supabase.from("profiles").select("url").eq("id", user.id).single();
+
+        if (!profile?.url) return;
+
+        const { data: exList } = await supabase
+          .from("exhibition")
+          .select("id, contents")
+          .eq("naver_gallery_url", profile.url);
+
+        setExhibitions(exList || []);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchExhibitions();
-  }, [userInfo?.url]);
+  }, []);
 
   // 전체 유저 목록 불러오기
   useEffect(() => {
@@ -89,10 +106,17 @@ export default function VisitorPage() {
     fetchTicketsAndNames();
   }, [selectedExhibition]);
 
+  /* 전시회 목록이 로드되고 아직 선택되지 않았을 때 첫 번째 전시를 자동 선택 */
+  useEffect(()=>{
+    if(exhibitions.length>0 && !selectedExhibition){
+      setSelectedExhibition(String(exhibitions[0].id));
+    }
+  },[exhibitions, selectedExhibition]);
+
   return (
     <div className="w-full h-full p-8">
       <h1 className="text-2xl font-bold mb-6 mt-16 sm:mt-0">관람객 관리</h1>
-      <h2 className="text-lg font-semibold mb-2">티켓 구매자 리스트</h2>
+
       <div className="mb-4">
         <label htmlFor="exhibition-select" className="mr-2 font-medium">전시회 선택:</label>
         <select
