@@ -24,7 +24,8 @@ const nextConfig = {
       'picsum.photos', 
       'teaelrzxuigiocnukwha.supabase.co',
       'teaelrzxuigiocnukwha.supabase.in',
-      'search.pstatic.net'
+      'search.pstatic.net',
+      'k.kakaocdn.net'
     ],
     unoptimized: false,
   },
