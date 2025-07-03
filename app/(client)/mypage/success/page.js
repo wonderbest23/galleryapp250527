@@ -332,12 +332,14 @@ const Success = () => {
       <div className="w-full h-auto flex justify-center items-center my-6 flex-col gap-y-4">
         <div className="w-24 h-24 flex justify-center items-center bg-black rounded-full relative overflow-hidden">
           {(() => {
-            const src = (isArtist && profile?.isArtistApproval && profile?.avatar_url)
+            const raw = (isArtist && profile?.isArtistApproval && profile?.avatar_url)
               ? profile.avatar_url
-              : (user?.user_metadata?.avatar_url || user?.user_metadata?.picture);
-            return src ? (
-              <Image src={src} alt="프로필 이미지" fill className="rounded-full object-cover" />
-            ) : null;
+              : (user?.user_metadata?.picture || user?.user_metadata?.avatar_url);
+            if(!raw) return null;
+            const safeSrc = raw.startsWith('http://')
+              ? raw.replace('http://', 'https://')
+              : (raw.startsWith('//') ? `https:${raw}` : raw);
+            return <Image src={safeSrc} alt="프로필 이미지" fill className="rounded-full object-cover" />;
           })()}
         </div>
         <div className="text-lg font-bold flex flex-col justify-center items-center">
