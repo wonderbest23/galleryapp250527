@@ -39,71 +39,77 @@ const SkeletonCard = ({ index }) => (
 );
 
 // 전시회 카드 컴포넌트
-const ExhibitionCard = ({ exhibition, index, isBookmarked, toggleBookmark }) => (
-  <motion.div
-    layout
-    key={`${exhibition.id}-${index}`}
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ 
-      duration: 0.5,
-      delay: index * 0.05 // 각 아이템마다 살짝 딜레이를 줘서 순차적으로 나타나게 함
-    }}
-    className="w-full mb-4 outline-none"
-  >
-    <Link href={`/exhibition/${exhibition.id}`} className="w-full justify-center items-center">
-      <Card
-        classNames={{ body: "p-2 justify-center items-center" }}
-        className="w-full h-full"
-        shadow="sm"
-      >
-        <CardBody className="grid grid-cols-7 items-center justify-center gap-x-3">
-          <div className="col-span-2">
-            <Image
-              src={exhibition.photo || "/images/noimage.jpg"}
-              alt={exhibition.name}
-              width={80}
-              height={80}
-              className="w-20 h-20 object-cover rounded"
-            />
-          </div>
-          <div className="flex flex-col col-span-5">
-            <div className="flex flex-row justify-between items-start">
-              <div className="flex flex-col flex-1">
-                <div className="text-[10px]">{exhibition.naver_gallery_url?.name || '없음'}</div>
-                <div className="text-[12px] font-bold mb-2">{exhibition.contents}</div>
-                <div className="flex items-center w-full">
-                  <Divider orientation="horizontal" className="bg-gray-300 mb-2 w-full" />
+const ExhibitionCard = ({ exhibition, index, isBookmarked, toggleBookmark }) => {
+  const diffDays = Math.ceil((new Date(exhibition.end_date) - new Date()) / 86400000);
+  return (
+    <motion.div
+      layout
+      key={`${exhibition.id}-${index}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ 
+        duration: 0.5,
+        delay: index * 0.05
+      }}
+      className="w-full mb-4 outline-none relative"
+    >
+      <Link href={`/exhibition/${exhibition.id}`} className="w-full justify-center items-center">
+        <Card
+          classNames={{ body: "p-2 justify-center items-center" }}
+          className="w-full h-full"
+          shadow="sm"
+        >
+          <CardBody className="grid grid-cols-7 items-center justify-center gap-x-3">
+            <div className="col-span-2">
+              <Image
+                src={exhibition.photo || "/images/noimage.jpg"}
+                alt={exhibition.name}
+                width={80}
+                height={80}
+                className="w-20 h-20 object-cover rounded"
+              />
+            </div>
+            <div className="flex flex-col col-span-5">
+              <div className="flex flex-row justify-between items-start">
+                <div className="flex flex-col flex-1">
+                  <div className="text-[10px]">{exhibition.naver_gallery_url?.name || '없음'}</div>
+                  <div className="text-[12px] font-bold mb-2">{exhibition.contents}</div>
+                  <div className="flex items-center w-full">
+                    <Divider orientation="horizontal" className="bg-gray-300 mb-2 w-full" />
+                  </div>
+                </div>
+                <div className="flex-shrink-0 ml-2" onClick={(e) => toggleBookmark(e, exhibition)}>
+                  {isBookmarked(exhibition.id) ? (
+                    <FaBookmark className="text-red-500 text-lg bg-gray-300 rounded-full p-1 cursor-pointer font-bold" />
+                  ) : (
+                    <FaRegBookmark className="text-white font-bold text-lg bg-gray-300 rounded-full p-1 cursor-pointer" />
+                  )}
                 </div>
               </div>
-              <div className="flex-shrink-0 ml-2" onClick={(e) => toggleBookmark(e, exhibition)}>
-                {isBookmarked(exhibition.id) ? (
-                  <FaBookmark className="text-red-500 text-lg bg-gray-300 rounded-full p-1 cursor-pointer font-bold" />
-                ) : (
-                  <FaRegBookmark className="text-white font-bold text-lg bg-gray-300 rounded-full p-1 cursor-pointer" />
-                )}
+              <div className="text-xs flex flex-col mt-0">
+                <div className="flex flex-row gap-1 text-[10px]">
+                  <FaCalendar className="text-[#007AFF] w-[12px] h-[12px] align-middle relative top-[1px]" />
+                  {exhibition.start_date?.replace(/(\d{4})(\d{2})(\d{2})/, "$1년$2월$3일")} ~ {exhibition.end_date?.replace(/(\d{4})(\d{2})(\d{2})/, "$1년$2월$3일")}
+                </div>
+                <div className="flex flex-row gap-1 text-[10px]">
+                  <FaMoneyBillWaveAlt className="text-[#007AFF] w-[12px] h-[12px] align-middle relative top-[2px]" />
+                  {exhibition.price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} 원
+                </div>
+                <div className="flex flex-row gap-1 text-[10px]">
+                  <FaStar className="text-[#007AFF] w-[12px] h-[12px] align-middle relative top-[1px]" />
+                  {exhibition.review_average === 0 ? "1.0" : exhibition.review_average?.toFixed(1) || "1.0"} ({exhibition.review_count || 0})
+                </div>
               </div>
             </div>
-            <div className="text-xs flex flex-col mt-0">
-              <div className="flex flex-row gap-1 text-[10px]">
-                <FaCalendar className="text-[#007AFF] w-[12px] h-[12px] align-middle relative top-[1px]" />
-                {exhibition.start_date?.replace(/(\d{4})(\d{2})(\d{2})/, "$1년$2월$3일")} ~ {exhibition.end_date?.replace(/(\d{4})(\d{2})(\d{2})/, "$1년$2월$3일")}
-              </div>
-              <div className="flex flex-row gap-1 text-[10px]">
-                <FaMoneyBillWaveAlt className="text-[#007AFF] w-[12px] h-[12px] align-middle relative top-[2px]" />
-                {exhibition.price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} 원
-              </div>
-              <div className="flex flex-row gap-1 text-[10px]">
-                <FaStar className="text-[#007AFF] w-[12px] h-[12px] align-middle relative top-[1px]" />
-                {exhibition.review_average === 0 ? "1.0" : exhibition.review_average?.toFixed(1) || "1.0"} ({exhibition.review_count || 0})
-              </div>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
-    </Link>
-  </motion.div>
-);
+            {diffDays > 0 && diffDays <= 3 && (
+              <div className="absolute bottom-2 right-2 text-[10px] text-red-500 font-bold">종료 D-{diffDays}</div>
+            )}
+          </CardBody>
+        </Card>
+      </Link>
+    </motion.div>
+  );
+};
 
 export function ExhibitionCards({ exhibitionCategory, user }) {
   const [currentIndex, setCurrentIndex] = useState(0);

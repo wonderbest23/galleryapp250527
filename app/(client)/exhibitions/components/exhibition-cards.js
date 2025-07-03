@@ -72,7 +72,7 @@ export function ExhibitionCards({
             <motion.div
               key={index}
               variants={cardVariants}
-              className="w-full"
+              className="w-full relative"
             >
               <Card classNames={{body: 'px-2 py-1 '}} shadow="sm">
                 <Link href={`/exhibition/${exhibition.id}`}>
@@ -134,6 +134,12 @@ export function ExhibitionCards({
                     </div>
                   </CardBody>
                 </Link>
+                {(() => {
+                  const diff= Math.ceil((new Date(exhibition.end_date)-new Date())/86400000);
+                  return diff>0&&diff<=3? (
+                    <div className="absolute bottom-2 right-2 text-[10px] text-red-500 font-bold">종료 D-{diff}</div>
+                  ):null;
+                })()}
               </Card>
             </motion.div>
           ))}
