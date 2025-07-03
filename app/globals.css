@@ -139,3 +139,10 @@ html, body {
       '복제금지 · ARTBRIDGE   복제금지 · ARTBRIDGE   복제금지 · ARTBRIDGE   ';
   }
 }
+
+/* 데스크톱(넓은 화면)에서 모바일 비율 유지 */
+@media (min-width: 1024px) {
+  html {
+    zoom: 0.8; /* 80% 축소 */
+  }
+}
