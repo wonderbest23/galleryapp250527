@@ -52,7 +52,9 @@ export function MagazineCarousel() {
   const settings = {
     dots: true,
     infinite: true,
-    speed: 500,
+    speed: 800,
+    cssEase: "cubic-bezier(.25,.8,.25,1)",
+    lazyLoad: "ondemand",
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: true,
@@ -220,6 +222,10 @@ export function MagazineCarousel() {
                 .slick-container .slick-dots li.slick-active .dot-button {
                   width: 10px;
                   height: 10px;
+                }
+                .slick-container .slick-track {
+                  will-change: transform;
+                  transition-timing-function: cubic-bezier(.25,.8,.25,1) !important;
                 }
                 img {
                   -webkit-tap-highlight-color: transparent;
