@@ -15,8 +15,10 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Input,
+  Textarea,
 } from "@heroui/react";
-import { FaChevronLeft, FaFileContract, FaCheckCircle, FaClock, FaUserSlash, FaPlus } from "react-icons/fa";
+import { FaChevronLeft, FaFileContract, FaCheckCircle, FaClock, FaUserSlash, FaPlus, FaPlusSquare } from "react-icons/fa";
 import { BiSupport } from "react-icons/bi";
 import { FiLogOut } from "react-icons/fi";
 import { useRouter } from "next/navigation";
@@ -56,6 +58,9 @@ const Success = () => {
   const [alarmExhibition, setAlarmExhibition] = useState(null);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const [isRequestOpen, setIsRequestOpen] = useState(false);
+  const [requestTitle, setRequestTitle] = useState("");
+  const [requestContent, setRequestContent] = useState("");
 
   const getPolicy = async () => {
     const supabase = createClient();
@@ -233,6 +238,20 @@ const Success = () => {
       setWithdrawLoading(false);
       setIsWithdrawOpen(false);
     }
+  };
+
+  const handleSubmitRequest = async () => {
+    if(!requestTitle.trim()) { alert("전시회명을 입력해주세요"); return; }
+    const supabase=createClient();
+    await supabase.from("exhibition_request").insert({
+      user_id: user?.id,
+      title: requestTitle.trim(),
+      content: requestContent.trim()
+    });
+    setIsRequestOpen(false);
+    setRequestTitle("");
+    setRequestContent("");
+    alert("등록 요청이 접수되었습니다!");
   };
 
   // 개인정보 처리방침 내용 최신화
@@ -480,6 +499,14 @@ const Success = () => {
 
       <div className="w-full h-auto flex justify-center items-center flex-col gap-y-4 mb-24 px-4">
         <div
+          className="flex items-center gap-x-2 w-full cursor-pointer"
+          onClick={() => setIsRequestOpen(true)}
+        >
+          <FaPlusSquare className="text-gray-600" size={20} />
+          <span>전시회 등록 요청</span>
+        </div>
+        <Divider></Divider>
+        <div
           onClick={() => {
             setSelectedModal("policy");
             onOpen();
@@ -583,6 +610,23 @@ const Success = () => {
             </ModalBody>
             <ModalFooter>
               <Button color="primary" onPress={()=>{ onClose(); router.push('/register'); }}>확인</Button>
+            </ModalFooter>
+          </>)}
+        </ModalContent>
+      </Modal>
+
+      {/* 전시 등록 요청 모달 */}
+      <Modal isOpen={isRequestOpen} onOpenChange={setIsRequestOpen} placement="center">
+        <ModalContent>
+          {(onClose)=>(<>
+            <ModalHeader>전시회 등록 요청</ModalHeader>
+            <ModalBody className="flex flex-col gap-4">
+              <Input label="전시회명" value={requestTitle} onChange={(e)=>setRequestTitle(e.target.value)} required />
+              <Textarea label="내용(선택)" value={requestContent} onChange={(e)=>setRequestContent(e.target.value)} rows={4} />
+            </ModalBody>
+            <ModalFooter>
+              <Button color="primary" onPress={handleSubmitRequest}>제출</Button>
+              <Button onPress={onClose}>취소</Button>
             </ModalFooter>
           </>)}
         </ModalContent>
