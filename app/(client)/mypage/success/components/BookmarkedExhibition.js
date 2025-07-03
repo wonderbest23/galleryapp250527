@@ -114,14 +114,24 @@ export default function BookmarkedExhibition({ user, alarmExhibition }) {
         
         // null 값 제거 후 상태 업데이트
         const today = new Date().setHours(0,0,0,0);
+        const parseDate = (str) => {
+          if(!str) return null;
+          if(typeof str === 'string' && /^\d{8}$/.test(str)) {
+            const y=str.slice(0,4);
+            const m=str.slice(4,6);
+            const d=str.slice(6,8);
+            return new Date(`${y}-${m}-${d}`);
+          }
+          return new Date(str);
+        };
         const validExhibitions = exhibitionsData.filter(item => {
           if(!item) return false;
-          // 전시 종료일(end_date) 필드가 있고 오늘 이전이면 제외
           if(item.end_date){
-            try{
-              const end=new Date(item.end_date).setHours(0,0,0,0);
+            const endDateObj = parseDate(item.end_date);
+            if(!isNaN(endDateObj)){
+              const end=endDateObj.setHours(0,0,0,0);
               if(end<today) return false; // 종료된 전시 제외
-            }catch(e){/* parsing fail -> include */}
+            }
           }
           return true;
         });
