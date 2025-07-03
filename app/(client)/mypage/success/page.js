@@ -581,13 +581,6 @@ const Success = () => {
         </ModalContent>
       </Modal>
 
-      {/* 작가 반려 재등록 버튼 */}
-      {profile?.is_artist_rejected && (
-        <div className="fixed bottom-24 right-4">
-          <Button color="warning" onPress={openReject}>작가 재등록</Button>
-        </div>
-      )}
-
       <Modal isOpen={isRejectOpen} onOpenChange={onRejectChange} placement="center">
         <ModalContent>
           {(onClose)=>(<>
