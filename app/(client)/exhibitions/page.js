@@ -171,8 +171,14 @@ function ExhibitionListContent() {
           .from("exhibition")
           .select("*,gallery:naver_gallery_url(*)", { count: 'exact' })
           .not("gallery", "is", null)
-          .order("review_count", { ascending: false })
           .gte("end_date", new Date().toISOString());
+
+        // 정렬 기준 변경
+        if(selectedTab === "all"){
+          query = query.order("end_date", { ascending: true });
+        } else {
+          query = query.order("review_count", { ascending: false });
+        }
 
         // 선택된 탭에 따라 필터 적용
         if (selectedTab === "free") {
