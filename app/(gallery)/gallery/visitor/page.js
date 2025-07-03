@@ -15,19 +15,36 @@ export default function VisitorPage() {
   const supabase = createClient();
   const { userInfo } = useUserInfoStore();
 
-  // 1. 갤러리 url로 전시회 목록 조회
+  /* 1. 갤러리 URL 로 전시회 목록 조회 – 프로필을 로컬에서 다시 읽어와 first-load 문제 해결 */
   useEffect(() => {
-    if (!userInfo?.url) return;
     const fetchExhibitions = async () => {
-      const { data, error } = await supabase
-        .from("exhibition")
-        .select("id, contents")
-        .eq("naver_gallery_url", userInfo.url);
-      if (!error && data) setExhibitions(data);
-      else setExhibitions([]);
+      setLoading(true);
+      try {
+        // 현재 로그인 갤러리 프로필 직접 조회 (store 의존 제거)
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user?.id) return;
+
+        const {
+          data: profile,
+        } = await supabase.from("profiles").select("url").eq("id", user.id).single();
+
+        if (!profile?.url) return;
+
+        const { data: exList } = await supabase
+          .from("exhibition")
+          .select("id, contents")
+          .eq("naver_gallery_url", profile.url);
+
+        setExhibitions(exList || []);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchExhibitions();
-  }, [userInfo?.url]);
+  }, []);
 
   // 전체 유저 목록 불러오기
   useEffect(() => {
