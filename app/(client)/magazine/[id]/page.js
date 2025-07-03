@@ -34,6 +34,13 @@ export default function page({params}) {
     }
     getMagazineData();
   }, []);
+
+  useEffect(() => {
+    if(!loading && typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [loading]);
+
   console.log('magazine:',magazine);
   
   if (loading) {
