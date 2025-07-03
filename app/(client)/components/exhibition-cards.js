@@ -103,7 +103,9 @@ const ExhibitionCard = ({ exhibition, index, isBookmarked, toggleBookmark }) => 
               </div>
             </div>
             {diffDays && diffDays > 0 && diffDays <= 3 && (
-              <div className="absolute bottom-2 right-2 text-[10px] text-red-500 font-bold">종료 D-{diffDays}</div>
+              <div className="absolute bottom-2 right-2 px-1.5 py-0.5 border border-gray-400 rounded text-[10px] text-red-500 bg-white/80 backdrop-blur-sm font-semibold">
+                종료 D-{diffDays}
+              </div>
             )}
           </CardBody>
         </Card>
