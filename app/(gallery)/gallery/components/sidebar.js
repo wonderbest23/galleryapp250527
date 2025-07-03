@@ -14,6 +14,7 @@ export default function Sidebar({ onItemClick }) {
     { icon: "lucide:image", label: "소식등록", href: "/gallery/news" },
     { icon: "lucide:users", label: "관람객 관리", href: "/gallery/visitor" },
     { icon: "lucide:megaphone", label: "프로모션", href: "/gallery/promotion" },
+    { icon: "lucide:help-circle", label: "고객센터", href: "http://pf.kakao.com/_sBnXn/chat?mode=chat&input=%EC%B1%84%ED%8C%85%EC%9D%84%20%EB%82%A8%EA%B2%A8%EC%A3%BC%EC%84%B8%EC%9A%94.", external: true },
     { icon: "lucide:log-out", label: "로그아웃", href: "" },
     { icon: "lucide:users", label: "관리자 페이지로 이동", href: "/admin" },
   ];
@@ -54,7 +55,13 @@ export default function Sidebar({ onItemClick }) {
               color={pathname === item.href ? "primary" : "default"}
               className="justify-start"
               fullWidth
-              onPress={() => router.push(item.href)}
+              onPress={() => {
+                if(item.external){
+                  window.open(item.href, "_blank");
+                } else {
+                  router.push(item.href);
+                }
+              }}
             >
               <Icon icon={item.icon} className="text-lg mr-2" />
               {item.label}
