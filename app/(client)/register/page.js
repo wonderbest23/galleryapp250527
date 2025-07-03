@@ -293,6 +293,8 @@ export default function MagazineList() {
         artist_genre: genreName,
         artist_proof: artistProof,
         avatar_url: profileImage,
+        is_artist_rejected: false,
+        reject_reason: null,
       };
 
       if (!isEdit) {
