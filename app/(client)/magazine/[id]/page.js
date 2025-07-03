@@ -28,6 +28,10 @@ export default function page({params}) {
   }
   
   useEffect(() => {
+    // 페이지 진입 시 최상단으로 스크롤
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
     getMagazineData();
   }, []);
   console.log('magazine:',magazine);
