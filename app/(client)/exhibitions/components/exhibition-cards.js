@@ -135,8 +135,9 @@ export function ExhibitionCards({
                   </CardBody>
                 </Link>
                 {(() => {
-                  const diff= Math.ceil((new Date(exhibition.end_date)-new Date())/86400000);
-                  return diff>0&&diff<=3? (
+                  const parseDate=(s)=>{if(!s) return null; if(s.includes('-')) return new Date(s); const y=s.slice(0,4); const m=s.slice(4,6); const d=s.slice(6,8); return new Date(`${y}-${m}-${d}`);} ;
+                  const diff=(()=>{const dt=parseDate(exhibition.end_date); if(!dt||isNaN(dt)) return null; return Math.ceil((dt-new Date())/86400000);})();
+                  return diff&&diff>0&&diff<=3? (
                     <div className="absolute bottom-2 right-2 text-[10px] text-red-500 font-bold">종료 D-{diff}</div>
                   ):null;
                 })()}

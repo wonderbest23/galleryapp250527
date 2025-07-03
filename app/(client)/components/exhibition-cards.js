@@ -40,7 +40,8 @@ const SkeletonCard = ({ index }) => (
 
 // 전시회 카드 컴포넌트
 const ExhibitionCard = ({ exhibition, index, isBookmarked, toggleBookmark }) => {
-  const diffDays = Math.ceil((new Date(exhibition.end_date) - new Date()) / 86400000);
+  const parseDate=(s)=>{if(!s) return null; if(s.includes('-')) return new Date(s); const y=s.slice(0,4); const m=s.slice(4,6); const d=s.slice(6,8); return new Date(`${y}-${m}-${d}`);} ;
+  const diffDays = (()=>{const dt=parseDate(exhibition.end_date); if(!dt||isNaN(dt)) return null; return Math.ceil((dt - new Date())/86400000);} )();
   return (
     <motion.div
       layout
@@ -101,7 +102,7 @@ const ExhibitionCard = ({ exhibition, index, isBookmarked, toggleBookmark }) => 
                 </div>
               </div>
             </div>
-            {diffDays > 0 && diffDays <= 3 && (
+            {diffDays && diffDays > 0 && diffDays <= 3 && (
               <div className="absolute bottom-2 right-2 text-[10px] text-red-500 font-bold">종료 D-{diffDays}</div>
             )}
           </CardBody>
