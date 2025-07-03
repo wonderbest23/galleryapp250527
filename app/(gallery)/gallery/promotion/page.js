@@ -69,7 +69,21 @@ export default function PromotionPage() {
   return (
     <div className="w-full h-full p-8">
       <h1 className="text-2xl font-bold mb-6 mt-16 sm:mt-0">프로모션</h1>
-      <p className="text-gray-600 mb-6">관람객·리뷰 작성자 등 기존 고객에게 프로모션 메시지를 발송할 수 있는 메뉴입니다. 현재 베타 버전이며 발송 버튼은 비활성화되어 있습니다.</p>
+      <p className="text-gray-600 mb-4">관람객·리뷰 작성자 등 기존 고객에게 프로모션 메시지를 발송할 수 있는 메뉴입니다. 현재 베타 버전이며 발송 버튼은 비활성화되어 있습니다.</p>
+
+      {/* 발송 대상 요약 및 버튼 */}
+      {(!loading) && (
+        <div className="flex items-center gap-4 mb-6">
+          <span className="font-semibold">총 대상자: {Array.from(new Set([
+            ...tickets.map(t=>t.user_id),
+            ...galleryReviews.map(r=>r.user_id),
+            ...exhibitionReviews.map(r=>r.user_id)
+          ])).length}명</span>
+          <button disabled className="px-4 py-2 rounded bg-gray-300 text-white cursor-not-allowed" title="유료 버전 출시 예정">
+            메시지 발송 (준비중)
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center items-center h-32"><Spinner/></div>
