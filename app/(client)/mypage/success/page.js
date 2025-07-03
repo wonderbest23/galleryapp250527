@@ -336,7 +336,9 @@ const Success = () => {
               ? profile.avatar_url
               : (user?.user_metadata?.picture || user?.user_metadata?.avatar_url);
             if(!raw) return null;
-            const safeSrc = raw.startsWith('http://') ? raw.replace('http://','https://') : raw;
+            const safeSrc = raw.startsWith('http://')
+              ? raw.replace('http://', 'https://')
+              : (raw.startsWith('//') ? `https:${raw}` : raw);
             return <Image src={safeSrc} alt="프로필 이미지" fill className="rounded-full object-cover" />;
           })()}
         </div>

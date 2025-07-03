@@ -25,14 +25,18 @@ const nextConfig = {
       'teaelrzxuigiocnukwha.supabase.co',
       'teaelrzxuigiocnukwha.supabase.in',
       'search.pstatic.net',
-      'k.kakaocdn.net'
+      'k.kakaocdn.net',
+      'img1.kakaocdn.net'
     ],
     remotePatterns: [
       { protocol: 'https', hostname: 'k.kakaocdn.net', pathname: '/**' },
       { protocol: 'http', hostname: 'k.kakaocdn.net', pathname: '/**' },
       { protocol: 'https', hostname: 'img1.kakaocdn.net', pathname: '/**' },
+      { protocol: 'http', hostname: 'img1.kakaocdn.net', pathname: '/**' },
       { protocol: 'https', hostname: 't1.kakaocdn.net', pathname: '/**' },
+      { protocol: 'http', hostname: 't1.kakaocdn.net', pathname: '/**' },
       { protocol: 'https', hostname: 'dn.kakaocdn.net', pathname: '/**' },
+      { protocol: 'http', hostname: 'dn.kakaocdn.net', pathname: '/**' },
       { protocol: 'https', hostname: 'teaelrzxuigiocnukwha.supabase.co', pathname: '/**' },
       { protocol: 'https', hostname: 'teaelrzxuigiocnukwha.supabase.in', pathname: '/**' },
       { protocol: 'https', hostname: 'search.pstatic.net', pathname: '/**' },
