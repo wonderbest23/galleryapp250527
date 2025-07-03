@@ -331,23 +331,14 @@ const Success = () => {
       </div>
       <div className="w-full h-auto flex justify-center items-center my-6 flex-col gap-y-4">
         <div className="w-24 h-24 flex justify-center items-center bg-black rounded-full relative overflow-hidden">
-          {(isArtist && profile?.isArtistApproval && profile?.avatar_url) ? (
-            <Image
-              src={profile.avatar_url}
-              alt="프로필 이미지"
-              fill
-              className="rounded-full object-cover"
-            />
-          ) : (
-            user?.user_metadata?.avatar_url && (
-              <Image
-                src={user.user_metadata.avatar_url}
-                alt="프로필 이미지"
-                fill
-                className="rounded-full object-cover"
-              />
-            )
-          )}
+          {(() => {
+            const src = (isArtist && profile?.isArtistApproval && profile?.avatar_url)
+              ? profile.avatar_url
+              : (user?.user_metadata?.avatar_url || user?.user_metadata?.picture);
+            return src ? (
+              <Image src={src} alt="프로필 이미지" fill className="rounded-full object-cover" />
+            ) : null;
+          })()}
         </div>
         <div className="text-lg font-bold flex flex-col justify-center items-center">
           <div className="flex flex-row items-center gap-x-2 text-[#0B437E]">
