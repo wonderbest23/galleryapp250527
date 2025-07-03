@@ -116,6 +116,30 @@ export default function page() {
       console.error("Error submitting review:", error);
     } else {
       console.log("Review submitted successfully");
+
+      /* 동일 내용으로 갤러리 리뷰도 생성 (없을 때만) */
+      try {
+        const { data: exInfo } = await supabase.from('exhibition').select('naver_gallery_url').eq('id', id).single();
+        if(exInfo?.naver_gallery_url){
+          const { data: galInfo } = await supabase.from('gallery').select('id').eq('url', exInfo.naver_gallery_url).single();
+          const gId = galInfo?.id;
+          if(gId){
+            // 중복 확인
+            const { data: existG } = await supabase.from('gallery_review').select('id').eq('gallery_id', gId).eq('user_id', user.id).maybeSingle();
+            if(!existG){
+              await supabase.from('gallery_review').insert({
+                gallery_id: gId,
+                rating,
+                description,
+                category: selectedFeelings,
+                name: maskedName,
+                user_id: user.id,
+              });
+            }
+          }
+        }
+      } catch(e){console.log('gallery review sync error',e)}
+
       addToast({
         title: "리뷰 작성 완료",
         description: "리뷰가 성공적으로 작성되었습니다.",

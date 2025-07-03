@@ -72,7 +72,7 @@ export function ExhibitionCards({
             <motion.div
               key={index}
               variants={cardVariants}
-              className="w-full"
+              className="w-full relative"
             >
               <Card classNames={{body: 'px-2 py-1 '}} shadow="sm">
                 <Link href={`/exhibition/${exhibition.id}`}>
@@ -134,6 +134,13 @@ export function ExhibitionCards({
                     </div>
                   </CardBody>
                 </Link>
+                {(() => {
+                  const parseDate=(s)=>{if(!s) return null; if(s.includes('-')) return new Date(s); const y=s.slice(0,4); const m=s.slice(4,6); const d=s.slice(6,8); return new Date(`${y}-${m}-${d}`);} ;
+                  const diff=(()=>{const dt=parseDate(exhibition.end_date); if(!dt||isNaN(dt)) return null; return Math.ceil((dt-new Date())/86400000);})();
+                  return diff&&diff>0&&diff<=3? (
+                    <div className="absolute bottom-2 right-2 px-1.5 py-0.5 border border-gray-400 rounded text-[10px] text-red-500 bg-white/80 backdrop-blur-sm font-semibold">종료 D-{diff}</div>
+                  ):null;
+                })()}
               </Card>
             </motion.div>
           ))}
