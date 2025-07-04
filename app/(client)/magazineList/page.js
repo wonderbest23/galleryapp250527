@@ -59,7 +59,7 @@ export default function MagazineList() {
     const base=1000+(hashStr(item.id.toString())%1000); // 1000-1999
     const days=Math.floor((Date.now()-new Date(item.created_at).getTime())/864e5);
     const daily=(hashStr(item.id.toString()+"x")%30); // 0-29
-    return base+days*daily;
+    return base+days*daily+(item.real_views||0);
   }
 
   return (
