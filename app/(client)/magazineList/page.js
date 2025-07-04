@@ -12,6 +12,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Pagination } from "@heroui/react";
+import { Eye } from "lucide-react";
 
 export default function MagazineList() {
   const [magazines, setMagazines] = useState([]);
@@ -51,6 +52,15 @@ export default function MagazineList() {
   const pagedMagazines = magazines.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   console.log("magazines:", magazines);
+
+  // utility hash and view function
+  function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i);h|=0;}return Math.abs(h);} 
+  function calcViews(item){
+    const base=1000+(hashStr(item.id.toString())%1000); // 1000-1999
+    const days=Math.floor((Date.now()-new Date(item.created_at).getTime())/864e5);
+    const daily=(hashStr(item.id.toString()+"x")%30); // 0-29
+    return base+days*daily;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen pb-24">
@@ -127,8 +137,10 @@ export default function MagazineList() {
                     {magazines[0].subtitle}
                   </span>
                 )}
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-gray-400 flex items-center gap-1">
                   {new Date(magazines[0].created_at).getFullYear()}년 {new Date(magazines[0].created_at).getMonth() + 1}월 {new Date(magazines[0].created_at).getDate()}일
+                  <span className="mx-1">·</span>
+                  <Eye size={14} className="text-gray-400" /> {calcViews(magazines[0]).toLocaleString()}
                   {magazines[0].author && (
                     <span className="flex items-center gap-1">| by
                       <span className="inline-block w-6 h-6 rounded-full overflow-hidden align-middle mr-1 ml-1 shadow">
@@ -185,8 +197,9 @@ export default function MagazineList() {
                             </span>
                           )}
                           <span className="text-[12px] text-gray-400">·</span>
-                          <span className="text-[12px] text-gray-400 truncate">
+                          <span className="text-[12px] text-gray-400 truncate flex items-center gap-1">
                             {new Date(item.created_at).getFullYear()}년 {new Date(item.created_at).getMonth() + 1}월 {new Date(item.created_at).getDate()}일
+                            <span className="mx-1">·</span><Eye size={12} className="text-gray-400"/>{calcViews(item).toLocaleString()}
                           </span>
                         </div>
                       </div>
