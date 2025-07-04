@@ -24,7 +24,7 @@ export default function App({searchParams}) {
     >
       <div className="flex flex-col gap-4 md:max-w-[30%] w-full max-w-[80%]">
         <h1 className="text-2xl font-bold text-center">관리자 로그인</h1>
-        <div className="text-center">
+        <div className="text-center leading-relaxed space-y-2 md:space-y-3">
             <p>(!)경고 해당사이트에 접근하지마세요. </p>
             <p>
               <a 
