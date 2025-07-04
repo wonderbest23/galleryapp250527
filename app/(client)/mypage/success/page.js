@@ -242,11 +242,22 @@ const Success = () => {
 
   const handleSubmitRequest = async () => {
     if(!requestTitle.trim()) { alert("전시회명을 입력해주세요"); return; }
-    const supabase=createClient();
-    await supabase.from("exhibition_request").insert({
+    const supabase = createClient();
+    // 오늘 00:00 기준 ISO
+    const todayStart = new Date();
+    todayStart.setHours(0,0,0,0);
+    const { count, error: cntErr } = await supabase
+      .from('exhibition_request')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user?.id)
+      .gte('created_at', todayStart.toISOString());
+    if (cntErr) { console.log(cntErr); alert('요청 확인 중 오류가 발생했습니다'); return; }
+    if ((count || 0) >= 10) { alert('하루 최대 10건까지 요청할 수 있습니다. 내일 다시 시도해주세요.'); return; }
+
+    await supabase.from('exhibition_request').insert({
       user_id: user?.id,
       title: requestTitle.trim(),
-      content: requestContent.trim()
+      content: requestContent.trim(),
     });
     setIsRequestOpen(false);
     setRequestTitle("");
