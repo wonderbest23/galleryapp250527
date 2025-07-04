@@ -14,6 +14,13 @@ import {
   Skeleton,
   Divider,
   Pagination,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Input,
+  Textarea,
 } from "@heroui/react";
 import { FaChevronLeft, FaPlus } from "react-icons/fa";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -74,6 +81,9 @@ function ExhibitionListContent() {
   const [highRatingExhibitions, setHighRatingExhibitions] = useState([]);
   const [loadingHighRating, setLoadingHighRating] = useState(true);
   const [tabLoading, setTabLoading] = useState(false);
+  const [isRequestOpen, setIsRequestOpen] = useState(false);
+  const [requestTitle, setRequestTitle] = useState('');
+  const [requestContent, setRequestContent] = useState('');
 
   const ITEMS_PER_PAGE = 5; // 페이지당 항목 수
   const supabase = createClient();
@@ -534,18 +544,17 @@ function ExhibitionListContent() {
             </SelectItem>
           </Select>
 
-          <Checkbox
+          <Button
             size="sm"
             color="primary"
-            value={isBookmark}
-            isSelected={isBookmark}
-            onChange={(e) => {
-              setIsBookmark(e.target.checked);
-              updateBookmarkUrlParam(e.target.checked);
+            variant="flat"
+            onPress={() => {
+              if(!user){ router.push('/mypage'); return; }
+              setIsRequestOpen(true);
             }}
           >
-            북마크
-          </Checkbox>
+            전시회 등록 요청
+          </Button>
         </div>
 
         {/* 전시회 카드 */}
@@ -654,6 +663,55 @@ function ExhibitionListContent() {
           </motion.div>
         )}
       </div>
+
+      {/* 전시회 등록 요청 모달 */}
+      <Modal isOpen={isRequestOpen} onOpenChange={setIsRequestOpen} placement="center">
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">전시회 등록 요청</ModalHeader>
+              <ModalBody>
+                <Input
+                  label="전시회명"
+                  value={requestTitle}
+                  onChange={e=>setRequestTitle(e.target.value)}
+                  isRequired
+                />
+                <Textarea
+                  label="요청 내용(선택)"
+                  value={requestContent}
+                  onChange={e=>setRequestContent(e.target.value)}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>취소</Button>
+                <Button color="primary" onPress={async()=>{
+                  if(!requestTitle.trim()){ alert('전시회명을 입력해주세요'); return; }
+                  const supabase = createClient();
+                  const todayStart = new Date();
+                  todayStart.setHours(0,0,0,0);
+                  const { count, error:cntErr } = await supabase
+                    .from('exhibition_request')
+                    .select('id', { count:'exact', head:true })
+                    .eq('user_id', user?.id)
+                    .gte('created_at', todayStart.toISOString());
+                  if(cntErr){ console.log(cntErr); alert('요청 확인 중 오류'); return; }
+                  if((count||0)>=10){ alert('하루 최대 10건까지 요청할 수 있습니다. 내일 다시 시도해주세요.'); return; }
+                  await supabase.from('exhibition_request').insert({
+                    user_id:user?.id,
+                    title: requestTitle.trim(),
+                    content: requestContent.trim(),
+                  });
+                  setRequestTitle(''); setRequestContent(''); onClose();
+                  alert('등록 요청이 접수되었습니다!');
+                }}>
+                  제출
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
