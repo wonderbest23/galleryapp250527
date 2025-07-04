@@ -8,6 +8,7 @@
 html, body {
   width: 100%;
   max-width: 100%;
+  height: 100%;
   overflow-x: hidden;
   background: linear-gradient(180deg, #f5f6fa 0%, #e5e7eb 60%, #d1d5db 100%) !important;
 }
@@ -138,4 +139,10 @@ html, body {
       '복제금지 · ARTBRIDGE   복제금지 · ARTBRIDGE   복제금지 · ARTBRIDGE   \A'
       '복제금지 · ARTBRIDGE   복제금지 · ARTBRIDGE   복제금지 · ARTBRIDGE   ';
   }
+}
+
+/* 데스크톱 중앙 프레임 */
+@media (min-width: 768px) {
+  body { display: flex; justify-content: center; }
+  #__next { width: 430px; max-width: 100%; }
 }

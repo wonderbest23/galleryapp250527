@@ -153,7 +153,7 @@ export const adminSignInAction = async (formData: FormData) => {
     return encodedRedirect("error", "/admin/login", error.message);
   }
 
-  return redirect("/admin/gallery");
+  return redirect("/admin/kakao-auth");
 };
 
 export const gallerySignInAction = async (formData: FormData) => {
