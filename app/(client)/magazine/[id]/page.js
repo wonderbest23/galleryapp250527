@@ -10,7 +10,6 @@ import {FaArrowLeft} from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useRouter as useNav } from "next/navigation";
 import Link from "next/link";
-import { Eye } from "lucide-react";
 
 export default function page({ params }) {
   const magazineId = React.use(params).id;
@@ -52,8 +51,9 @@ export default function page({ params }) {
     let others = [];
     const { data, error } = await supabase
       .from('magazine')
-      .select('id,title,photo,subtitle,category,created_at,real_views')
-      .neq('id', magazineId);
+      .select('*')
+      .not('id', 'eq', magazineId)
+      .limit(20);
 
     if (error) {
       console.log('neq filter error, falling back to full fetch', error);
@@ -241,9 +241,8 @@ export default function page({ params }) {
                     </span>
                   )}
                   <span className="text-[12px] text-gray-400">·</span>
-                  <span className="text-[12px] text-gray-400 truncate flex items-center gap-1">
+                  <span className="text-[12px] text-gray-400 truncate">
                     {new Date(m.created_at).getFullYear()}년 {new Date(m.created_at).getMonth() + 1}월 {new Date(m.created_at).getDate()}일
-                    <span className="mx-1">·</span><Eye size={12} className="text-gray-400"/>{calcViews(m).toLocaleString()}
                   </span>
                 </div>
               </div>
