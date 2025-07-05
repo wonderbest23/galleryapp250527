@@ -218,7 +218,7 @@ export default function page({ params }) {
             <Link key={m.id} href={`/magazine/${m.id}`} className="flex items-center gap-4 w-[90%]">
               <div className="flex-shrink-0 w-[96px] h-[96px] relative rounded-lg overflow-hidden border border-gray-200">
                 {m.photo?.[0]?.url && (
-                  <Image src={m.photo[0].url} alt={m.title} fill sizes="50vw" className="object-cover" />
+                  <Image src={m.photo[0].url} alt={m.title} className="object-cover w-full h-full" />
                 )}
               </div>
               <div className="flex flex-col space-y-1 flex-1 min-w-0">
