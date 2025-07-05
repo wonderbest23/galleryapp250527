@@ -56,7 +56,7 @@ export default function CommunityWriteClient() {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-[600px] mx-auto px-4 py-6 gap-4">
+    <>
       {/* Guidelines Modal */}
       <Modal isOpen={showGuide} onOpenChange={setShowGuide} size="sm" placement="center" className="z-[9999]">
         <ModalContent className="max-w-sm z-[9999]">
@@ -97,27 +97,32 @@ export default function CommunityWriteClient() {
         </ModalContent>
       </Modal>
 
-      <h1 className="text-2xl font-bold">게시글 작성</h1>
-      <Select
-        label="카테고리"
-        selectedKeys={new Set([category])}
-        onSelectionChange={(keys)=>{
-          const first = Array.from(keys)[0];
-          if (first) setCategory(first);
-        }}
-      >
-        {categories.map(c=>(<SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>))}
-      </Select>
-      <Input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="제목" />
-      <div className="w-full">
-        <FroalaEditorComponent
-          value={content}
-          onChange={setContent}
-          height={400}
-          bucketName="notification"
-        />
-      </div>
-      <Button color="primary" isLoading={isSaving} onPress={handleSubmit} className="w-full">등록</Button>
-    </div>
+      {/* Render editor only when guide closed */}
+      {!showGuide && (
+        <div className="flex flex-col items-center w-full max-w-[600px] mx-auto px-4 py-6 gap-4">
+          <h1 className="text-2xl font-bold">게시글 작성</h1>
+          <Select
+            label="카테고리"
+            selectedKeys={new Set([category])}
+            onSelectionChange={(keys)=>{
+              const first = Array.from(keys)[0];
+              if (first) setCategory(first);
+            }}
+          >
+            {categories.map(c=>(<SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>))}
+          </Select>
+          <Input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="제목" />
+          <div className="w-full">
+            <FroalaEditorComponent
+              value={content}
+              onChange={setContent}
+              height={400}
+              bucketName="notification"
+            />
+          </div>
+          <Button color="primary" isLoading={isSaving} onPress={handleSubmit} className="w-full">등록</Button>
+        </div>
+      )}
+    </>
   );
 } 
