@@ -61,10 +61,12 @@ export default function MagazineList() {
   // utility hash and view function
   function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i);h|=0;}return Math.abs(h);} 
   function calcViews(item){
-    const base=1000+(hashStr(item.id.toString())%1000); // 1000-1999
-    const days=Math.floor((Date.now()-new Date(item.created_at).getTime())/864e5);
-    const daily=(hashStr(item.id.toString()+"x")%30); // 0-29
-    return base+days*daily+(item.real_views||0);
+    // base 1,000~9,999 so 최대 1만 근접
+    const base = 1000 + (hashStr(item.id.toString()) % 9000);
+    const days = Math.floor((Date.now() - new Date(item.created_at).getTime()) / 864e5);
+    const daily = (hashStr(item.id.toString() + "x") % 50); // 0~49 증가폭 확대
+    const calculated = base + days * daily + (item.real_views || 0);
+    return Math.min(calculated, 10000);
   }
 
   return (
