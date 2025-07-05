@@ -48,8 +48,13 @@ export default function MagazineList() {
     getMagazines();
   }, []);
 
-  const totalPages = Math.ceil((magazines?.length || 0) / ITEMS_PER_PAGE);
-  const pagedMagazines = magazines.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  // 대형 카드로 사용된 첫 번째 매거진을 제외한 나머지 목록
+  const restMagazines = magazines.slice(1);
+  const totalPages = Math.ceil(restMagazines.length / ITEMS_PER_PAGE);
+  const pagedMagazines = restMagazines.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
 
   console.log("magazines:", magazines);
 
