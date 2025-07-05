@@ -8,6 +8,7 @@ import { useEffect, useState, use } from "react";
 import { createClient } from "@/utils/supabase/client";
 import {FaArrowLeft} from "react-icons/fa";
 import { motion } from "framer-motion";
+import { useRouter as useNav } from "next/navigation";
 
 export default function page({params}) {
   const magazineId = use(params)['id'];
@@ -16,10 +17,28 @@ export default function page({params}) {
   const router = useRouter();
   const supabase = createClient();
   
+  // record unique view
+  const recordView = async (mag) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !mag) return;
+      const insertRes = await supabase
+        .from('magazine_real_views')
+        .insert({ magazine_id: mag.id, user_id: user.id }, { ignoreDuplicates: true })
+        .select();
+      if (insertRes.data && insertRes.data.length > 0) {
+        await supabase.from('magazine')
+          .update({ real_views: (mag.real_views || 0) + 1 })
+          .eq('id', mag.id);
+      }
+    } catch (e) { console.log('record view error', e); }
+  };
+  
   const getMagazineData = async() => {
     try {
       const {data, error} = await supabase.from('magazine').select('*').eq('id', magazineId).single();
       setMagazine(data);
+      recordView(data);
     } catch (error) {
       console.log("매거진 데이터 로드 중 오류:", error);
     } finally {

@@ -15,6 +15,9 @@ export async function GET(request: NextRequest) {
     params.append('client_id', process.env.NEXT_PUBLIC_KAKAO_REST_KEY as string);
     params.append('redirect_uri', process.env.NEXT_PUBLIC_KAKAO_REDIRECT as string);
     params.append('code', code);
+    if (process.env.KAKAO_CLIENT_SECRET) {
+      params.append('client_secret', process.env.KAKAO_CLIENT_SECRET);
+    }
 
     const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
       method: 'POST',
@@ -25,12 +28,36 @@ export async function GET(request: NextRequest) {
     });
 
     if (!tokenRes.ok) {
-      console.error('Kakao token exchange failed', await tokenRes.text());
-      return NextResponse.redirect(new URL('/admin/login?error=카카오 토큰 요청 실패', request.url));
+      const errText = await tokenRes.text();
+      console.error('Kakao token exchange failed', errText);
+      return NextResponse.redirect(new URL(`/admin/login?error=카카오 토큰 요청 실패: ${encodeURIComponent(errText)}`, request.url));
     }
 
-    // 토큰 데이터 파싱 (필요 시 사용)
-    await tokenRes.json();
+    // 토큰 데이터 파싱
+    const tokenData: { access_token: string } = await tokenRes.json();
+
+    // 카카오 사용자 정보 조회
+    let kakaoEmail: string | undefined;
+    try {
+      const userRes = await fetch('https://kapi.kakao.com/v2/user/me', {
+        headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
+        },
+      });
+      if (userRes.ok) {
+        const userJson = await userRes.json();
+        kakaoEmail = userJson?.kakao_account?.email;
+      }
+    } catch (e) {
+      console.error('kakao user fetch error', e);
+    }
+
+    // 허용 이메일 목록 확인 (콤마 구분)
+    const allowedList = (process.env.KAKAO_ALLOWED_EMAILS || '').split(',').map(v => v.trim()).filter(Boolean);
+    if (allowedList.length && (!kakaoEmail || !allowedList.includes(kakaoEmail))) {
+      console.warn('Unauthorized kakao email', kakaoEmail);
+      return NextResponse.redirect(new URL('/admin/login?error=허용되지_않은_카카오_계정', request.url));
+    }
 
     // 세션 상태 업데이트 (Realtime 전달)
     if (state) {
