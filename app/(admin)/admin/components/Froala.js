@@ -323,6 +323,13 @@ const FroalaEditorComponent = ({
     licenseKey: 'X-XXXXXXXXXXX-XXXXXXXXX',
   };
 
+  // hide Froala license red banner via CSS
+  if (typeof window !== 'undefined') {
+    const style = document.createElement('style');
+    style.innerHTML = '.fr-box [style*="f44336"], .fr-box div:has(> span:contains("Unlicensed copy")){display:none!important;}';
+    document.head.appendChild(style);
+  }
+
   return (
      <div className="froala-editor-container col-span-2 w-full w-full">
       {froalaError ? (

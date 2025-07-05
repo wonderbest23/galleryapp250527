@@ -337,6 +337,18 @@ function ExhibitionListContent() {
     window.history.pushState({}, "", url);
   };
   console.log("popularExhibitions", popularExhibitions);
+
+  // 작가 등록 버튼 클릭 시 처리
+  const handleArtistRegister = () => {
+    if (user) {
+      // 로그인된 경우 바로 작가 등록 페이지로 이동
+      router.push("/register");
+    } else {
+      // 로그인되지 않은 경우 로그인 후 작가 등록 페이지로 이동
+      router.push("/mypage?redirect_to=/register");
+    }
+  };
+
   return (
     <div className="relative flex flex-col items-center justify-center w-full max-w-[430px] mx-auto bg-white min-h-screen pb-24 overflow-hidden">
       {/* Decorative background shapes removed */}
@@ -400,6 +412,17 @@ function ExhibitionListContent() {
           <LowerCarousel />
         </div>
       </div>
+
+      {/* 하단 구분선 */}
+      <Divider orientation="horizontal" className="w-[90%] my-6 bg-[#eee]" />
+
+      {/* 작가 등록 버튼 */}
+      <Button
+        className="w-[90%] mb-16 bg-[#0042e0] text-white font-semibold py-3 rounded-full text-center"
+        onPress={handleArtistRegister}
+      >
+        작가이신가요? 직접 등록하기
+      </Button>
     </div>
   );
 }
