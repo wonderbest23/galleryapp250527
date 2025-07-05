@@ -109,12 +109,14 @@ export default function MagazineList() {
           {/* 1. 가장 최근 매거진(대형 카드) */}
           {magazines[0] && (
             <motion.div
-              className="w-[90%] bg-white rounded-2xl mb-6 shadow hover:cursor-pointer mt-6"
+              className="relative w-[90%] bg-white rounded-2xl mb-6 shadow hover:cursor-pointer mt-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
               onClick={() => router.push(`/magazine/${magazines[0].id}`)}
             >
+              {/* NEW badge */}
+              <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded">NEW</span>
               {magazines[0].photo?.[0]?.url && (
                 <Image
                   src={
