@@ -204,9 +204,9 @@ export default function MagazineList() {
                             </span>
                           )}
                           <span className="text-[12px] text-gray-400">·</span>
-                          <span className="text-[12px] text-gray-400 truncate flex items-center gap-1">
+                          <span className="text-[11px] text-gray-400 flex items-center gap-1 whitespace-nowrap">
                             {new Date(item.created_at).getFullYear()}년 {new Date(item.created_at).getMonth() + 1}월 {new Date(item.created_at).getDate()}일
-                            <span className="mx-1">·</span><Eye size={12} className="text-gray-400"/>{calcViews(item).toLocaleString()}
+                            <span className="mx-1">·</span><Eye size={10} className="text-gray-400"/>{calcViews(item).toLocaleString()}
                           </span>
                         </div>
                       </div>
