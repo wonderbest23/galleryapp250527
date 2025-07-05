@@ -18,11 +18,11 @@ export default function App({searchParams}) {
   
   return (
     <Form
-      className="w-full h-screen justify-center items-center space-y-4"
+      className="flex w-full h-screen items-start justify-center lg:justify-start lg:items-start lg:pl-20 pt-20"
       validationErrors={errors}
       action={adminSignInAction}
     >
-      <div className="flex flex-col gap-4 md:max-w-[30%] w-full max-w-[80%]">
+      <div className="flex flex-col gap-4 w-full max-w-[500px] md:max-w-[600px] px-4">
         <h1 className="text-2xl font-bold text-center">관리자 로그인</h1>
         <div className="text-center leading-relaxed space-y-2 md:space-y-3">
             <p>(!)경고 해당사이트에 접근하지마세요. </p>
