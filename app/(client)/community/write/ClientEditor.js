@@ -58,7 +58,7 @@ export default function CommunityWriteClient() {
   return (
     <div className="flex flex-col items-center w-full max-w-[600px] mx-auto px-4 py-6 gap-4">
       {/* Guidelines Modal */}
-      <Modal isOpen={showGuide} onOpenChange={setShowGuide} size="sm" placement="center">
+      <Modal isOpen={showGuide} onOpenChange={setShowGuide} size="sm" placement="center" className="z-[9999]">
         <ModalContent className="max-w-sm z-[9999]">
           <ModalHeader className="flex flex-col gap-1 text-sm">✅ 미술예술랭 커뮤니티 글 작성 시 유의사항</ModalHeader>
           <ModalBody className="max-h-[60vh] overflow-y-auto text-xs whitespace-pre-wrap leading-relaxed">
