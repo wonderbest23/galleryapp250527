@@ -159,7 +159,7 @@ export default function page({ params }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.4 }}
-        className="flex flex-col gap-2 my-4 w-[100%] mb-24 px-8"
+        className="flex flex-col gap-2 my-2 w-[100%] mb-8 px-8"
       >
         <motion.div 
           initial={{ opacity: 0 }}
@@ -173,24 +173,21 @@ export default function page({ params }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.7 }}
-          className="text-[15px] font-medium text-gray-500 flex items-center"
+          className="flex items-center justify-between w-full"
         >
-          {magazine.subtitle === '전시나그네' && (
-            <a href="https://www.instagram.com/exhibition_wanderer/" target="_blank" rel="noopener noreferrer">
-              <span className="inline-block w-7 h-7 rounded-full bg-white shadow-lg mr-1 flex items-center justify-center">
-                <img src="https://teaelrzxuigiocnukwha.supabase.co/storage/v1/object/public/notification//imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-5 h-5 rounded-full object-cover" style={{margin: '2px'}} />
-              </span>
-            </a>
-          )}
-          {magazine.subtitle}
-        </motion.div>
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.8 }}
-          className="text-end text-[10px] text-[#494949]"
-        >
-          작성일 :{" "}{new Date(magazine.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+          <div className="text-[15px] font-medium text-gray-500 flex items-center">
+            {magazine.subtitle === '전시나그네' && (
+              <a href="https://www.instagram.com/exhibition_wanderer/" target="_blank" rel="noopener noreferrer">
+                <span className="inline-block w-7 h-7 rounded-full bg-white shadow-lg mr-1 flex items-center justify-center">
+                  <img src="https://teaelrzxuigiocnukwha.supabase.co/storage/v1/object/public/notification//imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-5 h-5 rounded-full object-cover" style={{margin: '2px'}} />
+                </span>
+              </a>
+            )}
+            {magazine.subtitle}
+          </div>
+          <div className="text-[10px] text-[#494949] whitespace-nowrap ml-2">
+            작성일 :{" "}{new Date(magazine.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </div>
         </motion.div>
         <Divider orientation="horizontal" className="w-full my-2"/>
         <motion.div 
@@ -212,7 +209,7 @@ export default function page({ params }) {
         initial={{opacity:0,y:20}}
         animate={{opacity:1,y:0}}
         transition={{duration:0.6,delay:1}}
-        className="w-full px-8 mb-20"
+        className="w-full px-8 mb-24"
       >
         <Divider orientation="horizontal" className="w-full my-4" />
         <h4 className="text-base font-bold mb-3">다른 매거진</h4>
