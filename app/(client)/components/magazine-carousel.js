@@ -133,7 +133,7 @@ export function MagazineCarousel() {
                     >
                       <CardBody className="p-0 relative">
                         <div 
-                          className="relative w-full h-[454px]"
+                          className="relative w-full h-[520px]"
                         >
                           <Image
                             src={
@@ -154,17 +154,26 @@ export function MagazineCarousel() {
                           </div>
                         </div>
                         {/* 하단 edge에서부터 자연스러운 그림자(그라데이션) */}
-                        <div className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none bg-gradient-to-t from-black/70 to-transparent z-10" />
+                        <div className="absolute bottom-0 left-0 right-0 h-44 pointer-events-none bg-gradient-to-t from-black/90 to-transparent z-10" />
                         {/* 텍스트는 그림자 위에 올림 */}
                         <div 
-                          className="absolute bottom-10 left-0 right-0 px-4 pb-0 mb-0 text-white z-20"
+                          className="absolute bottom-20 left-0 right-0 px-4 pb-0 mb-0 text-white z-20"
                           onClick={(e) => handleMagazineClick(e, magazine.id)}
                         >
                           <h3 className="text-base font-bold line-clamp-2 break-keep mb-1">
                             {magazine.title}
                           </h3>
                           <div className="flex flex-row items-center gap-2 mt-1">
-                            <span className="text-xs line-clamp-1 break-keep opacity-90">{magazine.subtitle || "매거진 내용"}</span>
+                            {magazine.subtitle && (
+                              <span className="flex items-center text-xs line-clamp-1 break-keep opacity-90">
+                                {magazine.subtitle === '전시나그네' && (
+                                  <span className="inline-block w-5 h-5 rounded-full bg-white shadow-lg mr-1 flex items-center justify-center">
+                                    <img src="https://teaelrzxuigiocnukwha.supabase.co/storage/v1/object/public/notification//imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-4 h-4 rounded-full object-cover" style={{margin:'1px'}} />
+                                  </span>
+                                )}
+                                {magazine.subtitle}
+                              </span>
+                            )}
                             {magazine.created_at && (
                               <span className="text-xs text-gray-300 ml-2">
                                 {new Date(magazine.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\./g, '.').replace(/\s/g, '')}
@@ -180,7 +189,7 @@ export function MagazineCarousel() {
               <style jsx global>{`
                 .slick-container .slick-dots {
                   position: absolute;
-                  bottom: 10px;
+                  bottom: 30px;
                   left: 0;
                   right: 0;
                   z-index: 10;
