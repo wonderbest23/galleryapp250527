@@ -56,17 +56,37 @@ export default function MagazineList() {
         return;
       }
 
-      // profiles 테이블에서 사용자 정보 검색
+      // 작가 신청/승인 여부 확인을 위해 전체 프로필 정보 조회
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .eq('isArtistApproval', true)
         .single();
 
       if (profileError) {
         console.log('프로필 정보를 가져오는 중 오류 발생:', profileError);
         setIsLoading(false);
+        return;
+      }
+
+      // 1) 이미 승인된 작가인 경우
+      if (profileData?.isArtistApproval === true) {
+        alert('이미 승인된 작가 계정입니다. 마이페이지로 이동합니다.');
+        router.replace('/mypage/success');
+        return;
+      }
+
+      // 2) 반려(거절)된 경우
+      if (profileData?.is_artist_rejected === true) {
+        alert('작가 신청이 반려되었습니다. 마이페이지에서 정보를 수정 후 재신청해 주세요.');
+        router.replace('/mypage/success');
+        return;
+      }
+
+      // 3) 신청은 했으나 아직 승인 대기 중인 경우
+      if (profileData?.isArtist === true && profileData?.isArtistApproval === false) {
+        alert('작가 신청이 접수되어 승인 대기 중입니다. 마이페이지로 이동합니다.');
+        router.replace('/mypage/success');
         return;
       }
 
