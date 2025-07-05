@@ -143,8 +143,6 @@ function CommunityPageContent() {
                     <HiOutlineClock className="w-3 h-3" />{new Date(p.created_at).toLocaleDateString("ko-KR")}
                     <HiOutlineTag className="w-3 h-3" />{p.category || "커뮤니티"}
                     <HiOutlineUser className="w-3 h-3" />{p.nickname || "익명"}
-                    <HiOutlineEye className="w-3 h-3" />{p.views || 0}
-                    <HiOutlineStar className="w-3 h-3" />{p.likes}
                   </div>
                 </Link>
               </li>
@@ -167,8 +165,6 @@ function CommunityPageContent() {
                   <HiOutlineClock className="w-3 h-3" />{new Date(p.created_at).toLocaleDateString("ko-KR")}
                   <HiOutlineTag className="w-3 h-3" />{p.category || "커뮤니티"}
                   <HiOutlineUser className="w-3 h-3" />{p.nickname || "익명"}
-                  <HiOutlineEye className="w-3 h-3" />{p.views || 0}
-                  <HiOutlineStar className="w-3 h-3" />{p.likes}
                 </div>
               </Link>
             </li>
@@ -192,8 +188,6 @@ function CommunityPageContent() {
                   <HiOutlineClock className="w-3 h-3" />{new Date(p.created_at).toLocaleDateString("ko-KR")}
                   <HiOutlineTag className="w-3 h-3" />{p.category || "커뮤니티"}
                   <HiOutlineUser className="w-3 h-3" />{p.nickname || "익명"}
-                  <HiOutlineEye className="w-3 h-3" />{p.views || 0}
-                  <HiOutlineStar className="w-3 h-3" />{p.likes}
                 </div>
               </Link>
             </li>
