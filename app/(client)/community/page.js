@@ -107,13 +107,6 @@ function CommunityPageContent() {
     <div className="flex flex-col items-center w-full max-w-[600px] mx-auto px-4 py-6 pb-32">
       <div className="w-full flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold pl-1">커뮤니티</h1>
-        <Button color="primary" onPress={() => {
-          if (currentUser) {
-            router.push('/community/write');
-          } else {
-            router.push('/mypage?redirect_to=/community/write');
-          }
-        }}>글쓰기</Button>
       </div>
 
       {/* 탭 선택 */}
@@ -210,7 +203,7 @@ function CommunityPageContent() {
       <div className="flex justify-between w-full mt-3">
         <button className="border px-4 py-1 text-sm rounded bg-white hover:bg-gray-50">인기글</button>
         <button
-          className="border px-4 py-1 text-sm rounded bg-white hover:bg-gray-50 flex items-center gap-1"
+          className="px-4 py-1 text-sm rounded bg-green-500 hover:bg-green-600 text-white flex items-center gap-1"
           onClick={() => {
             if (currentUser) {
               router.push('/community/write');
