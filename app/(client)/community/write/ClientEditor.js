@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button, Input, Select, SelectItem, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
 import dynamicImport from "next/dynamic";
 
-// 커뮤니티 전용 TinyMCE 에디터 (다른 영역 영향 없음)
+// TinyMCE 에디터 컴포넌트 사용
 const TinyEditorComponent = dynamicImport(() => import("@/components/TinyEditor"), { ssr: false });
 
 export default function CommunityWriteClient() {

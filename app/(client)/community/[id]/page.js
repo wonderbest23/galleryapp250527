@@ -188,7 +188,7 @@ export default function CommunityDetail() {
 
       {/* 본문 */}
       <div
-        className="w-full leading-relaxed text-[15px] prose max-w-none mb-6 min-h-[220px]"
+        className="w-full leading-relaxed text-[16px] prose max-w-none mb-6 min-h-[220px]"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
