@@ -61,13 +61,17 @@ export default function MagazineList() {
   // utility hash and view function
   function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i);h|=0;}return Math.abs(h);} 
   function calcViews(item){
-    // 초기 조회수: 20 ~ 99 (글 ID 해시에 따라 결정)
-    const base = 20 + (hashStr(item.id.toString()) % 80); // 20-99
-
-    // 하루 경과 시 증가폭: 5 ~ 34 (역시 해시 기반, 글마다 다름)
-    const dailyInc = 5 + (hashStr(item.id.toString() + "x") % 30); // 5-34
-
     const days = Math.floor((Date.now() - new Date(item.created_at).getTime()) / 864e5);
+
+    if (days === 0) {
+      // 업로드 당일: 20 ~ 99 조회수
+      const base = 20 + (hashStr(item.id.toString()) % 80);
+      return base;
+    }
+
+    // 하루 이상 지난 글은 기존 로직으로 (1~3천대에서 시작, 서서히 증가)
+    const base = 1000 + (hashStr(item.id.toString()) % 9000); // 1,000~9,999
+    const dailyInc = (hashStr(item.id.toString() + "x") % 50); // 0~49
 
     const calculated = base + days * dailyInc + (item.real_views || 0);
 
