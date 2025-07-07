@@ -69,6 +69,13 @@ export default function MagazineList() {
     return Math.min(calculated, 10000);
   }
 
+  // yyyy-mm-dd 혹은 ISO 문자열을 "YYYY년 M월 D일" 한국형으로 변환
+  const fmtDate = (str) => {
+    if (!str) return '';
+    const [y, m, d] = str.slice(0, 10).split('-');
+    return `${y}년 ${parseInt(m)}월 ${parseInt(d)}일`;
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen pb-24">
       {isLoading ? (
@@ -147,7 +154,7 @@ export default function MagazineList() {
                   </span>
                 )}
                 <div className="text-xs text-gray-400 flex items-center gap-1">
-                  {new Date(magazines[0].created_at).getFullYear()}년 {new Date(magazines[0].created_at).getMonth() + 1}월 {new Date(magazines[0].created_at).getDate()}일
+                  {fmtDate(magazines[0].created_at)}
                   <span className="mx-1">·</span>
                   <Eye size={14} className="text-gray-400" /> {calcViews(magazines[0]).toLocaleString()}
                   {magazines[0].author && (
@@ -207,7 +214,7 @@ export default function MagazineList() {
                           )}
                           <span className="text-[12px] text-gray-400">·</span>
                           <span className="text-[11px] text-gray-400 flex items-center gap-1 whitespace-nowrap">
-                            {new Date(item.created_at).getFullYear()}년 {new Date(item.created_at).getMonth() + 1}월 {new Date(item.created_at).getDate()}일
+                            {fmtDate(item.created_at)}
                             <span className="mx-1">·</span><Eye size={10} className="text-gray-400"/>{calcViews(item).toLocaleString()}
                           </span>
                         </div>
