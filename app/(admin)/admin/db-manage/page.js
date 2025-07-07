@@ -9,11 +9,16 @@ export default function DBManagePage() {
   const [showAlarmUI, setShowAlarmUI] = useState(false);
   const [exhibitions, setExhibitions] = useState([]);
   const [selectedExhibition, setSelectedExhibition] = useState("");
+  const [viewGallery, setViewGallery] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const { data, error } = await supabase.from('profiles').select('id, full_name, email, created_at');
+      let query = supabase.from('profiles').select('id, full_name, email, created_at, role');
+      if (!viewGallery) query = query.eq('role', 'user');
+      else query = query.eq('role', 'gallery');
+
+      const { data, error } = await query;
       if (!error) setUsers(data);
     };
     const fetchExhibitions = async () => {
@@ -22,7 +27,7 @@ export default function DBManagePage() {
     };
     fetchUsers();
     fetchExhibitions();
-  }, []);
+  }, [viewGallery]);
 
   const handleSelect = (id) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -61,6 +66,9 @@ export default function DBManagePage() {
       <div className="flex items-center mb-2 gap-2">
         <Button size="sm" color="primary" onClick={() => setShowAlarmUI(v => !v)}>
           전시회 알람 발송
+        </Button>
+        <Button size="sm" color="default" onClick={()=>setViewGallery(v=>!v)}>
+          {viewGallery ? '일반 고객 보기' : '갤러리 계정 보기'}
         </Button>
         <Button size="sm" color="default" onClick={handleDeselectAll}>선택 해제</Button>
         <span className="text-sm text-gray-500">선택된 회원: {selectedIds.length}명</span>
