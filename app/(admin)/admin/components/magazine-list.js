@@ -94,6 +94,7 @@ export function MagazineList({
   // 페이지 변경 처리 함수
   const handlePageChange = (newPage) => {
     setPage(newPage);
+    onSelectionChange(new Set()); // 페이지 바뀌면 선택 초기화
   };
 
   // 매거진 선택 처리
@@ -106,6 +107,9 @@ export function MagazineList({
       if (magazine) onSelectMagazine({ ...magazine });
     }
   };
+
+  // 검색어 변경 시 선택 해제
+  useEffect(()=>{ onSelectionChange(new Set()); },[search]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -149,7 +153,14 @@ export function MagazineList({
         </TableHeader>
         <TableBody>
           {magazines.map((magazine) => (
-            <TableRow key={magazine.id}>
+            <TableRow
+              key={magazine.id}
+              onClick={() => {
+                const keySet = new Set([magazine.id]);
+                onSelectionChange(keySet);
+                onSelectMagazine({ ...magazine });
+              }}
+            >
               <TableCell>{magazine.title}</TableCell>
               <TableCell>{magazine.subtitle}</TableCell>
               <TableCell className="overflow-hidden whitespace-nowrap text-ellipsis max-w-[200px]" title={magazine.content}>
