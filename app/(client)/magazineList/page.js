@@ -64,8 +64,15 @@ export default function MagazineList() {
     const days = Math.floor((Date.now() - new Date(item.created_at).getTime()) / 864e5);
 
     if (days === 0) {
-      // 업로드 당일: 20 ~ 99 조회수
-      return 20 + (hashStr(item.id.toString()) % 80); // 20~99
+      // 업로드 첫 24시간 로직
+      const ms = Date.now() - new Date(item.created_at).getTime();
+      const hours = Math.floor(ms / 3600000); // 0~23
+
+      const base = 10 + (hashStr(item.id.toString()) % 90); // 10~99
+      const hourlyInc = 5 + (hashStr(item.id.toString() + 'h') % 40); // 5~44
+      let views = base + hours * hourlyInc;
+      views = Math.min(views, 1000);
+      return views;
     }
 
     // 기존 글: 초기 1,000~2,999 에서 시작
@@ -76,13 +83,13 @@ export default function MagazineList() {
     for (let d = 1; d <= maxLoop; d++) {
       const inc = 5 + (hashStr(item.id.toString() + '-' + d) % 296); // 5~300
       views += inc;
-      if (views >= 10000) { views = 10000; break; }
+      if (views >= 50000) { views = 50000; break; }
     }
 
     // 추가 실제 조회수 컬럼 합산
     views += (item.real_views || 0);
 
-    return Math.min(views, 10000);
+    return Math.min(views, 50000);
   }
 
   // yyyy-mm-dd 혹은 ISO 문자열을 "YYYY년 M월 D일" 한국형으로 변환
