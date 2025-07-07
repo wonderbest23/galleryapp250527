@@ -75,21 +75,38 @@ export default function MagazineList() {
       return views;
     }
 
-    // 기존 글: 초기 1,000~2,999 에서 시작
-    let views = 1000 + (hashStr(item.id.toString()) % 2000); // 1,000~2,999
+    // === 기존 글 (24h 이후) ===
+    // 인기 등급 결정 (85% 일반, 10% 중간, 5% 상위)
+    const popSeed = hashStr(item.id.toString() + 'pop') % 100; // 0~99
+    let views;
+    let dailyMin, dailyMax;
 
-    // 하루마다 5~300 사이 가변 증가 (해시 기반으로 일별 결정)
-    const maxLoop = Math.min(days, 365); // 안전 상한
-    for (let d = 1; d <= maxLoop; d++) {
-      const inc = 5 + (hashStr(item.id.toString() + '-' + d) % 296); // 5~300
-      views += inc;
-      if (views >= 50000) { views = 50000; break; }
+    if (popSeed < 5) {
+      // 상위 5% – 10k 이상도 가능
+      views = 10000 + (hashStr(item.id.toString()) % 9000); // 10,000~18,999 기본
+      dailyMin = 50; dailyMax = 500;
+    } else if (popSeed < 15) {
+      // 중간 10% – 5~9k
+      views = 5000 + (hashStr(item.id.toString()) % 4000); // 5,000~8,999
+      dailyMin = 20; dailyMax = 150;
+    } else {
+      // 일반 85% – 2~4k
+      views = 2000 + (hashStr(item.id.toString()) % 2000); // 2,000~3,999
+      dailyMin = 5; dailyMax = 60;
     }
 
-    // 추가 실제 조회수 컬럼 합산
+    // 일별 증가 (최대 2년치 루프 제한)
+    const maxLoop = Math.min(days, 730);
+    for (let d = 1; d <= maxLoop; d++) {
+      const incRange = dailyMax - dailyMin + 1;
+      const inc = dailyMin + (hashStr(item.id.toString() + '-' + d) % incRange);
+      views += inc;
+      if (views >= 100000) { views = 100000; break; }
+    }
+
     views += (item.real_views || 0);
 
-    return Math.min(views, 50000);
+    return Math.min(views, 100000);
   }
 
   // yyyy-mm-dd 혹은 ISO 문자열을 "YYYY년 M월 D일" 한국형으로 변환
