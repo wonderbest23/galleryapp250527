@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button, Input, Select, SelectItem, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
 import dynamicImport from "next/dynamic";
 
-const FroalaEditorComponent = dynamicImport(() => import("@/app/(admin)/admin/components/Froala"), { ssr: false });
+// TinyMCE 에디터 컴포넌트 사용
+const TinyEditorComponent = dynamicImport(() => import("@/components/TinyEditor"), { ssr: false });
 
 export default function CommunityWriteClient() {
   const categories = [
@@ -113,7 +114,7 @@ export default function CommunityWriteClient() {
           </Select>
           <Input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="제목" />
           <div className="w-full">
-            <FroalaEditorComponent
+            <TinyEditorComponent
               value={content}
               onChange={setContent}
               height={400}
