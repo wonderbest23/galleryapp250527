@@ -15,8 +15,11 @@ export default function DBManagePage() {
   useEffect(() => {
     const fetchUsers = async () => {
       let query = supabase.from('profiles').select('id, full_name, email, created_at, role');
-      if (!viewGallery) query = query.eq('role', 'user');
-      else query = query.eq('role', 'gallery');
+      if (viewGallery) {
+        query = query.eq('role', 'gallery');
+      } else {
+        query = query.or('role.is.null,role.eq.user,role.eq.master');
+      }
 
       const { data, error } = await query;
       if (!error) setUsers(data);
