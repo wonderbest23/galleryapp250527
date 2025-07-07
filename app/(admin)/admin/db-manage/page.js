@@ -18,7 +18,7 @@ export default function DBManagePage() {
       if (viewGallery) {
         query = query.eq('role', 'gallery');
       } else {
-        query = query.neq('role', 'gallery');
+        query = query.or('role.is.null,role.eq.user,role.eq.master');
       }
 
       const { data, error } = await query;
