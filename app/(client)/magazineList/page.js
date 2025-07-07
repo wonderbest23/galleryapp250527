@@ -61,17 +61,35 @@ export default function MagazineList() {
   // utility hash and view function
   function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i);h|=0;}return Math.abs(h);} 
   function calcViews(item){
-    // 초기 조회수: 20 ~ 99 (글 ID 해시에 따라 결정)
-    const base = 20 + (hashStr(item.id.toString()) % 80); // 20-99
-
-    // 하루 경과 시 증가폭: 5 ~ 34 (역시 해시 기반, 글마다 다름)
-    const dailyInc = 5 + (hashStr(item.id.toString() + "x") % 30); // 5-34
-
     const days = Math.floor((Date.now() - new Date(item.created_at).getTime()) / 864e5);
 
-    const calculated = base + days * dailyInc + (item.real_views || 0);
+    if (days === 0) {
+      // 업로드 첫 24시간 로직
+      const ms = Date.now() - new Date(item.created_at).getTime();
+      const hours = Math.floor(ms / 3600000); // 0~23
 
-    return Math.min(calculated, 10000);
+      const base = 10 + (hashStr(item.id.toString()) % 90); // 10~99
+      const hourlyInc = 5 + (hashStr(item.id.toString() + 'h') % 40); // 5~44
+      let views = base + hours * hourlyInc;
+      views = Math.min(views, 1000);
+      return views;
+    }
+
+    // 기존 글: 초기 1,000~2,999 에서 시작
+    let views = 1000 + (hashStr(item.id.toString()) % 2000); // 1,000~2,999
+
+    // 하루마다 5~300 사이 가변 증가 (해시 기반으로 일별 결정)
+    const maxLoop = Math.min(days, 365); // 안전 상한
+    for (let d = 1; d <= maxLoop; d++) {
+      const inc = 5 + (hashStr(item.id.toString() + '-' + d) % 296); // 5~300
+      views += inc;
+      if (views >= 50000) { views = 50000; break; }
+    }
+
+    // 추가 실제 조회수 컬럼 합산
+    views += (item.real_views || 0);
+
+    return Math.min(views, 50000);
   }
 
   // yyyy-mm-dd 혹은 ISO 문자열을 "YYYY년 M월 D일" 한국형으로 변환
