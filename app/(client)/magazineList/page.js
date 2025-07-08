@@ -61,12 +61,11 @@ export default function MagazineList() {
   // utility hash and view function
   function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i);h|=0;}return Math.abs(h);} 
   function calcViews(item){
-    const days = Math.floor((Date.now() - new Date(item.created_at).getTime()) / 864e5);
+    const msAgo = Date.now() - new Date(item.created_at).getTime();
+    const days = Math.floor(msAgo / 864e5);
 
-    if (days === 0) {
-      // 업로드 첫 24시간 로직
-      const ms = Date.now() - new Date(item.created_at).getTime();
-      const hours = Math.floor(ms / 3600000); // 0~23
+    if (msAgo < 864e5) { // 업로드 후 24h 이내
+      const hours = Math.floor(msAgo / 3600000); // 0~23
 
       const base = 10 + (hashStr(item.id.toString()) % 90); // 10~99
       const hourlyInc = 5 + (hashStr(item.id.toString() + 'h') % 40); // 5~44
