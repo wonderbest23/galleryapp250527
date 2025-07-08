@@ -61,7 +61,8 @@ export default function MagazineList() {
   // utility hash and view function
   function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i);h|=0;}return Math.abs(h);} 
   function calcViews(item){
-    const msAgo = Date.now() - new Date(item.created_at).getTime();
+    let msAgo = Date.now() - new Date(item.created_at).getTime();
+    if (msAgo < 0) msAgo = 0;
     const days = Math.floor(msAgo / 864e5);
 
     if (msAgo < 864e5) { // 업로드 후 24h 이내
