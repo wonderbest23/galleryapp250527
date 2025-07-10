@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardBody,
   CardFooter,
-  Input,
   Image,
   Spinner,
 } from "@heroui/react";
@@ -17,6 +16,8 @@ export default function MainBannerManager() {
   const supabase = createClient();
   const [banners, setBanners] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  // 업로드 진행 상태 관리
+  const [uploadingId, setUploadingId] = useState(null);
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -48,13 +49,60 @@ export default function MainBannerManager() {
     fetchBanners();
   }, []);
 
-  const handleBannerChange = (e, id) => {
-    const { value } = e.target;
-    setBanners(
-      banners.map((banner) =>
-        banner.id === id ? { ...banner, url: value } : banner
-      )
-    );
+  // 파일 업로드 핸들러
+  const handleBannerUpload = async (e, id) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingId(id);
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("banners")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.log("배너 이미지 업로드 오류:", uploadError);
+        addToast({
+          title: "업로드 실패",
+          description: "배너 이미지를 업로드하는 중 오류가 발생했습니다.",
+          color: "danger",
+        });
+        return;
+      }
+
+      // public URL 가져오기
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("banners").getPublicUrl(fileName);
+
+      // 상태 업데이트
+      setBanners(
+        banners.map((banner) =>
+          banner.id === id ? { ...banner, url: publicUrl } : banner
+        )
+      );
+
+      addToast({
+        title: "업로드 완료",
+        description: "배너 이미지가 성공적으로 업로드되었습니다.",
+        color: "success",
+      });
+    } catch (err) {
+      console.log("배너 이미지 업로드 예외:", err);
+      addToast({
+        title: "업로드 실패",
+        description: "배너 이미지를 업로드하는 중 오류가 발생했습니다.",
+        color: "danger",
+      });
+    } finally {
+      setUploadingId(null);
+    }
   };
   
   const addBanner = () => {
@@ -142,19 +190,32 @@ export default function MainBannerManager() {
 
                   </div>
                   
-                  <Input
-                    label="배너 이미지 URL"
-                    type="text"
-                    value={banner.url || ""}
-                    onChange={(e) => handleBannerChange(e, banner.id)}
-                    placeholder="배너 이미지 URL을 입력하세요"
-                    radius="sm"
-                    classNames={{
-                      input: "text-small",
-                      inputWrapper: "border-1",
-                    }}
+                  {/* 파일 업로드 인풋 */}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleBannerUpload(e, banner.id)}
+                    className="file-input file-input-bordered w-full"
                   />
-                  
+
+                  {/* 업로드 중 스피너 */}
+                  {uploadingId === banner.id && (
+                    <div className="flex items-center gap-2 text-sm text-default-500">
+                      <Spinner size="sm" /> 이미지 업로드 중...
+                    </div>
+                  )}
+
+                  {/* 미리보기 */}
+                  {banner.url && (
+                    <Image
+                      src={banner.url}
+                      alt={`메인 배너 ${index + 1}`}
+                      width={300}
+                      height={150}
+                      className="object-contain rounded border"
+                    />
+                  )}
+
 
                 </div>
               ))
