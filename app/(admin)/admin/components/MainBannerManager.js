@@ -10,6 +10,7 @@ import {
 } from "@heroui/react";
 import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
+import compressToWebp from "@/utils/compressImage";
 import { addToast } from "@heroui/react";
 
 export default function MainBannerManager() {
@@ -56,12 +57,19 @@ export default function MainBannerManager() {
 
     try {
       setUploadingId(id);
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+
+      // WebP 변환
+      const webpFile = await compressToWebp(file, {
+        maxWidth: 1920,
+        maxHeight: 1080,
+        quality: 0.8,
+      });
+
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.webp`;
 
       const { error: uploadError } = await supabase.storage
         .from("banners")
-        .upload(fileName, file, {
+        .upload(fileName, webpFile, {
           cacheControl: "3600",
           upsert: false,
         });
