@@ -12,7 +12,7 @@ export default function ExhibitionRequestPage() {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("exhibition_request")
-        .select("*, profiles(username,email)")
+        .select("*")
         .order("created_at", { ascending: false });
       if (!error) setRequests(data || []);
       setLoading(false);
@@ -41,7 +41,7 @@ export default function ExhibitionRequestPage() {
                   </span>
                 </div>
                 {req.content && <p className="whitespace-pre-wrap mb-2 text-sm">{req.content}</p>}
-                <p className="text-xs text-gray-500">요청자: {req.profiles?.username || req.profiles?.email || req.user_id}</p>
+                <p className="text-xs text-gray-500">요청자 ID: {req.user_id}</p>
               </CardBody>
             </Card>
           ))}
