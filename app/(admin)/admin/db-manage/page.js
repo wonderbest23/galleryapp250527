@@ -14,15 +14,20 @@ export default function DBManagePage() {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      let query = supabase.from('profiles').select('id, full_name, email, created_at, role');
+      // 필요한 컬럼만 조회 (role 컬럼 제외)
+      let query = supabase.from('profiles').select('id, full_name, email, created_at');
       if (viewGallery) {
         query = query.eq('role', 'gallery');
       } else {
-        query = query.or('role.is.null,role.eq.user,role.eq.master');
+        query = query.not('role', 'eq', 'gallery'); // 갤러리 계정 제외 (null 포함)
       }
 
       const { data, error } = await query;
-      if (!error) setUsers(data);
+      if (error) {
+        console.log('fetchUsers error', error);
+      } else {
+        setUsers(data);
+      }
     };
     const fetchExhibitions = async () => {
       const { data, error } = await supabase.from('exhibition').select('id, contents');
