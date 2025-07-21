@@ -47,9 +47,7 @@ export function ExhibitionCarousel() {
     dotsClass: "slick-dots custom-dots",
     customPaging: (i) => (
       <div className="dot-button" />
-    ),
-    vertical: true, // 세로 방향 슬라이드
-    verticalSwiping: true, // 세로 스와이프 활성화
+    )
   };
 
   const containerVariants = {
@@ -118,7 +116,7 @@ export function ExhibitionCarousel() {
                         quality={70}
                         priority={index === 0}
                         style={{ objectFit: "cover", borderRadius: "16px", outline: 'none', WebkitTapHighlightColor: 'transparent' }}
-                        className="w-full h-[300px] rounded-2xl" // 이미지 높이 증가
+                        className="w-full h-[200px] rounded-2xl"
                       />
                     </motion.div>
                   </div>
@@ -131,32 +129,51 @@ export function ExhibitionCarousel() {
       <style jsx global>{`
         .custom-dots {
           position: absolute;
-          right: 10px; /* 우측에 표시 */
-          top: 50%;
-          transform: translateY(-50%);
-          flex-direction: column;
+          bottom: 10px;
           display: flex !important;
           justify-content: center;
           align-items: center;
-          width: auto;
-          height: 100%;
+          width: 100%;
           padding: 0;
           margin: 0;
           list-style: none;
+          text-align: center;
           z-index: 10;
         }
         .custom-dots li {
-          width: 10px;
-          height: 10px;
-          margin: 4px 0;
+          position: relative;
+          display: inline-block;
+          width: 12px;
+          height: 12px;
+          margin: 0 3px;
+          padding: 0;
+          cursor: pointer;
+        }
+        .custom-dots li button {
+          font-size: 0;
+          line-height: 0;
+          display: block;
+          width: 12px;
+          height: 12px;
+          padding: 0;
+          cursor: pointer;
+          color: transparent;
+          border: 0;
+          outline: none;
+          background: transparent;
         }
         .custom-dots li .dot-button {
-          width: 6px;
-          height: 6px;
-        }
-        .custom-dots li.slick-active .dot-button {
+          display: block;
           width: 8px;
           height: 8px;
+          border-radius: 50%;
+          background-color: white;
+          transition: all 0.3s ease;
+        }
+        .custom-dots li.slick-active .dot-button {
+          background-color: #007AFF !important;
+          width: 10px;
+          height: 10px;
         }
         
         /* 이미지 클릭 시 하이라이트 제거 */

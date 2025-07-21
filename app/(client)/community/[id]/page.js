@@ -47,30 +47,6 @@ export default function CommunityDetail() {
           .order("created_at", { ascending: true });
         setComments(commentList || []);
         setLoading(false);
-        // viewerId: 로그인 사용자는 user.id, 아니면 localStorage 에 저장된 anonId 사용
-        const lsKey = "anonId";
-        let viewerId;
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          viewerId = session.user.id;
-        } else {
-          let anon = localStorage.getItem(lsKey);
-          if (!anon) {
-            anon = (typeof crypto !== "undefined" && crypto.randomUUID)
-              ? crypto.randomUUID()
-              : Math.random().toString(36).substring(2);
-            localStorage.setItem(lsKey, anon);
-          }
-          viewerId = anon;
-        }
-
-        const { data: newCnt, error: viewErr } = await supabase.rpc("increment_view", {
-          p_post_id: id,
-          p_viewer: viewerId,
-        });
-        if (!viewErr && typeof newCnt === "number") {
-          setPost((prev) => ({ ...prev, views: newCnt }));
-        }
         // 작성자 이름 조회 (profiles)
         if (data.user_id) {
           const { data: prof } = await supabase
@@ -177,7 +153,6 @@ export default function CommunityDetail() {
         <div className="flex flex-wrap items-center gap-3 text-[13px] text-gray-700 pb-2 mb-4 border-b border-gray-300">
           <Avatar radius="sm" size="sm" icon={<HiOutlineUser className="w-4 h-4" />} />
           <span className="font-medium mr-2">{post.nickname || authorName}</span>
-          <span className="text-gray-500 text-[12px]">조회 수 {post.views || 0}</span>
           <span className="text-gray-500 text-[12px]">추천 수 {post.likes}</span>
           <span className="text-gray-500 text-[12px]">댓글 {commentCnt}</span>
           <button onClick={handleCopyLink} className="ml-auto flex items-center gap-1 text-gray-500 hover:underline text-[12px]">
