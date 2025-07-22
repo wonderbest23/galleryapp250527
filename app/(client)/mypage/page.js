@@ -225,12 +225,12 @@ function MyPageContent() {
             <ModalHeader className="flex flex-col gap-1 text-sm">{policyTitle}</ModalHeader>
             <ModalBody className="max-h-[60vh] overflow-y-auto text-xs">
               <div dangerouslySetInnerHTML={{ __html: policyContent }} />
-            </ModalBody>
-            <ModalFooter>
+                </ModalBody>
+                <ModalFooter>
               <Button color="primary" onPress={onOpenChange}>
-                확인
-              </Button>
-            </ModalFooter>
+                    확인
+                  </Button>
+                </ModalFooter>
           </ModalContent>
         </Modal>
         {/* 개인정보 처리방침 최초 1회 동의용 팝업 */}

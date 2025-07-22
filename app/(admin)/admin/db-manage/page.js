@@ -15,7 +15,7 @@ export default function DBManagePage() {
   useEffect(() => {
     const fetchUsers = async () => {
       // 필요한 컬럼만 조회 (role 컬럼 제외)
-      let query = supabase.from('profiles').select('id, full_name, email, created_at');
+      let query = supabase.from('profiles').select('*');
       if (viewGallery) {
         query = query.eq('role', 'gallery');
       } else {
@@ -113,6 +113,7 @@ export default function DBManagePage() {
               <th className="p-2 border">user_id</th>
               <th className="p-2 border">이름</th>
               <th className="p-2 border">이메일</th>
+              <th className="p-2 border">연락처</th>
               <th className="p-2 border">가입일</th>
             </tr>
           </thead>
@@ -125,10 +126,11 @@ export default function DBManagePage() {
                 <td className="p-2 border">{u.id}</td>
                 <td className="p-2 border">{u.full_name || '-'}</td>
                 <td className="p-2 border">{u.email || '-'}</td>
+                <td className="p-2 border">{u.phone || u.phone_number || u.contact || '-'}</td>
                 <td className="p-2 border">{u.created_at ? u.created_at.slice(0, 19).replace('T', ' ') : '-'}</td>
               </tr>
             )) : (
-              <tr><td colSpan={5} className="text-center p-4">회원 정보가 없습니다.</td></tr>
+              <tr><td colSpan={6} className="text-center p-4">회원 정보가 없습니다.</td></tr>
             )}
           </tbody>
         </table>
