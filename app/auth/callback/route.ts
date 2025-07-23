@@ -25,10 +25,16 @@ export async function GET(request: Request) {
 
     // 세션이 성공적으로 생성된 경우 사용자 role 확인
     if (sessionData?.session?.user) {
+      const user = sessionData.session.user;
+      // phone_number가 있으면 profiles 테이블에 저장
+      const phone = user.user_metadata?.phone_number;
+      if (phone) {
+        await supabase.from('profiles').update({ phone }).eq('id', user.id);
+      }
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', sessionData.session.user.id)
+        .eq('id', user.id)
         .single();
 
       if (profileError) {
