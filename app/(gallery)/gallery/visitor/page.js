@@ -33,8 +33,8 @@ export default function VisitorPage() {
         if (!profile?.url) return;
 
         const { data: exList } = await supabase
-          .from("exhibition")
-          .select("id, contents")
+        .from("exhibition")
+        .select("id, contents")
           .eq("naver_gallery_url", profile.url);
 
         setExhibitions(exList || []);
