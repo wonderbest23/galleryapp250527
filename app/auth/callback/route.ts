@@ -26,8 +26,23 @@ export async function GET(request: Request) {
     // 세션이 성공적으로 생성된 경우 사용자 role 확인
     if (sessionData?.session?.user) {
       const user = sessionData.session.user;
-      // phone_number가 있으면 profiles 테이블에 저장
-      const phone = user.user_metadata?.phone_number;
+      let phone = user.user_metadata?.phone_number;
+      // access_token으로 카카오 API를 직접 호출해 phone_number를 받아옴 (user_metadata에 없을 때)
+      if (!phone && sessionData.session.provider_token) {
+        try {
+          const kakaoRes = await fetch('https://kapi.kakao.com/v2/user/me', {
+            headers: {
+              Authorization: `Bearer ${sessionData.session.provider_token}`,
+            },
+          });
+          if (kakaoRes.ok) {
+            const kakaoJson = await kakaoRes.json();
+            phone = kakaoJson?.kakao_account?.phone_number;
+          }
+        } catch (e) {
+          console.log('카카오 API 호출 중 오류:', e);
+        }
+      }
       if (phone) {
         await supabase.from('profiles').update({ phone }).eq('id', user.id);
       }
