@@ -57,9 +57,6 @@ export default function AdminLoginPage({ searchParams }) {
     >
       <div className="flex flex-col gap-4 md:max-w-[30%] w-full max-w-[80%]">
         <h1 className="text-2xl font-bold text-center">관리자 로그인</h1>
-        <div className="text-center">
-          <p>관리자 계정: admin@naver.com / 123456789</p>
-        </div>
         <Input
           isRequired
           label="이메일"
