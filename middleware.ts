@@ -91,14 +91,14 @@ export async function middleware(request: NextRequest) {
         }
       }
       
-      // Kakao 2FA 확인: admin 영역에서 kakao_verified 쿠키 없으면 인증 페이지로 리다이렉트
-      if (pathname.startsWith('/admin') && pathname !== '/admin/kakao-auth') {
-        const kakaoVerified = request.cookies.get('kakao_verified')?.value;
-        if (kakaoVerified !== '1') {
-          const url = new URL('/admin/kakao-auth', request.url);
-          return NextResponse.redirect(url);
-        }
-      }
+      // Kakao 2FA 임시 해제: kakao_verified 쿠키 체크 비활성화
+      // if (pathname.startsWith('/admin') && pathname !== '/admin/kakao-auth') {
+      //   const kakaoVerified = request.cookies.get('kakao_verified')?.value;
+      //   if (kakaoVerified !== '1') {
+      //     const url = new URL('/admin/kakao-auth', request.url);
+      //     return NextResponse.redirect(url);
+      //   }
+      // }
       
       return response;
     } catch (error) {
