@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
 
     // 카카오 사용자 정보 조회
     let kakaoEmail: string | undefined;
+    let kakaoPhone: string | undefined;
     try {
       const userRes = await fetch('https://kapi.kakao.com/v2/user/me', {
         headers: {
@@ -47,6 +48,7 @@ export async function GET(request: NextRequest) {
       if (userRes.ok) {
         const userJson = await userRes.json();
         kakaoEmail = userJson?.kakao_account?.email;
+        kakaoPhone = userJson?.kakao_account?.phone_number;
       }
     } catch (e) {
       console.error('kakao user fetch error', e);
@@ -64,6 +66,20 @@ export async function GET(request: NextRequest) {
       try {
         const supabase = await (await import('@/utils/supabase/server')).createClient();
         await supabase.from('kakao_sessions').update({ verified: true }).eq('id', state);
+        // 이메일이 있고, phone_number가 있으면 profiles 테이블에 저장
+        if (kakaoEmail && kakaoPhone) {
+          // 이메일로 기존 유저 찾기
+          const { data: userProfile, error: profileErr } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', kakaoEmail)
+            .maybeSingle();
+          if (userProfile && userProfile.id) {
+            // 이미 가입된 경우 update
+            await supabase.from('profiles').update({ phone: kakaoPhone }).eq('id', userProfile.id);
+          }
+          // (신규 가입은 별도 회원가입 로직에서 처리)
+        }
       } catch(e){
         console.error('supabase update error', e);
       }
