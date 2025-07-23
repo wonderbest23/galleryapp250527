@@ -8,6 +8,7 @@ import { FaCircleCheck } from "react-icons/fa6";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { sendAligoFriendTalk } from "@/utils/sendAligoFriendTalk";
 
 async function processTicketPayment(orderId, amount, paymentKey, exhibitionId, userId, ticketCount) {
   try {
@@ -81,6 +82,25 @@ async function processTicketPayment(orderId, amount, paymentKey, exhibitionId, u
       console.error("결제 정보 저장 중 오류 발생:", paymentError);
       throw new Error('결제 정보 저장 중 오류가 발생했습니다.');
     }
+
+    // --- 알리고(Aligo) 알림톡 자동 발송 ---
+    try {
+      // 수신자 번호: 실제 유저 번호가 없으면 관리자 테스트 번호 사용
+      const phone = userData?.phone?.replace(/[^0-9]/g, '') || "01086859866";
+      // 템플릿 메시지 치환
+      const message = `${userData?.name || "고객"} 고객님!\n티켓을 구매해주셔서 감사합니다.\n[${exhibitionData.contents}]\n구매하신 입장 티켓을 전달드립니다.\n아래 버튼을 눌러 QR코드를 통해 입장하시길 바랍니다.\n(주문번호): ${orderId}`;
+      const buttons = [
+        {
+          name: "티켓확인",
+          linkType: "WL",
+          linkUrl: `https://www.artandbridge.com/ticket?order_id=${orderId}`
+        }
+      ];
+      await sendAligoFriendTalk(phone, message, buttons, "UA_5617");
+    } catch (e) {
+      console.log("[Aligo] 발송 오류:", e);
+    }
+    // --- 알리고 발송 끝 ---
 
     return {
       exhibition: exhibitionData,
