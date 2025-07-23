@@ -1,13 +1,106 @@
 'use client'
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from "react";
+import { Form, Input, Button } from "@heroui/react";
+import { adminSignInAction } from "@/app/actions";
+import { addToast } from "@heroui/toast";
 
-export default function AdminLoginRedirect() {
-  const router = useRouter();
+export default function AdminLoginPage({ searchParams }) {
+  const [errors, setErrors] = useState({});
+  const error = searchParams?.error;
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberLogin, setRememberLogin] = useState(true);
+
   useEffect(() => {
-    router.replace('/admin/kakao-auth');
-  }, [router]);
+    if (typeof window !== 'undefined' && rememberLogin) {
+      const savedEmail = localStorage.getItem('admin_login_email');
+      const savedPassword = localStorage.getItem('admin_login_password');
+      if (savedEmail) setEmail(savedEmail);
+      if (savedPassword) setPassword(savedPassword);
+    }
+  }, [rememberLogin]);
 
-  return null; // 렌더링 없이 즉시 이동
+  const handleSaveLogin = () => {
+    if (typeof window !== 'undefined' && rememberLogin) {
+      localStorage.setItem('admin_login_email', email);
+      localStorage.setItem('admin_login_password', password);
+      addToast({
+        title: '저장 완료',
+        description: '아이디/비밀번호가 저장되었습니다.',
+        color: 'success',
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !rememberLogin) {
+      localStorage.removeItem('admin_login_email');
+      localStorage.removeItem('admin_login_password');
+    }
+  }, [rememberLogin]);
+
+  useEffect(() => {
+    if (error) {
+      addToast({
+        title: "로그인 실패",
+        description: error,
+        color: 'danger'
+      });
+    }
+  }, [error]);
+
+  return (
+    <Form
+      className="w-full h-screen justify-center items-center space-y-4"
+      validationErrors={errors}
+      action={adminSignInAction}
+    >
+      <div className="flex flex-col gap-4 md:max-w-[30%] w-full max-w-[80%]">
+        <h1 className="text-2xl font-bold text-center">관리자 로그인</h1>
+        <div className="text-center">
+          <p>관리자 계정: admin@naver.com / 123456789</p>
+        </div>
+        <Input
+          isRequired
+          label="이메일"
+          labelPlacement="outside"
+          name="email"
+          placeholder="이메일을 입력해주세요"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onValueChange={setEmail}
+        />
+        <Input
+          isRequired
+          label="비밀번호"
+          labelPlacement="outside"
+          name="password"
+          placeholder="비밀번호를 입력해주세요"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onValueChange={setPassword}
+        />
+        <div className="flex gap-4">
+          <Button className="w-full" color="primary" type="submit" onClick={handleSaveLogin}>
+            로그인
+          </Button>
+        </div>
+        <div className="flex items-center mt-2">
+          <input
+            id="rememberLogin"
+            type="checkbox"
+            checked={rememberLogin}
+            onChange={e => setRememberLogin(e.target.checked)}
+            className="mr-2 w-4 h-4 accent-blue-600"
+          />
+          <label htmlFor="rememberLogin" className="text-sm select-none">
+            로그인 정보 기억하기
+          </label>
+        </div>
+      </div>
+    </Form>
+  );
 }
 
