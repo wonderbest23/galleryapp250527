@@ -255,8 +255,14 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
         // 기본 쿼리 시작
         let query = supabase
           .from("exhibition")
-          .select("*,naver_gallery_url(*)", { count: "exact" })
-          .or(`end_date.gte.${new Date().toISOString()},isPreSale.eq.true`);
+          .select("*,naver_gallery_url(*)", { count: "exact" });
+        
+        // 종료일이 현재 날짜 이후이거나 사전예매인 전시회만 필터링
+        const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+        console.log("Current date for query:", currentDate);
+        
+        // 임시로 기존 로직으로 되돌려서 테스트
+        query = query.gte("end_date", currentDate);
 
         // 정렬: 전체전시는 종료일이 임박한 순, 그 외 카테고리는 기존 로직 유지
         if (exhibitionCategory === "all") {
@@ -275,6 +281,8 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
 
         // 페이지네이션 적용
         const { data, error, count } = await query.range(from, to);
+
+        console.log("Exhibition query result:", { data, error, count, currentDate });
 
         if (error) {
           console.log("Error fetching exhibitions:", error);
