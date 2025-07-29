@@ -294,7 +294,7 @@ export function ExhibitionDetail({
     if (!editedExhibition.contents) {
       addToast({
         title: "전시회 저장 중 오류 발생",
-        description: "전시회 이름을 입력해주세요.",
+        description: "전시회 제목을 입력해주세요.",
         color: "danger",
       });
       return;
@@ -716,12 +716,13 @@ export function ExhibitionDetail({
       <div className="grid grid-cols-2 md:grid-cols-2 gap-4 ">
         <Input
           className="col-span-2 md:col-span-1"
-          label="전시회 이름"
+          label="전시회 제목"
           value={editedExhibition.contents||""}
           onValueChange={(value) =>
             setEditedExhibition({ ...editedExhibition, contents: value })
           }
           isRequired={true}
+          placeholder="전시회 제목을 입력하세요"
         />
                 <Input
           className="col-span-2 md:col-span-1"
@@ -1041,14 +1042,7 @@ export function ExhibitionDetail({
           }
           className="col-span-2 md:col-span-1"
         />
-        <Textarea
-          label="전시회 내용"
-          value={editedExhibition.contents}
-          onValueChange={(value) =>
-            setEditedExhibition({ ...editedExhibition, contents: value })
-          }
-          className="col-span-2 md:col-span-1"
-        />
+
         <h1>추가 정보</h1>
         {/* <Froala
           label="추가 정보"
