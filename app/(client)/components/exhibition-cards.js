@@ -256,7 +256,7 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
         let query = supabase
           .from("exhibition")
           .select("*,naver_gallery_url(*)", { count: "exact" })
-          .gte("end_date", new Date().toISOString());
+          .or(`end_date.gte.${new Date().toISOString()},isPreSale.eq.true`);
 
         // 정렬: 전체전시는 종료일이 임박한 순, 그 외 카테고리는 기존 로직 유지
         if (exhibitionCategory === "all") {

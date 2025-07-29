@@ -60,47 +60,60 @@ async function processTicketPayment(orderId, amount, paymentKey, exhibitionId, u
       console.error("사용자 정보를 가져오는 중 오류 발생:", userError);
     }
     
-    // payment_ticket 테이블에 결제 정보 저장
-    const { error: paymentError } = await supabase
-      .from('payment_ticket')
-      .upsert([
-        {
-          exhibition_id: exhibitionId,
-          amount: amount,
-          payment_key: paymentKey,
-          order_id: orderId,
-          status: 'success',
-          people_count: ticketCount,
-          user_id: userId,
-        }
-      ], { 
-        onConflict: 'order_id',
-        ignoreDuplicates: false 
-      });
+    // 테스트 티켓인지 확인
+    const isTestTicket = exhibitionData.isTestSale;
     
-    if (paymentError) {
-      console.error("결제 정보 저장 중 오류 발생:", paymentError);
-      throw new Error('결제 정보 저장 중 오류가 발생했습니다.');
+    // 테스트 티켓이 아닌 경우에만 DB에 저장
+    if (!isTestTicket) {
+      // payment_ticket 테이블에 결제 정보 저장
+      const { error: paymentError } = await supabase
+        .from('payment_ticket')
+        .upsert([
+          {
+            exhibition_id: exhibitionId,
+            amount: amount,
+            payment_key: paymentKey,
+            order_id: orderId,
+            status: 'success',
+            people_count: ticketCount,
+            user_id: userId,
+          }
+        ], { 
+          onConflict: 'order_id',
+          ignoreDuplicates: false 
+        });
+      
+      if (paymentError) {
+        console.error("결제 정보 저장 중 오류 발생:", paymentError);
+        throw new Error('결제 정보 저장 중 오류가 발생했습니다.');
+      }
+    } else {
+      console.log("테스트 티켓이므로 DB 저장을 건너뜁니다.");
     }
 
-    // --- 알리고(Aligo) 알림톡 자동 발송 ---
-    try {
-      // 수신자 번호: 실제 유저 번호가 없으면 관리자 테스트 번호 사용
-      const phone = userData?.phone?.replace(/[^0-9]/g, '') || "01086859866";
-      // 템플릿 메시지 치환
-      const message = `${userData?.name || "고객"} 고객님!\n티켓을 구매해주셔서 감사합니다.\n[${exhibitionData.contents}]\n구매하신 입장 티켓을 전달드립니다.\n아래 버튼을 눌러 QR코드를 통해 입장하시길 바랍니다.\n(주문번호): ${orderId}`;
-      const buttons = [
-        {
-          name: "티켓확인",
-          linkType: "WL",
-          linkUrl: `https://www.artandbridge.com/ticket?order_id=${orderId}`
-        }
-      ];
-      await sendAligoFriendTalk(phone, message, buttons, "UA_5617");
-    } catch (e) {
-      console.log("[Aligo] 발송 오류:", e);
+    // 테스트 티켓이 아닌 경우에만 알림톡 발송
+    if (!isTestTicket) {
+      // --- 알리고(Aligo) 알림톡 자동 발송 ---
+      try {
+        // 수신자 번호: 실제 유저 번호가 없으면 관리자 테스트 번호 사용
+        const phone = userData?.phone?.replace(/[^0-9]/g, '') || "01086859866";
+        // 템플릿 메시지 치환
+        const message = `${userData?.name || "고객"} 고객님!\n티켓을 구매해주셔서 감사합니다.\n[${exhibitionData.contents}]\n구매하신 입장 티켓을 전달드립니다.\n아래 버튼을 눌러 QR코드를 통해 입장하시길 바랍니다.\n(주문번호): ${orderId}`;
+        const buttons = [
+          {
+            name: "티켓확인",
+            linkType: "WL",
+            linkUrl: `https://www.artandbridge.com/ticket?order_id=${orderId}`
+          }
+        ];
+        await sendAligoFriendTalk(phone, message, buttons, "UA_5617");
+      } catch (e) {
+        console.log("[Aligo] 발송 오류:", e);
+      }
+      // --- 알리고 발송 끝 ---
+    } else {
+      console.log("테스트 티켓이므로 알림톡 발송을 건너뜁니다.");
     }
-    // --- 알리고 발송 끝 ---
 
     return {
       exhibition: exhibitionData,
@@ -172,6 +185,11 @@ export default async function PaymentSuccessPage({ searchParams }) {
             <div className="text-[14px] text-black font-medium text-center mt-2">
               {ticketInfo.exhibition?.contents}
             </div>
+            {ticketInfo.exhibition?.isTestSale && (
+              <div className="mt-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                🧪 테스트 티켓
+              </div>
+            )}
           </div>
         </div>
       

@@ -83,6 +83,8 @@ export default function Exhibition() {
       price: 0,
       isSale: false,
       pick: false,
+      isTestSale: false,
+      isPreSale: false,
     };
 
     setSelectedExhibition(newExhibition);

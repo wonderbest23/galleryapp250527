@@ -241,6 +241,8 @@ export function ExhibitionDetail({
           price: editedExhibition.price,
           isSale: editedExhibition.isSale,
           pick: editedExhibition.pick,
+          isTestSale: editedExhibition.isTestSale,
+          isPreSale: editedExhibition.isPreSale,
         };
         if (editedExhibition.isSale) {
           payload.free_ticket_limit = editedExhibition.free_ticket_limit;
@@ -423,6 +425,8 @@ export function ExhibitionDetail({
           price: editedExhibition.price,
           isSale: editedExhibition.isSale,
           pick: editedExhibition.pick,
+          isTestSale: editedExhibition.isTestSale,
+          isPreSale: editedExhibition.isPreSale,
         };
         if (editedExhibition.isSale) {
           payload.free_ticket_limit = editedExhibition.free_ticket_limit;
@@ -464,6 +468,8 @@ export function ExhibitionDetail({
             price: editedExhibition.price,
             isSale: editedExhibition.isSale,
             pick: editedExhibition.pick,
+            isTestSale: editedExhibition.isTestSale,
+            isPreSale: editedExhibition.isPreSale,
           })
           .eq("id", editedExhibition.id);
 
@@ -496,6 +502,8 @@ export function ExhibitionDetail({
         price:0,
         isSale: false,
         pick: false,
+        isTestSale: false,
+        isPreSale: false,
         free_ticket_limit: 0,
       });
       // 목록 새로고침 실행
@@ -1123,6 +1131,24 @@ export function ExhibitionDetail({
               }
             >
               예술랭픽
+            </Checkbox>
+            <Checkbox
+              id="isTestSale"
+              isSelected={editedExhibition.isTestSale || false}
+              onValueChange={(value) =>
+                setEditedExhibition({ ...editedExhibition, isTestSale: value })
+              }
+            >
+              테스트 티켓판매
+            </Checkbox>
+            <Checkbox
+              id="isPreSale"
+              isSelected={editedExhibition.isPreSale || false}
+              onValueChange={(value) =>
+                setEditedExhibition({ ...editedExhibition, isPreSale: value })
+              }
+            >
+              사전티켓예매
             </Checkbox>
           </div>
         </div>

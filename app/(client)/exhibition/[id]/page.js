@@ -601,6 +601,11 @@ export default function App() {
                 <h1 className="text-[20px] font-bold text-[#333333]">
                   {exhibition?.contents}
                 </h1>
+                {exhibition?.isPreSale && (
+                  <div className="mt-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium inline-block">
+                    🎫 사전예매 진행중
+                  </div>
+                )}
 
                 <div className="flex items-center gap-1 mt-1">
                   <div className="flex items-center">
