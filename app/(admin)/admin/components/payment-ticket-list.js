@@ -29,6 +29,7 @@ export function PaymentTicketList({
   setRefreshToggle,
   selectedTicket,
   setSelectedTicket,
+  filterType = "all",
 }) {
   const [search, setSearch] = useState("");
   const [tickets, setTickets] = useState([]);
@@ -52,6 +53,16 @@ export function PaymentTicketList({
       .select("*,exhibition_id(*),user_id(*)", { count: "exact" })
       .order("id", { ascending: false })
       .range(offset, offset + itemsPerPage - 1);
+
+    // filterType에 따른 필터링
+    if (filterType === "purchase") {
+      // 실제 구매: order_id가 "manual_"로 시작하지 않는 것들
+      query = query.not('order_id', 'ilike', 'manual_%');
+    } else if (filterType === "manual") {
+      // 메뉴얼 발급: order_id가 "manual_"로 시작하는 것들
+      query = query.ilike('order_id', 'manual_%');
+    }
+    // filterType === "all"인 경우 필터링 없음
 
     if (search.trim()) {
       if (/^\d+$/.test(search.trim())) {
@@ -216,6 +227,7 @@ export function PaymentTicketList({
             <TableColumn>ID</TableColumn>
             <TableColumn>구매일시</TableColumn>
             <TableColumn>전시회명</TableColumn>
+            <TableColumn>발급타입</TableColumn>
             <TableColumn>주문ID</TableColumn>
             <TableColumn>결제키</TableColumn>
             <TableColumn>금액</TableColumn>
@@ -228,6 +240,19 @@ export function PaymentTicketList({
                 <TableCell>{ticket.id}</TableCell>
                 <TableCell>{ticket.created_at ? new Date(ticket.created_at).toLocaleString() : "-"}</TableCell>
                 <TableCell>{ticket.exhibition_id?.contents ? `${ticket.exhibition_id.contents} (ID: ${ticket.exhibition_id.id})` : '-'}</TableCell>
+                <TableCell>
+                  {ticket.order_id && ticket.order_id.startsWith('manual_') ? (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      <Icon icon="mdi:account-edit" className="mr-1" />
+                      메뉴얼
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <Icon icon="mdi:credit-card" className="mr-1" />
+                      구매
+                    </span>
+                  )}
+                </TableCell>
                 <TableCell>{ticket.order_id || "-"}</TableCell>
                 <TableCell>{ticket.payment_key || "-"}</TableCell>
                 <TableCell>{ticket.amount || 0}</TableCell>
