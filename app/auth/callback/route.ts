@@ -26,6 +26,8 @@ export async function GET(request: Request) {
     // 세션이 성공적으로 생성된 경우 사용자 role 확인
     if (sessionData?.session?.user) {
       const user = sessionData.session.user;
+      console.log('user_metadata:', user.user_metadata);
+      console.log('provider_token:', sessionData.session.provider_token);
       let phone = user.user_metadata?.phone_number;
       // access_token으로 카카오 API를 직접 호출해 phone_number를 받아옴 (user_metadata에 없을 때)
       if (!phone && sessionData.session.provider_token) {
@@ -38,6 +40,7 @@ export async function GET(request: Request) {
           if (kakaoRes.ok) {
             const kakaoJson = await kakaoRes.json();
             phone = kakaoJson?.kakao_account?.phone_number;
+            console.log('카카오 API에서 받은 phone_number:', phone);
           }
         } catch (e) {
           console.log('카카오 API 호출 중 오류:', e);

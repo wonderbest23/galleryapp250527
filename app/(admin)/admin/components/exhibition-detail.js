@@ -11,6 +11,7 @@ import RichTextEditor from "./RichTextEditor/RichTextEditor";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ko } from "date-fns/locale";
+import { GallerySearchModal } from "./GallerySearchModal";
 
 export function ExhibitionDetail({
   exhibition,
@@ -47,6 +48,10 @@ export function ExhibitionDetail({
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
+  // 갤러리 검색 모달 관련 상태
+  const [isGallerySearchOpen, setIsGallerySearchOpen] = useState(false);
+  const [selectedGallery, setSelectedGallery] = useState(null);
+
   useEffect(() => {
     console.log('ExhibitionDetail: exhibition prop 변경됨:', exhibition);
     
@@ -80,6 +85,21 @@ export function ExhibitionDetail({
   // add_info 값 변경 감지
   useEffect(() => {
   }, [editedExhibition.add_info]);
+
+  // 갤러리 선택 처리 함수
+  const handleGallerySelect = (gallery) => {
+    setSelectedGallery(gallery);
+    // 네이버 갤러리 URL을 갤러리의 URL로 설정
+    setEditedExhibition({
+      ...editedExhibition,
+      naver_gallery_url: gallery.url
+    });
+    addToast({
+      title: "갤러리 선택 완료",
+      description: `${gallery.name} 갤러리가 선택되었습니다.`,
+      color: "success",
+    });
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -974,16 +994,37 @@ export function ExhibitionDetail({
           }
           className="col-span-2 md:col-span-1"
         />
-        <Input
-          label="네이버 갤러리 URL"
-          value={editedExhibition.naver_gallery_url && typeof editedExhibition.naver_gallery_url === 'object' ? editedExhibition.naver_gallery_url.url || "" : editedExhibition.naver_gallery_url || ""}
-          onValueChange={(value) =>
-            setEditedExhibition({ ...editedExhibition, naver_gallery_url: value })
-          }
-          className="col-span-2 md:col-span-1"
-          isRequired
-          isDisabled={!isEditing}
-        />
+        <div className="col-span-2 md:col-span-1 space-y-2">
+          <div className="flex items-end gap-2">
+            <Input
+              label="네이버 갤러리 URL"
+              value={editedExhibition.naver_gallery_url && typeof editedExhibition.naver_gallery_url === 'object' ? editedExhibition.naver_gallery_url.url || "" : editedExhibition.naver_gallery_url || ""}
+              onValueChange={(value) =>
+                setEditedExhibition({ ...editedExhibition, naver_gallery_url: value })
+              }
+              className="flex-1"
+              isRequired
+              isDisabled={!isEditing}
+              placeholder="갤러리를 검색하거나 URL을 직접 입력하세요"
+            />
+            {isEditing && (
+              <Button
+                color="primary"
+                variant="flat"
+                onPress={() => setIsGallerySearchOpen(true)}
+                startContent={<Icon icon="mdi:magnify" />}
+                className="h-12"
+              >
+                갤러리 검색
+              </Button>
+            )}
+          </div>
+          {selectedGallery && (
+            <div className="text-sm text-green-600 bg-green-50 p-2 rounded">
+              선택된 갤러리: <strong>{selectedGallery.name}</strong> ({selectedGallery.address})
+            </div>
+          )}
+        </div>
         <Input
           label="가격"
           value={editedExhibition.price}
@@ -1134,6 +1175,13 @@ export function ExhibitionDetail({
           </div>
         )}
       </div>
+
+      {/* 갤러리 검색 모달 */}
+      <GallerySearchModal
+        isOpen={isGallerySearchOpen}
+        onClose={() => setIsGallerySearchOpen(false)}
+        onSelectGallery={handleGallerySelect}
+      />
     </div>
   );
 }
