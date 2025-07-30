@@ -73,7 +73,7 @@ const ExhibitionCard = ({ exhibition, index, isBookmarked, toggleBookmark }) => 
           <div className="flex flex-col col-span-5">
             <div className="flex flex-row justify-between items-start">
               <div className="flex flex-col flex-1">
-                <div className="text-[10px]">{exhibition.naver_gallery_url?.name || '없음'}</div>
+                <div className="text-[10px]">{exhibition.gallery?.name || exhibition.naver_gallery_url?.name || '미등록'}</div>
                 <div className="text-[12px] font-bold mb-2">{exhibition.contents}</div>
                 <div className="flex items-center w-full">
                   <Divider orientation="horizontal" className="bg-gray-300 mb-2 w-full" />
@@ -252,17 +252,12 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
         const from = (pageNum - 1) * PAGE_SIZE;
         const to = from + PAGE_SIZE - 1;
 
-        // 기본 쿼리 시작
+        // 기본 쿼리 시작 (exhibitions 페이지와 동일한 방식)
         let query = supabase
           .from("exhibition")
-          .select("*,naver_gallery_url(*)", { count: "exact" });
-        
-        // 종료일이 현재 날짜 이후이거나 사전예매인 전시회만 필터링
-        const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
-        console.log("Current date for query:", currentDate);
-        
-        // 임시로 기존 로직으로 되돌려서 테스트
-        query = query.gte("end_date", currentDate);
+          .select("*,gallery:naver_gallery_url(*),naver_gallery_url(*)", { count: "exact" })
+          .not("gallery", "is", null)
+          .gte("end_date", new Date().toISOString());
 
         // 정렬: 전체전시는 종료일이 임박한 순, 그 외 카테고리는 기존 로직 유지
         if (exhibitionCategory === "all") {
@@ -279,22 +274,25 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
         }
         // 'all'인 경우는 추가 필터 없음
 
-        // 페이지네이션 적용
+        // 서버 사이드 페이지네이션 적용 (단순화된 방식)
         const { data, error, count } = await query.range(from, to);
 
-        console.log("Exhibition query result:", { data, error, count, currentDate });
+        console.log("Exhibition query result:", { data, error, count });
 
         if (error) {
           console.log("Error fetching exhibitions:", error);
           return;
         }
 
-        // 전체 페이지 수 계산
-        const calculatedTotalPages = Math.ceil((count || 0) / PAGE_SIZE);
-        setTotalPages(calculatedTotalPages);
-        setTotalCount(count || 0);
+        console.log("Pagination debug:", {
+          count,
+          calculatedTotalPages: Math.ceil((count || 0) / PAGE_SIZE),
+          currentPage: pageNum,
+          exhibitionsLength: data?.length || 0
+        });
 
-        // 데이터 설정
+        setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
+        setTotalCount(count || 0);
         setExhibitions(data || []);
       } finally {
         setLoading(false);
@@ -303,18 +301,27 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
     [exhibitionCategory, supabase, PAGE_SIZE]
   );
 
-  // 페이지 변경 핸들러
+  // 페이지 변경 핸들러 (exhibitions 페이지와 동일한 방식)
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    setLoading(true); // 페이지 변경 시 로딩 상태로 설정
-    getExhibitions(page);
+    // 페이지 변경 시 스크롤을 맨 위로 이동
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
     // 카테고리가 변경되면 페이지를 1로 리셋하고 데이터를 다시 불러옵니다
-    setCurrentPage(1);
-    getExhibitions(1);
-  }, [getExhibitions]);
+    if (exhibitionCategory !== "all") {
+      setCurrentPage(1);
+      getExhibitions(1);
+    } else {
+      getExhibitions(currentPage);
+    }
+  }, [getExhibitions, exhibitionCategory]);
+
+  // 페이지 변경 시 데이터 다시 가져오기
+  useEffect(() => {
+    getExhibitions(currentPage);
+  }, [currentPage, getExhibitions]);
 
   return (
     <motion.div
@@ -368,7 +375,7 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
         </div>
         
         {/* Pagination 컴포넌트 */}
-        {totalPages > 1 && (
+        {totalPages >= 1 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
