@@ -241,8 +241,8 @@ export function ExhibitionDetail({
           price: editedExhibition.price,
           isSale: editedExhibition.isSale,
           pick: editedExhibition.pick,
-          isTestSale: editedExhibition.isTestSale || false,
-          isPreSale: editedExhibition.isPreSale || false,
+          // isTestSale: editedExhibition.isTestSale || false,
+          // isPreSale: editedExhibition.isPreSale || false,
         };
         if (editedExhibition.isSale) {
           payload.free_ticket_limit = editedExhibition.free_ticket_limit;
@@ -1126,7 +1126,7 @@ export function ExhibitionDetail({
             >
               예술랭픽
             </Checkbox>
-            <Checkbox
+            {/* <Checkbox
               id="isTestSale"
               isSelected={editedExhibition.isTestSale || false}
               onValueChange={(value) =>
@@ -1143,7 +1143,7 @@ export function ExhibitionDetail({
               }
             >
               사전티켓예매
-            </Checkbox>
+            </Checkbox> */}
           </div>
         </div>
 
