@@ -68,7 +68,7 @@ export default function MainBannerManager() {
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.webp`;
 
       const { error: uploadError } = await supabase.storage
-        .from("banners")
+        .from("exhibition")
         .upload(fileName, webpFile, {
           cacheControl: "3600",
           upsert: false,
@@ -87,7 +87,7 @@ export default function MainBannerManager() {
       // public URL 가져오기
       const {
         data: { publicUrl },
-      } = supabase.storage.from("banners").getPublicUrl(fileName);
+      } = supabase.storage.from("exhibition").getPublicUrl(fileName);
 
       // 상태 업데이트
       setBanners(
