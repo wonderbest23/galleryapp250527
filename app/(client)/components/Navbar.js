@@ -86,19 +86,17 @@ export default function Navbar() {
     };
   }, [search]); // useCallback 제거했으므로 의존성을 search로 변경
 
-  const handleLogoClick = () => {
-    router.push("/");
-  };
+  // 로고 클릭 핸들러 제거
   return (
     <div className="relative">
       <div className="flex justify-center items-center gap-x-4 h-[50px] px-4 mt-4">
-        <img
-          onClick={handleLogoClick}
-          src="/logo/logomain.png"
-          alt="logo"
-          className="hover:cursor-pointer w-[40px] h-[40px]"
-          
-        />
+        {/* 홈 버튼 */}
+        <div
+          onClick={() => router.push("/")}
+          className="cursor-pointer bg-[#F7F8F9] rounded-full p-2 w-10 h-10 flex items-center justify-center"
+        >
+          <Icon icon="lucide:home" className="text-gray-600 text-lg" />
+        </div>
 
         <Input
           classNames={{ 
