@@ -61,7 +61,7 @@ export default function CommunityWriteClient() {
       {/* Guidelines Modal */}
       <Modal isOpen={showGuide} onOpenChange={setShowGuide} size="sm" placement="center" className="z-[9999]">
         <ModalContent className="max-w-sm z-[9999]">
-          <ModalHeader className="flex flex-col gap-1 text-sm">✅ 미술예술랭 커뮤니티 글 작성 시 유의사항</ModalHeader>
+          <ModalHeader className="flex flex-col gap-1 text-sm">✅ 아트앤브릿지 커뮤니티 글 작성 시 유의사항</ModalHeader>
           <ModalBody className="max-h-[60vh] overflow-y-auto text-xs whitespace-pre-wrap leading-relaxed">
 {`
 1. 작품·전시 관련 정보 공유 시

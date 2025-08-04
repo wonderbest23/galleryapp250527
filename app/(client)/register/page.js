@@ -391,7 +391,7 @@ export default function MagazineList() {
                 <p>등록하신 작품 이미지는 플랫폼 내부에서만 노출되며, 외부로 공유되거나 사용되지 않습니다.</p>
                 <p>타사 플랫폼처럼 작가와의 계약 체결 없이 이용 가능하니, 안심하고 등록해 주세요.</p>
                 <p>추후에는 작품 설치 지원, 에스크로 연계 등의 기능도 순차적으로 제공될 예정입니다.</p>
-                <p className="pt-2">감사합니다.<br/>– 미술예술랭 드림</p>
+                <p className="pt-2">감사합니다.<br/>– 아트앤브릿지 드림</p>
               </ModalBody>
               <ModalFooter>
                 <Button color="primary" onPress={() => setShowIntro(false)}>확인</Button>

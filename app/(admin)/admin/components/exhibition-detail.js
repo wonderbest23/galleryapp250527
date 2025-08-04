@@ -1124,7 +1124,7 @@ export function ExhibitionDetail({
                 setEditedExhibition({ ...editedExhibition, pick: value })
               }
             >
-              예술랭픽
+                              아트앤브릿지
             </Checkbox>
             {/* <Checkbox
               id="isTestSale"

@@ -1,319 +1,880 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableColumn,
-  TableRow,
-  TableCell,
-  Pagination,
+  Card,
+  CardBody,
+  CardHeader,
+  CardFooter,
   Button,
   Input,
+  Select,
+  SelectItem,
+  Checkbox,
   Switch,
-  Textarea,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  addToast,
-  Spinner,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Chip,
+  Tabs,
+  Tab,
+  Spinner
 } from '@heroui/react';
-import { createClient } from '@/utils/supabase/client';
+import { Icon } from '@iconify/react';
 
-// One-click helper
-function useApiCaller() {
-  const [busy, setBusy] = useState("");
-  const call = async (path, body = {}) => {
-    try {
-      setBusy(path);
-      const res = await fetch(path, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const j = await res.json();
-      if (!res.ok) {
-        addToast({ title: '실패', description: j.error || 'error', color: 'danger' });
-      } else {
-        addToast({ title: '완료', description: path + ' OK', color: 'success' });
-      }
-    } catch (e) {
-      addToast({ title: '오류', description: e.message, color: 'danger' });
-    } finally {
-      setBusy("");
+export default function AiManagerPage() {
+  const [scrapedData, setScrapedData] = useState([]);
+  const [dbScrapedData, setDbScrapedData] = useState([]);
+  const [selectedDbItems, setSelectedDbItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [dbLoading, setDbLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('scrape');
+  const [selectedSite, setSelectedSite] = useState('visitSeoul');
+  
+  // 사이트 설정
+  const [siteConfigs, setSiteConfigs] = useState({
+    visitSeoul: {
+      month: '202508',
+      maxResults: 10,
+      autoPublish: false
+    },
+    culturePortal: {
+      category: 'exhibition',
+      maxResults: 10,
+      autoPublish: false
+    },
+    artCenter: {
+      maxResults: 10,
+      autoPublish: false
     }
-  };
-  return { busy, call };
-}
-
-export default function AiScheduleManagerPage() {
-  const supabase = createClient();
-  const { busy, call } = useApiCaller();
-  const [schedules, setSchedules] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState(null); // null = new
-  const [keyword, setKeyword] = useState("한국 미술 전시");
-
-  const defaultPrompt = `제목과 본문을 한국어로 작성해주세요.\n\n규칙:\n1) 제목은 50자 이하\n2) 본문은 400~600자, 존댓말 사용\n3) 마지막 문장을 마침표로 끝내기\n\n제목:`;
-
-  const [form, setForm] = useState({
-    name: '',
-    cron: '0 9 * * 1',
-    prompt_template: defaultPrompt,
-    enabled: true,
-    auto_publish: false,
-    mode: 'ai',
-    sources: { brave: true, visitseoul: false },
-    visitSeoulMonth: '',
   });
 
-  const itemsPerPage = 10;
-  const [page, setPage] = useState(1);
+  // 사이트 정보
+  const sites = [
+    {
+      key: 'visitSeoul',
+      name: 'Visit Seoul',
+      description: '서울 관광 공식 사이트의 전시 정보',
+      icon: 'lucide:building',
+      color: 'blue',
+      url: 'https://korean.visitseoul.net/exhibition'
+    },
+    {
+      key: 'culturePortal',
+      name: '문화포털',
+      description: '문화체육관광부 문화포털의 전시 정보',
+      icon: 'lucide:landmark',
+      color: 'purple',
+      url: 'https://www.culture.go.kr'
+    },
+    {
+      key: 'artCenter',
+      name: '예술의전당',
+      description: '예술의전당 공식 사이트의 전시 정보',
+      icon: 'lucide:palette',
+      color: 'green',
+      url: 'https://www.sac.or.kr'
+    }
+  ];
 
+  const currentSite = sites.find(site => site.key === selectedSite);
+  const currentConfig = siteConfigs[selectedSite];
+
+  // 토스트 메시지 함수
+  const addToast = ({ title, description, color }) => {
+    // 간단한 alert로 대체 (실제로는 toast 라이브러리 사용)
+    alert(`${title}: ${description}`);
+  };
+
+  // 스크랩된 데이터 발행
+  const publishScrapedData = async () => {
+    if (scrapedData.length === 0) {
+      addToast({
+        title: '발행할 데이터가 없습니다',
+        color: 'warning',
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const response = await fetch('/api/publish-scraped', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data: scrapedData,
+          source: selectedSite,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '발행 중 오류가 발생했습니다.');
+      }
+
+      addToast({
+        title: '발행 완료',
+        description: '스크랩된 데이터가 성공적으로 발행되었습니다.',
+        color: 'success',
+      });
+
+      setScrapedData([]); // 발행 후 데이터 초기화
+      await loadDbScrapedData(); // DB 데이터 새로고침
+    } catch (error) {
+      console.error('발행 오류:', error);
+      addToast({
+        title: '발행 실패',
+        description: error.message,
+        color: 'danger',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 스크랩 결과 초기화
+  const clearScrapedData = () => {
+    if (scrapedData.length === 0) {
+      addToast({
+        title: '삭제할 데이터가 없습니다',
+        color: 'warning',
+      });
+      return;
+    }
+
+    if (confirm(`정말로 ${scrapedData.length}개의 스크랩 결과를 모두 삭제하시겠습니까?`)) {
+      setScrapedData([]);
+      addToast({
+        title: '초기화 완료',
+        description: '모든 스크랩 결과가 삭제되었습니다.',
+        color: 'success',
+      });
+    }
+  };
+
+  // 선택된 사이트에 따른 스크랩 실행
+  const runScrape = async () => {
+    switch (selectedSite) {
+      case 'visitSeoul':
+        await scrapeVisitSeoul();
+        break;
+      case 'culturePortal':
+        await scrapeCulturePortal();
+        break;
+      case 'artCenter':
+        await scrapeArtCenter();
+        break;
+      default:
+        addToast({
+          title: '오류',
+          description: '선택된 사이트를 찾을 수 없습니다.',
+          color: 'danger',
+        });
+    }
+  };
+
+  // Visit Seoul 스크래핑
+  const scrapeVisitSeoul = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch('/api/scrape-visitseoul', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          month: siteConfigs.visitSeoul.month,
+          maxResults: siteConfigs.visitSeoul.maxResults,
+          autoPublish: siteConfigs.visitSeoul.autoPublish,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Visit Seoul 스크랩 중 오류가 발생했습니다.');
+      }
+
+      const result = await response.json();
+      
+      // 기존 데이터에 새 데이터 추가 (누적)
+      setScrapedData(prevData => [...prevData, ...(result.data || [])]);
+
+      addToast({
+        title: 'Visit Seoul 스크랩 완료',
+        description: `${result.data?.length || 0}개의 전시 정보를 수집했습니다. (총 ${scrapedData.length + (result.data?.length || 0)}개)`,
+        color: 'success',
+      });
+    } catch (error) {
+      console.error('Visit Seoul 스크랩 오류:', error);
+      addToast({
+        title: '스크랩 실패',
+        description: error.message,
+        color: 'danger',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 문화포털 스크래핑
+  const scrapeCulturePortal = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch('/api/scrape-cultureportal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: siteConfigs.culturePortal.category,
+          maxResults: siteConfigs.culturePortal.maxResults,
+          autoPublish: siteConfigs.culturePortal.autoPublish,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '문화포털 스크랩 중 오류가 발생했습니다.');
+      }
+
+      const result = await response.json();
+      
+      // 기존 데이터에 새 데이터 추가 (누적)
+      setScrapedData(prevData => [...prevData, ...(result.data || [])]);
+
+      addToast({
+        title: '문화포털 스크랩 완료',
+        description: `${result.data?.length || 0}개의 전시 정보를 수집했습니다. (총 ${scrapedData.length + (result.data?.length || 0)}개)`,
+        color: 'success',
+      });
+    } catch (error) {
+      console.error('문화포털 스크랩 오류:', error);
+      addToast({
+        title: '스크랩 실패',
+        description: error.message,
+        color: 'danger',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 예술의전당 스크래핑
+  const scrapeArtCenter = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch('/api/scrape-artcenter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          maxResults: siteConfigs.artCenter.maxResults,
+          autoPublish: siteConfigs.artCenter.autoPublish,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '예술의전당 스크랩 중 오류가 발생했습니다.');
+      }
+
+      const result = await response.json();
+      
+      // 기존 데이터에 새 데이터 추가 (누적)
+      setScrapedData(prevData => [...prevData, ...(result.data || [])]);
+
+      addToast({
+        title: '예술의전당 스크랩 완료',
+        description: `${result.data?.length || 0}개의 전시 정보를 수집했습니다. (총 ${scrapedData.length + (result.data?.length || 0)}개)`,
+        color: 'success',
+      });
+    } catch (error) {
+      console.error('예술의전당 스크랩 오류:', error);
+      addToast({
+        title: '스크랩 실패',
+        description: error.message,
+        color: 'danger',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // DB에서 스크랩된 데이터 조회
+  const loadDbScrapedData = async () => {
+    try {
+      setDbLoading(true);
+      
+      const response = await fetch('/api/scraped-data');
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'DB 데이터 조회 중 오류가 발생했습니다.');
+      }
+
+      const result = await response.json();
+      setDbScrapedData(result.data || []);
+      
+      addToast({
+        title: 'DB 데이터 로드 완료',
+        description: `${result.data?.length || 0}개의 스크랩 데이터를 불러왔습니다.`,
+        color: 'success',
+      });
+    } catch (error) {
+      console.error('DB 데이터 조회 오류:', error);
+      addToast({
+        title: 'DB 데이터 조회 실패',
+        description: error.message,
+        color: 'danger',
+      });
+    } finally {
+      setDbLoading(false);
+    }
+  };
+
+  // 선택된 DB 항목 삭제
+  const deleteSelectedDbItems = async () => {
+    if (selectedDbItems.length === 0) {
+      addToast({
+        title: '삭제할 항목을 선택해주세요',
+        color: 'warning',
+      });
+      return;
+    }
+
+    if (!confirm(`정말로 ${selectedDbItems.length}개의 스크랩 데이터를 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      setDbLoading(true);
+      
+      const response = await fetch('/api/scraped-data', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedDbItems }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '삭제 중 오류가 발생했습니다.');
+      }
+
+      const result = await response.json();
+      
+      addToast({
+        title: '삭제 완료',
+        description: result.message,
+        color: 'success',
+      });
+
+      setSelectedDbItems([]);
+      await loadDbScrapedData(); // 목록 새로고침
+    } catch (error) {
+      console.error('DB 데이터 삭제 오류:', error);
+      addToast({
+        title: '삭제 실패',
+        description: error.message,
+        color: 'danger',
+      });
+    } finally {
+      setDbLoading(false);
+    }
+  };
+
+  // 선택된 DB 항목 발행
+  const publishSelectedDbItems = async () => {
+    if (selectedDbItems.length === 0) {
+      addToast({
+        title: '발행할 항목을 선택해주세요',
+        color: 'warning',
+      });
+      return;
+    }
+
+    if (!confirm(`선택된 ${selectedDbItems.length}개의 스크랩 데이터를 community에 발행하고 DB에서 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      setDbLoading(true);
+      
+      // 선택된 항목들 가져오기
+      const selectedData = dbScrapedData.filter(item => selectedDbItems.includes(item.id));
+      
+      // community에 발행
+      const publishResponse = await fetch('/api/publish-to-community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          data: selectedData,
+          deleteFromScraped: true 
+        }),
+      });
+
+      if (!publishResponse.ok) {
+        const errorData = await publishResponse.json();
+        throw new Error(errorData.error || '발행 중 오류가 발생했습니다.');
+      }
+
+      const result = await publishResponse.json();
+      
+      addToast({
+        title: '발행 완료',
+        description: `${result.published}개의 포스트가 community에 발행되었습니다.`,
+        color: 'success',
+      });
+
+      setSelectedDbItems([]);
+      await loadDbScrapedData(); // 목록 새로고침
+    } catch (error) {
+      console.error('DB 데이터 발행 오류:', error);
+      addToast({
+        title: '발행 실패',
+        description: error.message,
+        color: 'danger',
+      });
+    } finally {
+      setDbLoading(false);
+    }
+  };
+
+  // 전체 DB 스크랩 데이터 발행
+  const publishAllDbScrapedData = async () => {
+    if (dbScrapedData.length === 0) {
+      addToast({
+        title: '발행할 데이터가 없습니다',
+        color: 'warning',
+      });
+      return;
+    }
+
+    if (!confirm(`모든 스크랩 데이터(${dbScrapedData.length}개)를 community에 발행하고 DB에서 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      setDbLoading(true);
+      
+      // community에 발행
+      const publishResponse = await fetch('/api/publish-to-community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          data: dbScrapedData,
+          deleteFromScraped: true 
+        }),
+      });
+
+      if (!publishResponse.ok) {
+        const errorData = await publishResponse.json();
+        throw new Error(errorData.error || '전체 발행 중 오류가 발생했습니다.');
+      }
+
+      const result = await publishResponse.json();
+      
+      addToast({
+        title: '전체 발행 완료',
+        description: `${result.published}개의 포스트가 community에 발행되었습니다.`,
+        color: 'success',
+      });
+
+      setSelectedDbItems([]);
+      setDbScrapedData([]);
+    } catch (error) {
+      console.error('전체 DB 데이터 발행 오류:', error);
+      addToast({
+        title: '전체 발행 실패',
+        description: error.message,
+        color: 'danger',
+      });
+    } finally {
+      setDbLoading(false);
+    }
+  };
+
+  // 전체 DB 스크랩 데이터 삭제
+  const deleteAllDbScrapedData = async () => {
+    if (dbScrapedData.length === 0) {
+      addToast({
+        title: '삭제할 데이터가 없습니다',
+        color: 'warning',
+      });
+      return;
+    }
+
+    if (!confirm(`정말로 모든 스크랩 데이터(${dbScrapedData.length}개)를 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      setDbLoading(true);
+      
+      const allIds = dbScrapedData.map(item => item.id);
+      
+      const response = await fetch('/api/scraped-data', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: allIds }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '전체 삭제 중 오류가 발생했습니다.');
+      }
+
+      const result = await response.json();
+      
+      addToast({
+        title: '전체 삭제 완료',
+        description: result.message,
+        color: 'success',
+      });
+
+      setSelectedDbItems([]);
+      setDbScrapedData([]);
+    } catch (error) {
+      console.error('전체 DB 데이터 삭제 오류:', error);
+      addToast({
+        title: '전체 삭제 실패',
+        description: error.message,
+        color: 'danger',
+      });
+    } finally {
+      setDbLoading(false);
+    }
+  };
+
+  // 컴포넌트 마운트 시 DB 데이터 로드
   useEffect(() => {
-    fetchSchedules();
+    loadDbScrapedData();
   }, []);
 
-  const fetchSchedules = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('ai_post_schedules')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.log('schedule fetch error', error);
-      addToast({ title: '조회 오류', description: error.message, color: 'danger' });
-    }
-    setSchedules(data || []);
-    setLoading(false);
-  };
-
-  const openNewModal = () => {
-    setEditing(null);
-    setForm({
-      name: '',
-      cron: '0 9 * * 1',
-      prompt_template: defaultPrompt,
-      enabled: true,
-      auto_publish: false,
-      mode: 'ai',
-      sources: { brave: true, visitseoul: false },
-      visitSeoulMonth: '',
-    });
-    setModalOpen(true);
-  };
-
-  const openEditModal = (sch) => {
-    setEditing(sch);
-    let extra = null;
-    if (sch.mode === 'scrape') {
-      try { extra = JSON.parse(sch.prompt_template || '{}'); } catch {}
-    }
-    setForm({
-      name: sch.name,
-      cron: sch.cron,
-      prompt_template: sch.prompt_template,
-      enabled: sch.enabled,
-      auto_publish: sch.auto_publish,
-      mode: sch.mode,
-      sources: extra?.sources ? {
-        brave: extra.sources.includes('brave'),
-        visitseoul: extra.sources.includes('visitseoul'),
-      } : { brave: true, visitseoul: false },
-      visitSeoulMonth: extra?.visitSeoulMonth || '',
-    });
-    setModalOpen(true);
-  };
-
-  const saveSchedule = async () => {
-    if (!form.name.trim()) {
-      addToast({ title: '이름을 입력하세요', color: 'warning' });
-      return;
-    }
-    if (form.mode !== 'scrape' && !form.prompt_template.trim()) {
-      addToast({ title: '프롬프트를 입력하세요', color: 'warning' });
-      return;
-    }
-
-    let promptTemplateToSave = form.prompt_template;
-    if (form.mode === 'scrape') {
-      const extra = {
-        keyword: form.name,
-        sources: Object.entries(form.sources).filter(([k,v])=>v).map(([k])=>k),
-        visitSeoulMonth: form.visitSeoulMonth||undefined,
-      };
-      promptTemplateToSave = JSON.stringify(extra);
-    }
-
-    const payload = {
-      name: form.name,
-      cron: form.cron,
-      prompt_template: promptTemplateToSave,
-      enabled: form.enabled,
-      auto_publish: form.auto_publish,
-      mode: form.mode,
-    };
-
-    let result;
-    if (editing) {
-      result = await supabase
-        .from('ai_post_schedules')
-        .update(payload)
-        .eq('id', editing.id)
-        .select('*')
-        .single();
-    } else {
-      result = await supabase
-        .from('ai_post_schedules')
-        .insert(payload)
-        .select('*')
-        .single();
-    }
-
-    const { error } = result;
-    if (error) {
-      addToast({ title: '저장 실패', description: error.message, color: 'danger' });
-      return;
-    }
-
-    setModalOpen(false);
-    fetchSchedules();
-  };
-
-  const deleteSchedule = async (sch) => {
-    if (!confirm('삭제하시겠습니까?')) return;
-    const { error } = await supabase.from('ai_post_schedules').delete().eq('id', sch.id);
-    if (error) {
-      addToast({ title: '삭제 실패', description: error.message, color: 'danger' });
-    } else {
-      fetchSchedules();
-    }
-  };
-
-  const runNow = async (sch) => {
-    const res = await fetch('/api/ai-generate-post', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scheduleId: sch.id, autoPublish: sch.auto_publish, extra: sch.prompt_template }),
-    });
-    if (res.ok) {
-      addToast({ title: '생성 완료', description: 'AI 글이 생성되었습니다.', color: 'success' });
-    } else {
-      const data = await res.json();
-      addToast({ title: '실패', description: data.error || 'error', color: 'danger' });
-    }
-  };
-
-  const totalPages = Math.max(1, Math.ceil(schedules.length / itemsPerPage));
-  const currentItems = schedules.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-
   return (
-    <div className="w-full h-full flex flex-col gap-4 py-20">
-      <div className="w-full max-w-7xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">AI 글 스케줄 관리</h1>
-          <Button color="primary" size="sm" onPress={openNewModal}>+ 새 스케줄</Button>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900">사이트별 콘텐츠 스크랩</h1>
+          <p className="text-gray-600 mt-2">각 사이트의 특성에 맞는 정확한 정보를 수집합니다</p>
         </div>
 
-        {/* 원클릭 뉴스 자동화 패널 */}
-        <div className="border p-4 rounded bg-gray-50 space-y-3">
-          <h2 className="font-semibold text-[15px]">원클릭 뉴스 자동화</h2>
-          <div className="flex flex-wrap gap-3">
-            <Input size="sm" className="w-60" value={keyword} onChange={(e)=>setKeyword(e.target.value)} placeholder="스크랩 키워드" />
-            <Button color="secondary" size="sm" isLoading={busy === '/api/run-scrapers'} onPress={() => call('/api/run-scrapers',{ keyword })}>① 기사 스크랩</Button>
-            <Button color="warning" size="sm" isLoading={busy === '/api/generate-daily-news'} onPress={() => call('/api/generate-daily-news')}>② 30개 뉴스 즉시 발행</Button>
-            <Button color="primary" size="sm" isLoading={busy === '/api/schedule-daily-news'} onPress={() => call('/api/schedule-daily-news', { prompt: '한국 미술/예술 최신 뉴스 30개' })}>③ 일일 랜덤 발행 스케줄</Button>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center py-40"><Spinner size="lg" /></div>
-        ) : (
-          <div className="bg-white rounded-lg shadow p-4">
-            <Table aria-label="ai schedules table">
-              <TableHeader>
-                <TableColumn>이름</TableColumn>
-                <TableColumn>크론</TableColumn>
-                <TableColumn>활성화</TableColumn>
-                <TableColumn>마지막 실행</TableColumn>
-                <TableColumn>액션</TableColumn>
-              </TableHeader>
-              <TableBody emptyContent="데이터가 없습니다." items={currentItems}>
-                {(item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell className="font-mono text-xs">{item.cron}</TableCell>
-                    <TableCell>{item.enabled ? 'ON' : 'OFF'}</TableCell>
-                    <TableCell>{item.last_run_at ? new Date(item.last_run_at).toLocaleString() : '-'}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="flat" onPress={() => runNow(item)}>실행</Button>
-                        <Button size="sm" variant="bordered" onPress={() => openEditModal(item)}>수정</Button>
-                        <Button size="sm" color="danger" variant="light" onPress={() => deleteSchedule(item)}>삭제</Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-
-            <div className="flex justify-center mt-3">
-              <Pagination total={totalPages} page={page} onChange={setPage} size="sm" />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Modal */}
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} size="lg">
-        <ModalContent>
-          <ModalHeader>{editing ? '스케줄 수정' : '새 스케줄'}</ModalHeader>
-          <ModalBody className="space-y-3">
-            <Input label="이름" value={form.name} onChange={(e)=>setForm({ ...form, name: e.target.value })} />
-            <Input label="Cron 표현식" value={form.cron} onChange={(e)=>setForm({ ...form, cron: e.target.value })} />
-            {form.mode!=='scrape' ? (
-              <Textarea
-                label="프롬프트 템플릿"
-                minRows={6}
-                placeholder={defaultPrompt}
-                value={form.prompt_template}
-                onChange={(e)=>setForm({ ...form, prompt_template: e.target.value })}
-              />
-            ) : (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">스크레이퍼 선택</label>
-                <div className="flex gap-4 items-center text-sm">
-                  <label><input type="checkbox" checked={form.sources.brave} onChange={(e)=>setForm({...form,sources:{...form.sources, brave:e.target.checked}})} /> Brave 검색</label>
-                  <label><input type="checkbox" checked={form.sources.visitseoul} onChange={(e)=>setForm({...form,sources:{...form.sources, visitseoul:e.target.checked}})} /> VisitSeoul 전시</label>
-                  {form.sources.visitseoul && (
-                    <input type="text" placeholder="YYYYMM" value={form.visitSeoulMonth} maxLength={6} className="border px-2 py-1 rounded" onChange={(e)=>setForm({...form, visitSeoulMonth:e.target.value.replace(/[^0-9]/g,'').slice(0,6)})} />
-                  )}
-                </div>
+        {/* 탭 네비게이션 */}
+        <Tabs 
+          selectedKey={activeTab} 
+          onSelectionChange={setActiveTab}
+          className="w-full"
+        >
+          <Tab key="scrape" title="스크랩하기">
+            <div className="space-y-6">
+              {/* 사이트 선택 카드들 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {sites.map((site) => (
+                  <Card
+                    key={site.key}
+                    isPressable
+                    isSelected={selectedSite === site.key}
+                    onPress={() => setSelectedSite(site.key)}
+                    className="p-4"
+                  >
+                    <CardBody className="text-center">
+                      <h3 className="text-lg font-semibold">{site.name}</h3>
+                      <p className="text-sm text-gray-600">{site.description}</p>
+                    </CardBody>
+                  </Card>
+                ))}
               </div>
-            )}
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">모드</label>
-              <select value={form.mode} onChange={(e)=>setForm({ ...form, mode: e.target.value })} className="border px-2 py-1 rounded text-sm">
-                <option value="ai">AI</option>
-                <option value="scrape">스크랩</option>
-                <option value="mix">Mix</option>
-              </select>
+
+              {/* 선택된 사이트 설정 */}
+              {currentSite && (
+                <Card className="p-6">
+                  <CardHeader>
+                    <h3 className="text-xl font-semibold">{currentSite.name} 설정</h3>
+                  </CardHeader>
+                  <CardBody className="space-y-4">
+                    {/* Visit Seoul 설정 */}
+                    {selectedSite === 'visitSeoul' && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Input
+                          label="조회 월"
+                          placeholder="202508"
+                          value={currentConfig.month}
+                          onChange={(e) => setSiteConfigs({
+                            ...siteConfigs,
+                            visitSeoul: { ...currentConfig, month: e.target.value }
+                          })}
+                          description="YYYYMM 형식 (예: 202508)"
+                        />
+                        <Input
+                          label="최대 결과 수"
+                          type="number"
+                          min="1"
+                          max="50"
+                          value={currentConfig.maxResults}
+                          onChange={(e) => setSiteConfigs({
+                            ...siteConfigs,
+                            visitSeoul: { ...currentConfig, maxResults: parseInt(e.target.value) || 10 }
+                          })}
+                        />
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            isSelected={currentConfig.autoPublish}
+                            onValueChange={(value) => setSiteConfigs({
+                              ...siteConfigs,
+                              visitSeoul: { ...currentConfig, autoPublish: value }
+                            })}
+                          />
+                          <span className="text-sm">자동 발행</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 문화포털 설정 */}
+                    {selectedSite === 'culturePortal' && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Select
+                          label="카테고리"
+                          selectedKeys={[currentConfig.category]}
+                          onSelectionChange={(keys) => setSiteConfigs({
+                            ...siteConfigs,
+                            culturePortal: { ...currentConfig, category: Array.from(keys)[0] }
+                          })}
+                        >
+                          <SelectItem key="exhibition" value="exhibition">전시</SelectItem>
+                          <SelectItem key="performance" value="performance">공연</SelectItem>
+                          <SelectItem key="festival" value="festival">축제</SelectItem>
+                        </Select>
+                        <Input
+                          label="최대 결과 수"
+                          type="number"
+                          min="1"
+                          max="50"
+                          value={currentConfig.maxResults}
+                          onChange={(e) => setSiteConfigs({
+                            ...siteConfigs,
+                            culturePortal: { ...currentConfig, maxResults: parseInt(e.target.value) || 10 }
+                          })}
+                        />
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            isSelected={currentConfig.autoPublish}
+                            onValueChange={(value) => setSiteConfigs({
+                              ...siteConfigs,
+                              culturePortal: { ...currentConfig, autoPublish: value }
+                            })}
+                          />
+                          <span className="text-sm">자동 발행</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 예술의전당 설정 */}
+                    {selectedSite === 'artCenter' && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Input
+                          label="최대 결과 수"
+                          type="number"
+                          min="1"
+                          max="50"
+                          value={currentConfig.maxResults}
+                          onChange={(e) => setSiteConfigs({
+                            ...siteConfigs,
+                            artCenter: { ...currentConfig, maxResults: parseInt(e.target.value) || 10 }
+                          })}
+                        />
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            isSelected={currentConfig.autoPublish}
+                            onValueChange={(value) => setSiteConfigs({
+                              ...siteConfigs,
+                              artCenter: { ...currentConfig, autoPublish: value }
+                            })}
+                          />
+                          <span className="text-sm">자동 발행</span>
+                        </div>
+                      </div>
+                    )}
+                  </CardBody>
+                  <CardFooter>
+                    <Button
+                      color="primary"
+                      onPress={runScrape}
+                      isLoading={loading}
+                      startContent={<Icon icon="lucide:download" />}
+                    >
+                      스크랩 실행
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )}
+
+              {/* 스크랩 결과 */}
+              <Card className="p-6">
+                <CardHeader className="flex justify-between items-center">
+                  <h3 className="text-xl font-semibold">스크랩 결과 ({scrapedData.length}개)</h3>
+                  <div className="flex gap-2">
+                    <Button
+                      color="success"
+                      onPress={publishScrapedData}
+                      isLoading={loading}
+                      isDisabled={scrapedData.length === 0}
+                      startContent={<Icon icon="lucide:send" />}
+                    >
+                      발행하기
+                    </Button>
+                    <Button
+                      variant="light"
+                      onPress={clearScrapedData}
+                      isLoading={loading}
+                      startContent={<Icon icon="lucide:trash" />}
+                    >
+                      전체 삭제
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardBody>
+                  {scrapedData.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">스크랩된 데이터가 없습니다.</p>
+                  ) : (
+                    <Table aria-label="스크랩 결과">
+                      <TableHeader>
+                        <TableColumn>제목</TableColumn>
+                        <TableColumn>기간</TableColumn>
+                        <TableColumn>장소</TableColumn>
+                        <TableColumn>출처</TableColumn>
+                      </TableHeader>
+                      <TableBody>
+                        {scrapedData.map((item, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{item.title}</TableCell>
+                            <TableCell>{item.date}</TableCell>
+                            <TableCell>{item.location}</TableCell>
+                            <TableCell>{item.source}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardBody>
+              </Card>
             </div>
-            <div className="flex items-center gap-2">
-              <Switch isSelected={form.enabled} onValueChange={(v)=>setForm({ ...form, enabled: v })} /> 활성화
-              <Switch isSelected={form.auto_publish} onValueChange={(v)=>setForm({ ...form, auto_publish: v })} /> 자동 발행
+          </Tab>
+
+          <Tab key="database" title="DB 관리">
+            <div className="space-y-6">
+              <Card className="p-6">
+                <CardHeader className="flex justify-between items-center">
+                  <h3 className="text-xl font-semibold">DB 스크랩 데이터 ({dbScrapedData.length}개)</h3>
+                  <div className="flex gap-2">
+                    <Button
+                      color="success"
+                      onPress={publishSelectedDbItems}
+                      isLoading={dbLoading}
+                      isDisabled={selectedDbItems.length === 0}
+                      startContent={<Icon icon="lucide:send" />}
+                    >
+                      선택 발행 ({selectedDbItems.length})
+                    </Button>
+                    <Button
+                      color="success"
+                      variant="flat"
+                      onPress={publishAllDbScrapedData}
+                      isLoading={dbLoading}
+                      isDisabled={dbScrapedData.length === 0}
+                      startContent={<Icon icon="lucide:send" />}
+                    >
+                      전체 발행
+                    </Button>
+                    <Button
+                      variant="light"
+                      onPress={loadDbScrapedData}
+                      isLoading={dbLoading}
+                      startContent={<Icon icon="lucide:refresh-cw" />}
+                    >
+                      새로고침
+                    </Button>
+                    <Button
+                      color="danger"
+                      onPress={deleteSelectedDbItems}
+                      isLoading={dbLoading}
+                      isDisabled={selectedDbItems.length === 0}
+                      startContent={<Icon icon="lucide:trash" />}
+                    >
+                      선택 삭제 ({selectedDbItems.length})
+                    </Button>
+                    <Button
+                      color="danger"
+                      variant="flat"
+                      onPress={deleteAllDbScrapedData}
+                      isLoading={dbLoading}
+                      isDisabled={dbScrapedData.length === 0}
+                      startContent={<Icon icon="lucide:trash-2" />}
+                    >
+                      전체 삭제
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardBody>
+                  {dbScrapedData.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">DB에 저장된 스크랩 데이터가 없습니다.</p>
+                  ) : (
+                    <Table 
+                      aria-label="DB 스크랩 데이터"
+                      selectionMode="multiple"
+                      selectedKeys={selectedDbItems}
+                      onSelectionChange={setSelectedDbItems}
+                    >
+                      <TableHeader>
+                        <TableColumn>선택</TableColumn>
+                        <TableColumn>제목</TableColumn>
+                        <TableColumn>내용</TableColumn>
+                        <TableColumn>출처</TableColumn>
+                        <TableColumn>생성일</TableColumn>
+                      </TableHeader>
+                      <TableBody>
+                        {dbScrapedData.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell>
+                              <Checkbox
+                                isSelected={selectedDbItems.includes(item.id)}
+                                onValueChange={(isSelected) => {
+                                  if (isSelected) {
+                                    setSelectedDbItems([...selectedDbItems, item.id]);
+                                  } else {
+                                    setSelectedDbItems(selectedDbItems.filter(id => id !== item.id));
+                                  }
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>{item.title}</TableCell>
+                            <TableCell>
+                              <div className="max-w-xs truncate">
+                                {item.summary?.substring(0, 100) || '내용 없음'}...
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Chip 
+                                color={item.source === 'visitSeoul' ? 'primary' : 
+                                       item.source === 'culturePortal' ? 'secondary' : 'default'}
+                                variant="flat"
+                              >
+                                {item.source || 'unknown'}
+                              </Chip>
+                            </TableCell>
+                            <TableCell>
+                              {new Date(item.created_at).toLocaleDateString('ko-KR')}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardBody>
+              </Card>
             </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="light" onPress={()=>setModalOpen(false)}>취소</Button>
-            <Button color="primary" onPress={saveSchedule}>{editing ? '저장' : '추가'}</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          </Tab>
+        </Tabs>
+      </div>
     </div>
   );
 } 

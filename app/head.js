@@ -1,7 +1,7 @@
 export default function Head() {
   return (
     <>
-      <title>미술예술랭</title>
+      <title>아트앤브릿지</title>
       {/* iPhone Safari 포함 모든 모바일에서 화면 폭에 맞춰 줍니다 */}
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       <meta name="naver-site-verification" content="bad7ac6c90f1c11f1dfa8f9ef1d8bb44d3fc597c" />
@@ -14,9 +14,9 @@ export default function Head() {
       {/* <link rel="manifest" href="/site.webmanifest" /> */}
 
       {/* Open Graph & Twitter 메타태그 */}
-      <meta property="og:title" content="미술예술랭" />
-      <meta property="og:site_name" content="미술예술랭" />
-      <meta name="twitter:title" content="미술예술랭" />
+              <meta property="og:title" content="아트앤브릿지" />
+        <meta property="og:site_name" content="아트앤브릿지" />
+        <meta name="twitter:title" content="아트앤브릿지" />
     </>
   );
 } 

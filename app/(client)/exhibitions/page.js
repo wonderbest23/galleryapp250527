@@ -607,10 +607,10 @@ function ExhibitionListContent() {
         className="w-[90%] my-4 bg-[#eee]"
       />
 
-      {/* 예술랭픽 섹션 */}
-      <div className="w-[90%] flex flex-col justify-center items-center mb-24">
-        <div className="w-full flex justify-between items-center">
-          <h1 className="text-[18px] font-bold">예술랭픽</h1>
+              {/* 아트앤브릿지 섹션 */}
+        <div className="w-[90%] flex flex-col justify-center items-center mb-24">
+          <div className="w-full flex justify-between items-center">
+            <h1 className="text-[18px] font-bold">아트앤브릿지</h1>
         </div>
 
         {loadingHighRating ? (

@@ -891,7 +891,7 @@ export function GalleryDetail({
               radius="sm"
             >
               <div className="flex items-center gap-2">
-                <span>예술랭픽</span>
+                <span>아트앤브릿지</span>
               </div>
             </Checkbox>
           </div>
