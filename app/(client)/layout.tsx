@@ -63,7 +63,6 @@ export default function RootLayout({
           <Providers>
             <div className="mobile-fixed-width">
               <main className="w-full h-full pb-16">
-                <Navbar />
                 {children}
               </main>
               <BottomNavigation />

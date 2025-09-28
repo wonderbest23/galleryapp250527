@@ -1,13 +1,9 @@
 "use client";
-import Hero from "@/components/hero";
-import ConnectSupabaseSteps from "@/components/tutorial/connect-supabase-steps";
-import SignUpUserSteps from "@/components/tutorial/sign-up-user-steps";
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
-import { ExhibitionCarousel } from "./components/exhibition-carousel";
-import { CategoryButtons } from "./components/category-buttons";
-import { ExhibitionCards } from "./components/exhibition-cards";
-import { GallerySection } from "./components/gallery-section";
-import { MagazineCarousel } from "./components/magazine-carousel";
+import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { FiHome, FiSearch, FiBell, FiHeart, FiMessageCircle, FiShare2, FiMoreVertical, FiChevronRight } from "react-icons/fi";
+import Link from "next/link";
+import Image from "next/image";
 import {
   Input,
   Tabs,
@@ -22,12 +18,21 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@heroui/react";
-import { useEffect, useState } from "react";
+import TopNavigation from "./components/TopNavigation";
+import { ExhibitionCarousel } from "./components/exhibition-carousel";
+import { CategoryButtons } from "./components/category-buttons";
+import { ExhibitionCards } from "./components/exhibition-cards";
+import { GallerySection } from "./components/gallery-section";
+import { MagazineCarousel } from "./components/magazine-carousel";
 import GalleryCards from "./components/gallery-cards";
-import { createClient } from "@/utils/supabase/client";
-import Image from "next/image";
-import { FiPlus, FiMinus } from "react-icons/fi";
 import Artists from "./components/Artists";
+import BottomNavigation from "./components/BottomNavigationbar";
+import { ReviewCards } from "./components/review-cards";
+import { MagazineCards } from "./components/magazine-cards";
+import { LatestWorks } from "./components/latest-works";
+import { TopOfWeek } from "./components/top-of-week";
+import { CommunityHighlights } from "./components/community-highlights";
+
 export default function Home() {
   const [exhibitionCategory, setExhibitionCategory] = useState("all");
   const [selectedTab, setSelectedTab] = useState("recommended");
@@ -36,14 +41,22 @@ export default function Home() {
   const exchangeRefundDisclosure = useDisclosure();
   const purchaseNoticeDisclosure = useDisclosure();
   const termsDisclosure = useDisclosure();
+  const notificationDisclosure = useDisclosure();
   const [ticketCount, setTicketCount] = useState(1);
-  const [ticketPrice, setTicketPrice] = useState(15000); // 기본 티켓 가격
+  const [ticketPrice, setTicketPrice] = useState(15000);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [search, setSearch] = useState("");
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [exhibitions, setExhibitions] = useState([]);
+  const [gallery, setGallery] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const supabase = createClient();
 
   // 티켓 수량 증가
   const increaseTicket = () => {
     if (ticketCount < 10) {
-      // 최대 10매로 제한
       setTicketCount(ticketCount + 1);
     }
   };
@@ -51,7 +64,6 @@ export default function Home() {
   // 티켓 수량 감소
   const decreaseTicket = () => {
     if (ticketCount > 1) {
-      // 최소 1매로 제한
       setTicketCount(ticketCount - 1);
     }
   };
@@ -67,9 +79,137 @@ export default function Home() {
       setUser(data?.user);
     }
   };
+
   useEffect(() => {
     getUser();
+    fetchNotifications();
   }, []);
+
+  // 스크롤 이벤트 리스너
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      console.log('Scroll position:', scrollTop); // 디버깅용
+      setIsScrolled(scrollTop > 50); // 50px 이상 스크롤하면 작은 모양으로 변경
+    };
+
+    // 초기 스크롤 위치 확인
+    handleScroll();
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 알림 데이터 가져오기
+  const fetchNotifications = async () => {
+    try {
+      // 실제 알림 데이터를 가져오는 로직 (예시)
+      const mockNotifications = [
+        {
+          id: 1,
+          title: "새로운 전시회가 등록되었습니다",
+          message: "서울시립미술관에서 '현대미술의 흐름' 전시회가 시작됩니다.",
+          time: "2시간 전",
+          isRead: false,
+          type: "exhibition"
+        },
+        {
+          id: 2,
+          title: "좋아요를 받았습니다",
+          message: "당신의 작품 '봄의 향기'에 좋아요가 추가되었습니다.",
+          time: "5시간 전",
+          isRead: false,
+          type: "like"
+        },
+        {
+          id: 3,
+          title: "댓글이 달렸습니다",
+          message: "갤러리 리뷰에 새로운 댓글이 달렸습니다.",
+          time: "1일 전",
+          isRead: true,
+          type: "comment"
+        }
+      ];
+      
+      setNotifications(mockNotifications);
+      setUnreadCount(mockNotifications.filter(n => !n.isRead).length);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  // 알림 읽음 처리
+  const markAsRead = (notificationId) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === notificationId 
+          ? { ...notification, isRead: true }
+          : notification
+      )
+    );
+    setUnreadCount(prev => Math.max(0, prev - 1));
+  };
+
+  // 모든 알림 읽음 처리
+  const markAllAsRead = () => {
+    setNotifications(prev => 
+      prev.map(notification => ({ ...notification, isRead: true }))
+    );
+    setUnreadCount(0);
+  };
+
+  // 검색 기능
+  const handleSearch = async (searchTerm) => {
+    try {
+      // 전시회 데이터 검색
+      const { data, error } = await supabase
+        .from("exhibition")
+        .select("*")
+        .ilike("contents", `%${searchTerm}%`)
+        .gte("end_date", new Date().toISOString());
+
+      if (error) {
+        console.error("전시회 데이터 검색 오류:", error);
+      } else {
+        setExhibitions(data || []);
+      }
+
+      // 갤러리 데이터 검색
+      const { data: galleryData, error: galleryError } = await supabase
+        .from("gallery")
+        .select("*")
+        .ilike("name", `%${searchTerm}%`);
+
+      if (galleryError) {
+        console.error("갤러리 데이터 검색 오류:", galleryError);
+      } else {
+        setGallery(galleryData || []);
+      }
+    } catch (e) {
+      console.error("검색 중 예외 발생:", e);
+    }
+  };
+
+  // 검색어 변경 시 검색 실행
+  useEffect(() => {
+    if (search) {
+      handleSearch(search);
+      setShowSearchResults(true);
+    } else {
+      setExhibitions([]);
+      setGallery([]);
+      setShowSearchResults(false);
+    }
+  }, [search]);
+
+  // 링크 클릭 시 검색창 초기화
+  const handleLinkClick = () => {
+    setSearch("");
+    setExhibitions([]);
+    setGallery([]);
+    setShowSearchResults(false);
+  };
+
   const getFavorites = async () => {
     const { data, error } = await supabase
       .from("favorite")
@@ -83,118 +223,314 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col gap-3 justify-center items-center w-full">
-      {/* Banner Carousel */}
-      <ExhibitionCarousel user={user} />
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* 상단 네비게이션 바 */}
+      <div className="bg-white px-4 py-3 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          {/* 홈 아이콘 */}
+          <div className="flex items-center">
+            <Link href="/" className="cursor-pointer">
+              <FiHome className="w-6 h-6 text-gray-700 hover:text-blue-500 transition-colors" />
+            </Link>
+          </div>
 
-      {/* Category Buttons */}
-      <CategoryButtons />
+          {/* 검색바 */}
+          <div className="flex-1 mx-4 relative">
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="갤러리, 전시회를 검색해보세요"
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
 
-      {/* Exhibition Tabs */}
-      <div className="w-full flex flex-col mb-4 justify-center items-center mt-4">
-        <div className="flex w-[90%] border-t border-gray-200 mb-2">
-          <div className="w-1/6"></div>
-          <div className="flex w-2/3">
-            <button
-              className={`text-[12px] flex-1 py-3 text-center font-medium ${exhibitionCategory === "all" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-              onClick={() => setExhibitionCategory("all")}
-            >
-              전체전시
-            </button>
-            <button
-              className={`text-[12px] flex-1 py-3 text-center font-medium ${exhibitionCategory === "free" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-              onClick={() => setExhibitionCategory("free")}
-            >
-              무료전시
-            </button>
-            <button
-              className={`text-[12px] flex-1 py-3 text-center font-medium ${exhibitionCategory === "recommended" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-              onClick={() => setExhibitionCategory("recommended")}
-            >
-              추천전시
+            {/* 검색 결과 배너 */}
+            {showSearchResults && search && (
+              <div className="absolute w-full bg-white shadow-md rounded-b-lg p-4 z-50 top-full left-0">
+                <div className="mb-3">
+                  <h3 className="text-sm font-semibold text-gray-600 mb-2">갤러리</h3>
+                  {gallery.length > 0 ? (
+                    <div className="space-y-2">
+                      {gallery.slice(0, 3).map((item) => (
+                        <Link
+                          href={`/galleries/${item.id}`}
+                          key={item.id}
+                          onClick={handleLinkClick}
+                        >
+                          <div className="flex items-center p-2 hover:bg-gray-50 rounded-lg transition">
+                            <div className="flex-shrink-0 mr-3">
+                              <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+                                {item.thumbnail ? (
+                                  <img
+                                    src={item.thumbnail}
+                                    alt={item.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <FiHome className="text-gray-400 text-xl" />
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-sm">{item.name}</span>
+                          </div>
+                        </Link>
+                      ))}
+                      {gallery.length > 3 && (
+                        <div className="text-xs text-right text-gray-500">
+                          외 {gallery.length - 3}개 결과
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-500 p-2">
+                      갤러리 검색 결과가 없습니다.
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-gray-200 my-2"></div>
+
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 mb-2">전시회</h3>
+                  {exhibitions.length > 0 ? (
+                    <div className="space-y-2">
+                      {exhibitions.slice(0, 3).map((item) => (
+                        <Link
+                          href={`/exhibition/${item.id}`}
+                          key={item.id}
+                          onClick={handleLinkClick}
+                        >
+                          <div className="flex items-center p-2 hover:bg-gray-50 rounded-lg transition">
+                            <div className="flex-shrink-0 mr-3">
+                              <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+                                {item.photo ? (
+                                  <img
+                                    src={item.photo}
+                                    alt={item.title || item.contents}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <FiHome className="text-gray-400 text-xl" />
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-sm">
+                              {item.title || item.contents}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                      {exhibitions.length > 3 && (
+                        <div className="text-xs text-right text-gray-500">
+                          외 {exhibitions.length - 3}개 결과
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-500 p-2">
+                      전시회 검색 결과가 없습니다.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 알림 아이콘 */}
+          <div className="relative">
+            <button onClick={notificationDisclosure.onOpen} className="relative">
+              <FiBell className="w-6 h-6 text-gray-700" />
+              {unreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {unreadCount}
+                </div>
+              )}
             </button>
           </div>
-          <div className="w-1/6"></div>
         </div>
-
-        <ExhibitionCards exhibitionCategory={exhibitionCategory} user={user} />
       </div>
 
-      {/* Gallery Section */}
-      <div className="w-full flex flex-col mb-4 justify-center items-center">
-        <div className="flex w-[90%] border-t border-gray-200 mb-2">
-          <div className="w-1/6"></div>
-          <div className="flex w-2/3">
-            <button
-              className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "recommended" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-              onClick={() => setSelectedTab("recommended")}
-            >
-              추천갤러리
-            </button>
-            <button
-              className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "new" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-              onClick={() => setSelectedTab("new")}
-            >
-              신규갤러리
-            </button>
-            <button
-              className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "now" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-              onClick={() => setSelectedTab("now")}
-            >
-              전시갤러리
-            </button>
+      {/* 메인 콘텐츠 */}
+      <div className="flex flex-col gap-3 justify-center items-center w-full">
+        {/* Banner Carousel */}
+        <ExhibitionCarousel user={user} />
+
+        {/* Exhibition Tabs */}
+        <div className="w-full flex flex-col mb-4 justify-center items-center mt-4">
+          <div className="flex w-[90%] border-b border-gray-200 mb-2">
+            <div className="flex flex-1">
+              <button
+                className={`text-sm py-3 px-4 font-medium ${exhibitionCategory === "all" ? "text-black border-b-2 border-black" : "text-gray-500"}`}
+                onClick={() => setExhibitionCategory("all")}
+              >
+                전체전시
+              </button>
+              <button
+                className={`text-sm py-3 px-4 font-medium ${exhibitionCategory === "free" ? "text-black border-b-2 border-black" : "text-gray-500"}`}
+                onClick={() => setExhibitionCategory("free")}
+              >
+                무료전시
+              </button>
+              <button
+                className={`text-sm py-3 px-4 font-medium ${exhibitionCategory === "recommended" ? "text-black border-b-2 border-black" : "text-gray-500"}`}
+                onClick={() => setExhibitionCategory("recommended")}
+              >
+                추천전시
+              </button>
+            </div>
+            <div className="flex items-center">
+              <Link href="/exhibitions" className="text-sm text-blue-500 font-medium hover:text-blue-700 transition-colors">
+                전체보기
+              </Link>
+            </div>
           </div>
-          <div className="w-1/6"></div>
+
+          <ExhibitionCards exhibitionCategory={exhibitionCategory} user={user} />
         </div>
 
-        <GalleryCards selectedTab={selectedTab} user={user} />
+        {/* 전시회 리뷰 섹션 */}
+        <div className="w-full flex flex-col mb-4 justify-center items-center mt-6">
+          <div className="flex w-[90%] justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-900">전시회 리뷰</h2>
+            <Link href="/community" className="text-sm text-blue-500 font-medium hover:text-blue-700 transition-colors">
+              더보기 &gt;
+            </Link>
+          </div>
+          
+          <ReviewCards />
+        </div>
+
+        {/* Magazine Section */}
+        <div className="w-full flex flex-col mb-4 justify-center items-center mt-6">
+          <div className="flex w-[90%] justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-900">아트 매거진</h2>
+            <Link href="/magazineList" className="text-sm text-blue-500 font-medium hover:text-blue-700 transition-colors">
+              더보기 &gt;
+            </Link>
+          </div>
+          
+          <MagazineCards />
+        </div>
+
+        {/* 최신 작품 Section */}
+        <div className="w-full flex flex-col mb-4 justify-center items-center mt-6">
+          <div className="flex w-[90%] justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-900">최신 작품</h2>
+            <Link href="/artstore/all" className="text-sm text-blue-500 font-medium hover:text-blue-700 transition-colors">
+              더보기 &gt;
+            </Link>
+          </div>
+          
+          <LatestWorks />
+        </div>
+
+        {/* Top of Week Section */}
+        <div className="w-full flex flex-col mb-4 justify-center items-center mt-6">
+          <div className="flex w-[90%] justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-900">Top of Week</h2>
+            <Link href="/artstore/all" className="text-sm text-blue-500 font-medium hover:text-blue-700 transition-colors">
+              더보기 &gt;
+            </Link>
+          </div>
+          
+          <TopOfWeek />
+        </div>
+
+        {/* 커뮤니티 하이라이트 Section */}
+        <div className="w-full flex flex-col mb-4 justify-center items-center mt-6">
+          <div className="flex w-[90%] justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-900">커뮤니티 하이라이트</h2>
+            <Link href="/community" className="text-sm text-blue-500 font-medium hover:text-blue-700 transition-colors">
+              더보기 &gt;
+            </Link>
+          </div>
+          
+          <CommunityHighlights />
+        </div>
+        
+        {/* 매거진과 푸터 사이 넉넉한 흰색 여백 */}
+        <div style={{ height: '48px', background: '#fff', width: '100%' }} />
+        
+        {/* 푸터 */}
+        <div className="flex flex-row gap-4 pt-4 pb-[32px] bg-[hsl(0,0%,93%)] w-full justify-center items-center">
+          <div className="w-[30%] h-full flex justify-center items-center ">
+            <Image
+              src="/logo/artandbridge-logo.svg"
+              alt="ARTANDBRIDGE"
+              width={120}
+              height={30}
+            />
+          </div>
+          <div className="w-[70%] h-full text-[6px] flex flex-col justify-center items-start">
+            <div className="flex flex-row justify-end w-full gap-x-4 pr-4">
+              <div className="cursor-pointer" onClick={termsDisclosure.onOpen}>
+                이용약관
+              </div>
+              <div className="cursor-pointer" onClick={exchangeRefundDisclosure.onOpen}>
+                교환 및 반품
+              </div>
+              <div
+                className="cursor-pointer"
+                onClick={purchaseNoticeDisclosure.onOpen}
+              >
+                구매 전 유의사항
+              </div>
+            </div>
+            <div>
+              <p>(주) 아트앤브릿지 대표 : 박명서</p>
+              <p>
+                서울특별시 금천구 가산디지털 1 로 19, 16 층 1609-엘 04호 (가산동,
+                대륭테크노타운 18 차 ){" "}
+              </p>
+              <p>사업자번호 137-87-03464 통신판매업 제2024-서울금천-2468호 </p>
+              <p>이메일 support@artandbridge.com / 개인정보보호책임자 : 박명서</p>
+              <p>연락처 : 010-8993-0271 </p>
+              <p>고객센터,카카오채널 : 아트앤브릿지</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* 푸터와 하단 네비게이션 사이 넉넉한 여백(흰색) */}
+        <div style={{ height: '32px', background: '#fff', width: '100%' }} />
       </div>
 
-      <Artists />
-
-      {/* Magazine Section */}
-      <MagazineCarousel />
-      {/* 매거진과 푸터 사이 넉넉한 흰색 여백 */}
-      <div style={{ height: '48px', background: '#fff', width: '100%' }} />
-      <div className="flex flex-row gap-4 pt-4 pb-[32px] bg-[hsl(0,0%,93%)] w-full justify-center items-center">
-        <div className="w-[30%] h-full flex justify-center items-center ">
-          <Image
-            src="/logo/artandbridge-logo.svg"
-            alt="ARTANDBRIDGE"
-            width={120}
-            height={30}
-          />
-        </div>
-        <div className="w-[70%] h-full text-[6px] flex flex-col justify-center items-start">
-          <div className="flex flex-row justify-end w-full gap-x-4 pr-4">
-            <div className="cursor-pointer" onClick={termsDisclosure.onOpen}>
-              이용약관
-            </div>
-            <div className="cursor-pointer" onClick={exchangeRefundDisclosure.onOpen}>
-              교환 및 반품
-            </div>
-            <div
-              className="cursor-pointer"
-              onClick={purchaseNoticeDisclosure.onOpen}
-            >
-              구매 전 유의사항
-            </div>
-          </div>
-          <div>
-            <p>(주) 아트앤브릿지 대표 : 박명서</p>
-            <p>
-              서울특별시 금천구 가산디지털 1 로 19, 16 층 1609-엘 04호 (가산동,
-              대륭테크노타운 18 차 ){" "}
-            </p>
-            <p>사업자번호 137-87-03464 통신판매업 제2024-서울금천-2468호 </p>
-                            <p>이메일 support@artandbridge.com / 개인정보보호책임자 : 박명서</p>
-                          <p>연락처 : 010-8993-0271 </p>
-            <p>고객센터,카카오채널 : 아트앤브릿지</p>
-          </div>
-        </div>
+      {/* 하단 네비게이션 */}
+      <BottomNavigation />
+      
+      {/* 디버깅용 스크롤 상태 표시 */}
+      <div className="fixed top-4 right-4 z-50 bg-black text-white px-2 py-1 rounded text-xs">
+        스크롤: {isScrolled ? 'ON' : 'OFF'}
       </div>
-      {/* 푸터와 하단 네비게이션 사이 넉넉한 여백(흰색) */}
-      <div style={{ height: '32px', background: '#fff', width: '100%' }} />
+
+      {/* 플로팅 리뷰쓰기 버튼 */}
+      <div className="fixed bottom-20 right-4 z-50">
+        {isScrolled ? (
+          // 스크롤 시 + 모양 (작은 원형)
+          <button
+            onClick={() => setShowReviewModal(true)}
+            className="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        ) : (
+          // 기본 상태 (큰 직사각형)
+          <button
+            onClick={() => setShowReviewModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-full shadow-lg flex items-center space-x-2 transition-all duration-300"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <span className="font-medium">리뷰쓰기</span>
+            <span className="bg-yellow-400 text-black text-xs px-2 py-1 rounded-full font-bold">100P+</span>
+          </button>
+        )}
+      </div>
 
       {/* 이용약관 모달 */}
       <Modal
@@ -464,6 +800,178 @@ export default function Home() {
               닫기
             </Button>
           </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* 알림 모달 */}
+      <Modal
+        isOpen={notificationDisclosure.isOpen}
+        onClose={notificationDisclosure.onClose}
+        size="lg"
+      >
+        <ModalContent>
+          <ModalHeader className="flex justify-between items-center">
+            <span>알림</span>
+            {unreadCount > 0 && (
+              <Button
+                size="sm"
+                color="primary"
+                variant="light"
+                onPress={markAllAsRead}
+              >
+                모두 읽음
+              </Button>
+            )}
+          </ModalHeader>
+          <ModalBody className="max-h-[60vh] overflow-y-auto">
+            {notifications.length > 0 ? (
+              <div className="space-y-3">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-3 rounded-lg border ${
+                      notification.isRead 
+                        ? 'bg-gray-50 border-gray-200' 
+                        : 'bg-blue-50 border-blue-200'
+                    }`}
+                    onClick={() => markAsRead(notification.id)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h4 className={`font-medium text-sm ${
+                          notification.isRead ? 'text-gray-700' : 'text-blue-900'
+                        }`}>
+                          {notification.title}
+                        </h4>
+                        <p className={`text-xs mt-1 ${
+                          notification.isRead ? 'text-gray-500' : 'text-blue-700'
+                        }`}>
+                          {notification.message}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-2">
+                          {notification.time}
+                        </p>
+                      </div>
+                      {!notification.isRead && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <FiBell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>알림이 없습니다</p>
+              </div>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button color="primary" onPress={notificationDisclosure.onClose}>
+              닫기
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* 리뷰쓰기 모달 */}
+      <Modal
+        placement="center"
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        size="full"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <div className="flex items-center">
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="mr-3 p-1 hover:bg-gray-100 rounded-full"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <h2 className="text-lg font-bold">전시회 검색</h2>
+            </div>
+          </ModalHeader>
+          <ModalBody>
+            <div className="space-y-4">
+              {/* 검색바 */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="전시회를 검색해보세요"
+                  className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+
+              {/* 전시회 목록 */}
+              <div className="space-y-3">
+                {[
+                  {
+                    id: 1,
+                    title: "PROTOTYPE - OKSEUNG CHEOL",
+                    venue: "롯데뮤지엄 오브 아트",
+                    dates: "2025-08-15 ~ 2025-10-28",
+                    image: "/images/noimage.jpg"
+                  },
+                  {
+                    id: 2,
+                    title: "모던 아트 컬렉션",
+                    venue: "국립현대미술관",
+                    dates: "2025-09-01 ~ 2025-11-30",
+                    image: "/images/noimage.jpg"
+                  },
+                  {
+                    id: 3,
+                    title: "디지털 아트 페스티벌",
+                    venue: "서울아트센터",
+                    dates: "2025-12-01 ~ 2025-12-31",
+                    image: "/images/noimage.jpg"
+                  },
+                  {
+                    id: 4,
+                    title: "Unfinished @ Studio Urban",
+                    venue: "Studio Urban",
+                    dates: "2025-10-15 ~ 2025-12-31",
+                    image: "/images/noimage.jpg"
+                  }
+                ].map((exhibition) => (
+                  <div key={exhibition.id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0">
+                      <Image
+                        src={exhibition.image}
+                        alt={exhibition.title}
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-gray-900 text-sm mb-1 line-clamp-1">
+                        {exhibition.title}
+                      </h3>
+                      <p className="text-xs text-gray-600 mb-1">{exhibition.venue}</p>
+                      <p className="text-xs text-gray-500">{exhibition.dates}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 빈 상태 메시지 */}
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">방문한 전시가 없었나요?</p>
+                <button className="border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                  새롭게 등록하기
+                </button>
+              </div>
+            </div>
+          </ModalBody>
         </ModalContent>
       </Modal>
     </div>

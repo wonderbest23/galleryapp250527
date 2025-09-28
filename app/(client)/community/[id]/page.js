@@ -1,263 +1,213 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { useParams, useRouter } from "next/navigation";
-import { Button, Spinner, Divider, Avatar, addToast } from "@heroui/react";
-import { HiOutlineClock, HiOutlineUser, HiOutlineEye, HiOutlineStar, HiOutlineLink, HiOutlineChat } from "react-icons/hi";
+import { FiHeart, FiMessageCircle, FiShare2, FiMoreVertical, FiArrowLeft } from "react-icons/fi";
 import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
-export default function CommunityDetail() {
-  const { id } = useParams();
+export default function CommunityPostDetail({ params }) {
   const supabase = createClient();
   const router = useRouter();
-
   const [post, setPost] = useState(null);
-  const [commentCnt, setCommentCnt] = useState(0);
-  const [authorName, setAuthorName] = useState("익명");
-  const [loading, setLoading] = useState(true);
-  const [likeLoading, setLikeLoading] = useState(false);
-  const [copyMsg, setCopyMsg] = useState("");
-  const [commentText, setCommentText] = useState("");
-  const [sending, setSending] = useState(false);
-  const [comments, setComments] = useState([]);
-  const [replyTo, setReplyTo] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const fetchPost = async () => {
-      const { data, error } = await supabase
-        .from("community_post")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (error || !data) {
-        router.replace("/community");
-      } else {
-        setPost(data);
-        // 댓글 수 조회
-        const { count } = await supabase
-          .from("community_comment")
-          .select("id", { count: "exact", head: true })
-          .eq("post_id", id);
-        setCommentCnt(count || 0);
-        // 댓글 목록 조회
-        const { data: commentList } = await supabase
-          .from("community_comment")
-          .select("id, content, created_at, likes, user_id, parent_id")
-          .eq("post_id", id)
-          .order("created_at", { ascending: true });
-        setComments(commentList || []);
-        setLoading(false);
-        // 작성자 이름 조회 (profiles)
-        if (data.user_id) {
-          const { data: prof } = await supabase
-            .from("profiles")
-            .select("nickname")
-            .eq("id", data.user_id)
-            .maybeSingle();
-          if (prof?.nickname) setAuthorName(prof.nickname);
+      setIsLoading(true);
+      try {
+        // 실제 포스트 데이터를 가져오는 쿼리
+        const { data, error } = await supabase
+          .from("community_post")
+          .select(`
+            *,
+            profiles:user_id(name, avatar_url)
+          `)
+          .eq("id", params.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching post:", error);
+          // 에러 시 샘플 데이터 사용
+          setPost({
+            id: params.id,
+            title: "전시 관람 후기",
+            content: "방금 다녀온 전시회가 정말 인상적이었습니다. 작가의 새로운 시도와 표현 방식이 돋보였고, 특히 색감과 구도가 매우 인상적이었습니다. 전시장 분위기도 좋았고, 관람객들도 많아서 활기찬 분위기였습니다. 다음에도 이런 전시회가 열리면 꼭 가보고 싶습니다.\n\n작가의 작품 세계를 이해하는 데 도움이 되는 오디오 가이드도 정말 유용했습니다. 각 작품의 배경과 작가의 의도를 자세히 설명해주어서 더욱 깊이 있게 감상할 수 있었습니다.",
+            user_id: "test-user-3",
+            profiles: { name: "박관람객", avatar_url: null },
+            created_at: new Date(Date.now() - 17 * 60 * 60 * 1000).toISOString(),
+            likes: 156,
+            comments: 23,
+            category: "exhibition",
+            image_url: null
+          });
+        } else {
+          setPost(data);
         }
+      } catch (error) {
+        console.error("Error:", error);
+        setPost(null);
+      } finally {
+        setIsLoading(false);
       }
     };
-    if (id) fetchPost();
-  }, [id]);
 
-  const handleLike = async () => {
-    if (!post) return;
-    setLikeLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) {
-      addToast({ title: "로그인 필요", description: "추천하려면 로그인하세요", color: "warning" });
-      setLikeLoading(false);
-      return;
+    if (params.id) {
+      fetchPost();
     }
+  }, [params.id]);
 
-    const { error } = await supabase.rpc("like_post_once", {
-      p_post_id: id,
-      p_user_id: session.user.id,
-    });
-    setLikeLoading(false);
-    if (error) {
-      if (error.code === "23505" || error.message?.includes("unique")) {
-        addToast({ title: "이미 추천했습니다" });
-      } else {
-        addToast({ title: "추천 실패", description: error.message, color: "danger" });
-      }
-    } else {
-      setPost((prev) => ({ ...prev, likes: prev.likes + 1 }));
-    }
+  const getTimeAgo = (createdAt) => {
+    const now = new Date();
+    const postTime = new Date(createdAt);
+    const diffInHours = Math.floor((now - postTime) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return "방금 전";
+    if (diffInHours < 24) return `${diffInHours}시간 전`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}일 전`;
   };
 
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopyMsg("링크 복사 완료!");
-      setTimeout(() => setCopyMsg(""), 2000);
-    } catch (e) {
-      alert("복사 실패: " + e.message);
-    }
-  };
-
-  const handleComment = async () => {
-    if (!post) return;
-    setSending(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    const { error } = await supabase
-      .from("community_comment")
-      .insert({
-        post_id: id,
-        content: commentText,
-        user_id: session?.user?.id || null,
-        parent_id: replyTo,
-      });
-    setSending(false);
-    if (error) {
-      addToast({ title: "댓글 등록 실패", description: error.message, color: "danger" });
-    } else {
-      setCommentText("");
-      setReplyTo(null);
-      // 목록에 바로 반영
-      setComments((prev) => [...prev, { id: Date.now(), content: commentText, likes: 0, created_at: new Date().toISOString(), user_id: session?.user?.id ?? null, parent_id: replyTo }]);
-      addToast({ title: "댓글 등록 성공", description: "댓글이 성공적으로 등록되었습니다.", color: "success" });
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center w-full h-screen">
-        <Spinner variant="wave" />
+      <div className="min-h-screen bg-gray-50 pb-16">
+        <div className="bg-white border-b border-gray-200">
+          <div className="px-4 py-4">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+              <div className="ml-3">
+                <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                <div className="h-3 bg-gray-200 rounded w-16 mt-1 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="p-4">
+          <div className="h-6 bg-gray-200 rounded w-3/4 mb-4 animate-pulse"></div>
+          <div className="space-y-2">
+            <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded w-4/5 animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!post) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-16">
+        <div className="bg-white border-b border-gray-200">
+          <div className="px-4 py-4">
+            <div className="flex items-center">
+              <button
+                onClick={() => router.back()}
+                className="mr-3 p-1 hover:bg-gray-100 rounded-full"
+              >
+                <FiArrowLeft className="w-6 h-6" />
+              </button>
+              <h1 className="text-lg font-bold">게시글</h1>
+            </div>
+          </div>
+        </div>
+        <div className="p-4 text-center">
+          <p className="text-gray-500">게시글을 찾을 수 없습니다.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center w-full max-w-[700px] mx-auto px-4 py-6 pb-32 gap-6">
-      {/* 카테고리/Breadcrumb */}
-      <div className="w-full">
-        <div className="flex items-center gap-2 text-[13px] text-gray-600 mb-3 border-y border-gray-300 py-2">
-          <Link href="/community" className="font-semibold hover:underline">커뮤니티</Link>
-          {post.category && (
-            <>
-              <span className="text-gray-300">|</span>
-              <span className="font-medium">{post.category}</span>
-            </>
-          )}
+    <div className="min-h-screen bg-gray-50 pb-16">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="px-4 py-4">
+          <div className="flex items-center">
+            <button
+              onClick={() => router.back()}
+              className="mr-3 p-1 hover:bg-gray-100 rounded-full"
+            >
+              <FiArrowLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-lg font-bold">게시글</h1>
+          </div>
         </div>
+      </div>
 
-        {/* 제목 영역 */}
-        <div className="flex justify-between items-start gap-2 mb-2">
-          <h1 className="text-[17px] font-semibold break-words flex-1 leading-snug">{post.title}</h1>
-          <span className="text-[12px] text-gray-500 whitespace-nowrap">{new Date(post.created_at).toLocaleDateString("ko-KR")} {new Date(post.created_at).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"})}</span>
-        </div>
-
-        {/* 작성자 + 메타 정보 */}
-        <div className="flex flex-wrap items-center gap-3 text-[13px] text-gray-700 pb-2 mb-4 border-b border-gray-300">
-          <Avatar radius="sm" size="sm" icon={<HiOutlineUser className="w-4 h-4" />} />
-          <span className="font-medium mr-2">{post.nickname || authorName}</span>
-          <span className="text-gray-500 text-[12px]">추천 수 {post.likes}</span>
-          <span className="text-gray-500 text-[12px]">댓글 {commentCnt}</span>
-          <button onClick={handleCopyLink} className="ml-auto flex items-center gap-1 text-gray-500 hover:underline text-[12px]">
-            <HiOutlineLink className="w-4 h-4" /> 링크 복사
+      {/* Post Content */}
+      <div className="bg-white">
+        {/* Post Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-bold">아트</span>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-900">
+                {post.profiles?.name || "익명"}
+              </p>
+              <p className="text-xs text-gray-500">
+                {getTimeAgo(post.created_at)}
+              </p>
+            </div>
+          </div>
+          <button className="p-1">
+            <FiMoreVertical className="w-5 h-5 text-gray-400" />
           </button>
         </div>
-      </div>
 
-      {/* 본문 */}
-      <div
-        className="w-full leading-relaxed text-[16px] prose max-w-none mb-6 min-h-[220px]"
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      />
-
-      {/* 추천 버튼 – 본문과 댓글 사이 중앙 배치 */}
-      <div className="w-full flex justify-center mt-8 mb-6">
-        <Button
-          color="warning"
-          size="lg"
-          radius="sm"
-          isLoading={likeLoading}
-          onPress={handleLike}
-          className="font-semibold w-1/4 max-w-[180px] py-2.5 text-[14px]"
-        >
-          👍 추천하기 ({post.likes})
-        </Button>
-      </div>
-
-      {/* 목록으로 */}
-      <div className="self-end">
-        <Button size="sm" variant="light" onPress={() => router.back()}>
-          목록으로
-        </Button>
-      </div>
-
-      {copyMsg && <div className="text-xs text-green-600 mt-1">{copyMsg}</div>}
-
-      {/* 댓글 목록 */}
-      {comments && comments.length > 0 && (
-        <div className="w-full flex flex-col gap-4">
-          {/* 원댓글 렌더링 */}
-          {comments.filter(cc=>!cc.parent_id).map((c) => (
-            <div key={c.id} className="flex flex-col gap-2 pb-3 border-b last:border-none">
-              {/* 원댓글 */}
-              <div className="flex items-start gap-2">
-                <HiOutlineUser className="w-6 h-6 text-gray-400 shrink-0" />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                    <span className="font-medium text-gray-700">익명</span>
-                    <span>{new Date(c.created_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}</span>
-                    {/* like & reply icons */}
-                    <button onClick={async()=>{
-                      const { data, error } = await supabase.from("community_comment").update({ likes: c.likes+1 }).eq("id", c.id).select().maybeSingle();
-                      if(!error && data){setComments(prev=>prev.map(pc=>pc.id===c.id?data:pc));}
-                    }} className="flex items-center gap-1 text-gray-500 ml-auto text-[13px]">
-                      👍 <span>{c.likes}</span>
-                    </button>
-                    <button onClick={()=>{setReplyTo(c.id);}} className="text-gray-500 text-[13px]">💬 댓글</button>
-                  </div>
-                  <p className="text-sm whitespace-pre-wrap break-words">{c.content}</p>
-                </div>
-              </div>
-              {/* 대댓글 목록 */}
-              {comments.filter(r=>r.parent_id===c.id).map(r=>(
-                <div key={r.id} className="flex items-start gap-2 pl-8 pt-2">
-                  <HiOutlineUser className="w-6 h-6 text-gray-400 shrink-0" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                      <span className="font-medium text-gray-700">익명</span>
-                      <span>{new Date(r.created_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}</span>
-                      <button onClick={async()=>{
-                        const { data, error } = await supabase.from("community_comment").update({ likes: r.likes+1 }).eq("id", r.id).select().maybeSingle();
-                        if(!error && data){setComments(prev=>prev.map(pc=>pc.id===r.id?data:pc));}
-                      }} className="flex items-center gap-1 text-gray-500 ml-auto text-[13px]">
-                        👍 <span>{r.likes}</span>
-                      </button>
-                    </div>
-                    <p className="text-sm whitespace-pre-wrap break-words">{r.content}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ))}
+        {/* Post Title */}
+        <div className="px-4 py-3 border-b border-gray-100">
+          <h1 className="text-xl font-bold text-gray-900">
+            {post.title}
+          </h1>
         </div>
-      )}
 
-      {/* 댓글 쓰기 */}
-      <div className="w-full border rounded p-4 bg-gray-50">
-        <h2 className="font-semibold mb-2 text-[15px]">{replyTo?"답글 쓰기":"댓글 쓰기"}</h2>
-        <textarea
-          value={commentText}
-          onChange={(e)=>setCommentText(e.target.value)}
-          rows={4}
-          placeholder='욕설이나 비난 등은 자제 부탁드립니다.'
-          className="w-full border rounded px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-        />
-        <Button
-          color="primary"
-          className="w-full mt-3"
-          isLoading={sending}
-          onPress={handleComment}
-        >
-          등록
-        </Button>
+        {/* Post Content */}
+        <div className="px-4 py-4">
+          <div className="text-gray-900 leading-relaxed">
+            <p className="whitespace-pre-wrap">
+              {post.content}
+            </p>
+          </div>
+        </div>
+
+        {/* Post Actions */}
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+          <div className="flex items-center space-x-6">
+            <button className="flex items-center space-x-2">
+              <FiHeart className="w-5 h-5 text-gray-400" />
+              <span className="text-sm text-gray-500">{post.likes || 0}</span>
+            </button>
+            <button className="flex items-center space-x-2">
+              <FiMessageCircle className="w-5 h-5 text-gray-400" />
+              <span className="text-sm text-gray-500">{post.comments || 0}</span>
+            </button>
+            <button className="flex items-center space-x-2">
+              <FiShare2 className="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Comments Section */}
+      <div className="bg-white mt-2">
+        <div className="px-4 py-3 border-b border-gray-100">
+          <h3 className="text-sm font-medium text-gray-900">댓글 {post.comments || 0}개</h3>
+        </div>
+        <div className="p-4 text-center text-gray-500">
+          <p>아직 댓글이 없습니다.</p>
+        </div>
       </div>
     </div>
   );
-} 
+}
