@@ -10,6 +10,153 @@ import JournalistApplicationPopup from "../mypage/success/components/JournalistA
 import VideoPlayer from "./components/VideoPlayer";
 import Head from "next/head";
 import { generateSEOMeta, PAGE_SEO } from "@/utils/seo";
+import { ReviewCards } from "../components/review-cards";
+// 리뷰 데이터를 커뮤니티 게시글 카드 형태로 보여주는 간단한 피드 컴포넌트
+function ReviewFeedCards() {
+  const supabase = createClient();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const maskName = (name) => {
+    if (!name) return '익명 사용자';
+    if (name.includes('@')) {
+      const e = name.split('@')[0];
+      return e.length > 1 ? e[0] + '**' : e;
+    }
+    return name.length > 1 ? name[0] + '**' : name;
+  };
+
+  const cleanContent = (content) => {
+    if (!content || typeof content !== 'string') return '';
+    let t = content;
+    const patterns = [
+      /\[커스텀\s*리뷰\][^\n]*?/gi,
+      /\[커스텀\s*전시회\][^\n]*?/gi,
+      /\[Custom\s*Review\][^\n]*?/gi,
+      /전시회:\s*[^,\n]*,?/gi,
+      /갤러리:\s*[^,\n]*,?/gi,
+      /장소:\s*[^,\n]*,?/gi,
+      /제목:\s*[^,\n]*,?/gi,
+      /방문일:\s*[^,\n]*,?/gi
+    ];
+    patterns.forEach(p=>{ t = t.replace(p,''); });
+    t = t.replace(/\s+/g,' ').trim();
+    return t;
+  };
+
+  const formatRelative = (iso) => {
+    try {
+      const d = new Date(iso);
+      const diffMs = Date.now() - d.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays < 1) {
+        const h = Math.floor(diffMs / (1000 * 60 * 60));
+        if (h <= 0) return '방금 전';
+        return `${h}시간 전`;
+      }
+      if (diffDays < 30) return `${diffDays}일 전`;
+      const months = Math.floor(diffDays / 30);
+      return `${months}달 전`;
+    } catch { return ''; }
+  };
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('exhibition_review')
+        .select(`*, exhibition:exhibition_id(id, contents, photo)`) 
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (!error) setItems(data || []);
+      setLoading(false);
+    };
+    fetchReviews();
+  }, []);
+
+  if (loading) return (
+    <div className="space-y-4">
+      {[1,2,3].map(i => (
+        <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 animate-pulse">
+          <div className="h-4 bg-gray-200 w-1/3 mb-3"/>
+          <div className="h-3 bg-gray-200 w-2/3 mb-2"/>
+          <div className="h-3 bg-gray-200 w-1/2"/>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (!items || items.length === 0) {
+    return (
+      <div className="text-center text-gray-500 py-8">아직 승인된 리뷰가 없습니다.</div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {items.map((rv) => (
+        <div key={rv.id} className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
+          {/* 헤더 */}
+          <div className="p-4 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center">
+                  <span className="font-semibold text-gray-700">{maskName(rv.name||'U')[0]}</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-gray-900">{maskName(rv.name)}</h3>
+                    <span className="text-xs text-gray-500">{formatRelative(rv.created_at)}</span>
+                  </div>
+                </div>
+              </div>
+              <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">리뷰</span>
+            </div>
+          </div>
+          {/* 본문 */}
+          <div className="p-4">
+            <h4 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">{rv.exhibition?.contents || '전시회 리뷰'}</h4>
+            <p className="text-gray-700 text-base leading-relaxed whitespace-pre-wrap">{cleanContent(rv.description || rv.content || '리뷰 내용')}</p>
+
+            {/* 이미지 섹션: 내용 하단에 전체 표시 */}
+            {(() => {
+              let urls = [];
+              if (rv.proof_images && Array.isArray(rv.proof_images)) {
+                urls = rv.proof_images;
+              } else if (rv.images && Array.isArray(rv.images)) {
+                urls = rv.images;
+              } else if (typeof rv.images === 'string') {
+                try { const arr = JSON.parse(rv.images); if (Array.isArray(arr)) urls = arr; } catch {}
+                if (urls.length === 0 && rv.images.includes(',')) urls = rv.images.split(',').map(v=>v.trim());
+              } else if (rv.proof_image) {
+                urls = [rv.proof_image];
+              }
+              if (urls.length === 0 && rv.exhibition?.photo) urls = [rv.exhibition.photo];
+              if (urls.length === 0) return null;
+              return (
+                <div className="mt-3 space-y-3">
+                  {urls.map((u, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={i} src={u} alt={`리뷰 이미지 ${i+1}`} className="w-full h-auto rounded-lg object-cover" />
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+          {/* 액션바 */}
+          <div className="p-4 border-t border-gray-100">
+            <div className="flex items-center space-x-6 text-gray-600">
+              <button className="flex items-center space-x-1 hover:text-red-600 transition-colors"><Heart className="w-5 h-5"/><span className="text-sm">0</span></button>
+              <button className="flex items-center space-x-1 hover:text-blue-600 transition-colors"><MessageCircle className="w-5 h-5"/><span className="text-sm">0</span></button>
+              <button className="flex items-center space-x-1 hover:text-green-600 transition-colors"><Share className="w-5 h-5"/></button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // 카테고리 한글 라벨 매핑
 const CATEGORY_LABELS = {
@@ -107,20 +254,23 @@ function TrendingPostsCarousel({ posts }) {
   ];
   
   useEffect(() => {
+    if (!displayPosts || displayPosts.length <= 1) {
+      // 0개 또는 1개면 회전 애니메이션 불필요
+      return;
+    }
     const interval = setInterval(() => {
       setIsAnimating(true);
-      
       // 애니메이션 완료 후 다음 인덱스로 변경
       setTimeout(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % displayPosts.length);
         setIsAnimating(false);
-      }, 300); // 애니메이션 지속 시간
-    }, 3000); // 3초마다 변경
-    
+      }, 300);
+    }, 3000);
     return () => clearInterval(interval);
-  }, [displayPosts.length]);
+  }, [displayPosts && displayPosts.length]);
   
-  const currentPost = displayPosts[currentIndex];
+  if (!displayPosts || displayPosts.length === 0) return null;
+  const currentPost = displayPosts[currentIndex] || displayPosts[0];
   
   return (
     <div className="bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors p-3">
@@ -319,7 +469,7 @@ function CommunityPageContent() {
         .select('*');
 
       // 카테고리별 필터링
-      if (activeTab !== 'all') {
+      if (activeTab !== 'all' && activeTab !== 'review') {
         const categoryMap = {
           'free': 'free',
           'exhibition': 'exhibition',
@@ -332,6 +482,11 @@ function CommunityPageContent() {
         if (categoryMap[activeTab]) {
           query = query.eq('category', categoryMap[activeTab]);
         }
+      }
+
+      // 리뷰 탭은 커뮤니티 게시판이 아닌 메인 리뷰 카드 섹션을 사용하므로 별도 쿼리 불필요
+      if (activeTab === 'review') {
+        query = query.eq('category', 'review');
       }
 
       const { data, error } = await query
@@ -798,6 +953,10 @@ function CommunityPageContent() {
                   })()}
                 </div>
               </div>
+            </div>
+          ) : activeTab === 'review' ? (
+            <div className="max-w-2xl mx-auto w-full px-4 pt-4 pb-6">
+              <ReviewFeedCards />
             </div>
           ) : posts.length === 0 ? (
             <div className="text-center py-12">

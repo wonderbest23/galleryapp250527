@@ -53,8 +53,9 @@ export function PostReportModal({ isOpen, onClose, postId, postTitle }) {
         return;
       }
 
+      // UUID 기반 신고 테이블로 저장 (타입 불일치 방지)
       const { data, error } = await supabase
-        .from("post_reports")
+        .from("post_reports_uuid")
         .insert([
           {
             post_id: postId,
