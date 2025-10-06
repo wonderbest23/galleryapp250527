@@ -14,6 +14,36 @@ export default function CommunityPostDetail({ params }) {
   const [post, setPost] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+  const [commentText, setCommentText] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [relatedPosts, setRelatedPosts] = useState([]);
+
+  // 카테고리 한글 라벨 매핑 및 뱃지 색상
+  const CATEGORY_LABELS = {
+    all: '전체',
+    free: '자유',
+    exhibition: '전시회',
+    short_video: '숏폼',
+    discussion: '토론',
+    review: '리뷰',
+    journalist: '기자단'
+  };
+  const getBadgeClass = (category) => {
+    switch (category) {
+      case 'discussion':
+        return 'bg-green-100 text-green-700';
+      case 'exhibition':
+        return 'bg-blue-100 text-blue-700';
+      case 'review':
+        return 'bg-amber-100 text-amber-700';
+      case 'short_video':
+        return 'bg-purple-100 text-purple-700';
+      case 'journalist':
+        return 'bg-slate-100 text-slate-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -29,14 +59,7 @@ export default function CommunityPostDetail({ params }) {
       try {
         const { data, error } = await supabase
           .from('community_post')
-          .select(`
-            *,
-            profiles:user_id (
-              id,
-              name,
-              avatar_url
-            )
-          `)
+          .select('*')
           .eq('id', params.id)
           .single();
 
@@ -45,7 +68,37 @@ export default function CommunityPostDetail({ params }) {
           return;
         }
 
-        setPost(data);
+        // profiles 정보를 별도로 가져와서 병합
+        if (data && data.user_id) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url')
+            .eq('id', data.user_id)
+            .single();
+          
+          if (!profileError && profile) {
+            setPost({
+              ...data,
+              profiles: profile
+            });
+          } else {
+            setPost(data);
+          }
+        } else {
+          setPost(data);
+        }
+
+        // 관련 게시글 로드 (같은 카테고리, 본인 제외 상위 5개)
+        if (data?.category) {
+          const { data: rel } = await supabase
+            .from('community_post')
+            .select('id, title, created_at')
+            .eq('category', data.category)
+            .neq('id', data.id)
+            .order('created_at', { ascending: false })
+            .limit(5);
+          setRelatedPosts(rel || []);
+        }
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -57,6 +110,63 @@ export default function CommunityPostDetail({ params }) {
       fetchPost();
     }
   }, [params.id]);
+
+  const handleLike = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+      const { error } = await supabase.rpc('like_post_once', { p_post_id: post.id, p_user_id: user.id });
+      if (error) {
+        console.log('like error', error);
+        return;
+      }
+      // 새로고침
+      const { data: refreshed } = await supabase.from('community_post').select('*').eq('id', post.id).single();
+      if (refreshed) setPost(prev => ({ ...prev, likes: refreshed.likes }));
+    } catch (e) {
+      console.log('like exception', e);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const shareData = { title: post.title, text: post.content, url: window.location.href };
+      if (navigator.share) await navigator.share(shareData);
+      else {
+        await navigator.clipboard.writeText(shareData.url);
+        alert('링크가 클립보드에 복사되었습니다.');
+      }
+    } catch (e) {
+      console.log('share error', e);
+    }
+  };
+
+  const submitComment = async () => {
+    if (!commentText.trim()) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+      setSubmittingComment(true);
+      const { error } = await supabase.from('community_comments').insert({
+        post_id: post.id,
+        user_id: user.id,
+        content: commentText.trim()
+      });
+      if (!error) {
+        setCommentText("");
+      }
+    } catch (e) {
+      console.log('comment error', e);
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -188,8 +298,8 @@ export default function CommunityPostDetail({ params }) {
                   </p>
                 </div>
               </div>
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
-                {post.category}
+              <span className={`px-3 py-1 text-sm rounded-full ${getBadgeClass(post.category)}`}>
+                {CATEGORY_LABELS[post.category] || post.category}
               </span>
             </div>
 
@@ -226,24 +336,45 @@ export default function CommunityPostDetail({ params }) {
                 />
               </div>
             )}
-          </div>
+            {/* 액션 + 댓글 입력 (같은 카드 하단에 결합) */}
+            <div className="mt-6 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-6">
+                  <button onClick={handleLike} className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors">
+                    <FiHeart className="w-5 h-5" />
+                    <span>{post.likes || 0}</span>
+                  </button>
+                  <button className="flex items-center space-x-2 text-gray-600">
+                    <FiMessageCircle className="w-5 h-5" />
+                    <span>댓글</span>
+                  </button>
+                  <button onClick={handleShare} className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors">
+                    <FiShare2 className="w-5 h-5" />
+                    <span>공유</span>
+                  </button>
+                </div>
+              </div>
 
-          {/* 액션 버튼들 */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
-                <button className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors">
-                  <FiHeart className="w-5 h-5" />
-                  <span>좋아요</span>
-                </button>
-                <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
-                  <FiMessageCircle className="w-5 h-5" />
-                  <span>댓글</span>
-                </button>
-                <button className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors">
-                  <FiShare2 className="w-5 h-5" />
-                  <span>공유</span>
-                </button>
+              {/* 댓글 입력 */}
+              <div className="flex items-center gap-3 mt-4">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                  {(currentUser?.user_metadata?.full_name || 'U').charAt(0)}
+                </div>
+                <div className="flex-1 flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="댓글을 작성해보세요..."
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    onKeyPress={(e)=>{ if(e.key==='Enter') submitComment(); }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <button onClick={submitComment} disabled={submittingComment} className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-full disabled:opacity-50">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -251,11 +382,22 @@ export default function CommunityPostDetail({ params }) {
           {/* 관련 게시글 */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">관련 게시글</h3>
-            <div className="space-y-4">
-              <Link href="/community" className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <h4 className="font-medium text-gray-900 mb-2">더 많은 커뮤니티 글 보기</h4>
-                <p className="text-sm text-gray-600">다양한 예술 관련 이야기를 만나보세요</p>
-              </Link>
+            <div className="space-y-2">
+              {relatedPosts && relatedPosts.length > 0 ? (
+                relatedPosts.map((p) => (
+                  <Link key={p.id} href={`/community/${p.id}`} className="block p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-900 line-clamp-1">{p.title}</span>
+                      <span className="text-xs text-gray-500">{new Date(p.created_at).toLocaleDateString('ko-KR')}</span>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <Link href="/community" className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  <h4 className="font-medium text-gray-900 mb-2">더 많은 커뮤니티 글 보기</h4>
+                  <p className="text-sm text-gray-600">다양한 예술 관련 이야기를 만나보세요</p>
+                </Link>
+              )}
             </div>
           </div>
         </div>

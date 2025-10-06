@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { createClient } from "@/utils/supabase/client";
+// import { useScrollToTop } from "./components/ScrollToTop";
 import { Heart, MessageCircle, Share, Plus, MoreHorizontal, Flame, Volume2, VolumeX } from 'lucide-react';
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -10,10 +11,149 @@ import VideoPlayer from "./components/VideoPlayer";
 import Head from "next/head";
 import { generateSEOMeta, PAGE_SEO } from "@/utils/seo";
 
+// 카테고리 한글 라벨 매핑
+const CATEGORY_LABELS = {
+  all: '전체',
+  free: '자유',
+  exhibition: '전시회',
+  short_video: '숏폼',
+  discussion: '토론',
+  '토론': '토론',
+  review: '리뷰',
+  journalist: '기자단'
+};
+
+// 카테고리 뱃지 스타일 (필요 시 카테고리별 색상 확장 가능)
+const getCategoryBadgeClass = (category) => {
+  const key = CATEGORY_LABELS[category] ? category : (category || '');
+  switch (key) {
+    case 'discussion':
+    case '토론':
+      return 'bg-green-100 text-green-700';
+    case 'exhibition':
+      return 'bg-blue-100 text-blue-700';
+    case 'review':
+      return 'bg-amber-100 text-amber-700';
+    case 'short_video':
+      return 'bg-purple-100 text-purple-700';
+    case 'journalist':
+      return 'bg-slate-100 text-slate-700';
+    case 'free':
+    default:
+      return 'bg-gray-100 text-gray-700';
+  }
+};
+
+// 상대 시간 포맷터 (예: 7일 전)
+const getRelativeTime = (dateString) => {
+  try {
+    const date = new Date(dateString);
+    const diffMs = Date.now() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays < 1) {
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      if (diffHours <= 0) return '방금 전';
+      return `${diffHours}시간 전`;
+    }
+    return `${diffDays}일 전`;
+  } catch (_) {
+    return '';
+  }
+};
+
+// 카테고리별 임시 더미 포스트 생성
+const makeDummyPosts = (category, count = 3) => {
+  const korean = CATEGORY_LABELS[category] || '전체';
+  const samples = [
+    {
+      title: `${korean} 커뮤니티에서 나눠요` ,
+      content: `오늘 전시 다녀온 소감 한 줄로 남겨요. 관람 동선과 조명이 특히 좋았어요. 여러분은 어떠셨나요?`,
+    },
+    {
+      title: `${korean} 이야기 모음` ,
+      content: `최근 트렌드가 확실히 보이는 듯합니다. 작은 변화들이 관람 경험을 바꾸네요.`,
+    },
+    {
+      title: `${korean} 톡톡`,
+      content: `가볍게 한마디 남겨요. 좋은 공간과 작품은 결국 사람을 불러 모으네요.`,
+    },
+  ];
+  return Array.from({ length: count }).map((_, i) => ({
+    id: `dummy-${category}-${i}-${Math.random().toString(36).slice(2,8)}`,
+    user_id: null,
+    category,
+    title: samples[i % samples.length].title,
+    content: samples[i % samples.length].content,
+    created_at: new Date(Date.now() - (i + 1) * 86400000).toISOString(),
+    profiles: {
+      full_name: ['아트취향조사단','익명 사용자','갤러리러버'][i % 3],
+      avatar_url: null
+    }
+  }));
+};
+
+// 실시간 인기글 캐러셀 컴포넌트
+function TrendingPostsCarousel({ posts }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  
+  // 실제 DB 데이터를 우선 사용, 없으면 샘플 데이터
+  const displayPosts = posts && posts.length > 0 ? posts : [
+    { id: "129daaba-5be3-4cd5-af72-63b2e3157bb0", title: "요즘 미술시장 어떻게 보세요", content: "작년보단 조용하지만 꾸준히 보이네요. 디지털 작품을 소장한다는 감각이 아직 낯선 분들도 많고요.", views: 1245, likes: 89 },
+    { id: "aebc75c9-0d43-4cb5-9347-48c54ed73247", title: "작품 설명이 구매에 주는 영향", content: "캡션 높이와 조도가 안정적이라 읽고 보기 편했습니다. 동선이 막히지 않게 작은 여유 공간을 둔 것도 좋았고요.", views: 567, likes: 45 },
+    { id: "a23b51f4-8873-4061-9f93-7dd37e2f9d86", title: "전시 동선과 조도 얘기", content: "전시장의 동선과 조도는 관람객의 경험에 큰 영향을 미칩니다. 적절한 조명과 흐름이 중요해요.", views: 234, likes: 18 },
+    { id: "00fa6277-7d1a-46c0-b78d-fdd51047ee25", title: "드로잉 입문하면서 느낀 점", content: "드로잉을 시작하면서 느낀 점들을 공유해보세요. 초보자도 쉽게 따라할 수 있는 팁들이 있으면 좋겠어요.", views: 189, likes: 23 },
+    { id: "180d3bfe-1fd2-43ae-aeab-4f353eaf2030", title: "레지던시 다녀오고 남는 것", content: "레지던시 프로그램을 경험한 후 느낀 점과 배운 것들을 공유해보세요.", views: 345, likes: 67 }
+  ];
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsAnimating(true);
+      
+      // 애니메이션 완료 후 다음 인덱스로 변경
+      setTimeout(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % displayPosts.length);
+        setIsAnimating(false);
+      }, 300); // 애니메이션 지속 시간
+    }, 3000); // 3초마다 변경
+    
+    return () => clearInterval(interval);
+  }, [displayPosts.length]);
+  
+  const currentPost = displayPosts[currentIndex];
+  
+  return (
+    <div className="bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors p-3">
+      <div className="relative overflow-hidden">
+        <Link href={`/community/${currentPost.id}`} className="block cursor-pointer">
+          <div
+            className={`flex items-center gap-3 transform transition-all duration-300 ${
+              isAnimating ? 'translate-y-full opacity-0' : 'translate-y-0 opacity-100'
+            }`}
+          >
+            <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
+              {currentIndex + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-gray-900 truncate">{currentPost.title}</h3>
+              <p className="text-sm text-gray-500 mt-1 line-clamp-1">{currentPost.content}</p>
+            </div>
+          </div>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function CommunityPageContent() {
   const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  // 페이지 진입 시 최상단으로 스크롤
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const [activeTab, setActiveTab] = useState('all');
   const [posts, setPosts] = useState([]);
   const [trendingPosts, setTrendingPosts] = useState([]);
@@ -22,11 +162,18 @@ function CommunityPageContent() {
   const [mutedVideos, setMutedVideos] = useState({});
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
+  const [selectedPostTitle, setSelectedPostTitle] = useState("");
   const [showJournalistApplication, setShowJournalistApplication] = useState(false);
+  
+  // 댓글 관련 상태
+  const [showComments, setShowComments] = useState({});
+  const [commentText, setCommentText] = useState({});
+  const [submittingComment, setSubmittingComment] = useState({});
   
   // 광고 배너 상태
   const [adBanner, setAdBanner] = useState(null);
   const [adBanners, setAdBanners] = useState([]);
+  const [hideJournalBanner, setHideJournalBanner] = useState(false);
 
   const tabs = [
     { id: 'all', label: '전체' },
@@ -81,21 +228,42 @@ function CommunityPageContent() {
       // 트렌딩 포스트 가져오기 (좋아요 수 기준)
       const { data, error } = await supabase
         .from('community_post')
-        .select(`
-          *,
-          profiles:user_id (
-            id,
-            name,
-            avatar_url
-          )
-        `)
-        .eq('is_published', true)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
 
       if (error) {
         console.error('트렌딩 포스트 조회 오류:', error);
         return;
+      }
+
+      // profiles 정보를 별도로 가져와서 병합
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(post => post.user_id).filter(id => id))];
+        
+        if (userIds.length > 0) {
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url')
+            .in('id', userIds);
+          
+          if (!profilesError && profiles) {
+            const profilesMap = {};
+            profiles.forEach(profile => {
+              profilesMap[profile.id] = profile;
+            });
+            
+            // 게시글에 profiles 정보 병합
+            const postsWithProfiles = data.map(post => ({
+              ...post,
+              profiles: post.user_id ? profilesMap[post.user_id] : null
+            }));
+            
+            console.log('트렌딩 포스트:', postsWithProfiles);
+            setTrendingPosts(postsWithProfiles);
+            return;
+          }
+        }
       }
 
       console.log('트렌딩 포스트:', data);
@@ -112,7 +280,7 @@ function CommunityPageContent() {
         .select('*')
         .eq('type', 'banner')
         .eq('is_active', true)
-        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
         .limit(1)
         .single();
 
@@ -120,7 +288,7 @@ function CommunityPageContent() {
         setAdBanner(data);
       }
     } catch (error) {
-      console.error('광고 배너 조회 오류:', error);
+      console.log('광고 배너 조회 오류');
     }
   };
 
@@ -131,14 +299,14 @@ function CommunityPageContent() {
         .select('*')
         .eq('type', 'ad_banner')
         .eq('is_active', true)
-        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
         .limit(3);
 
       if (!error && data) {
         setAdBanners(data);
       }
     } catch (error) {
-      console.error('광고 배너들 조회 오류:', error);
+      console.log('광고 배너들 조회 오류');
     }
   };
 
@@ -148,15 +316,7 @@ function CommunityPageContent() {
       
       let query = supabase
         .from('community_post')
-        .select(`
-          *,
-          profiles:user_id (
-            id,
-            name,
-            avatar_url
-          )
-        `)
-        .or('is_published.eq.true,is_published.is.null');
+        .select('*');
 
       // 카테고리별 필터링
       if (activeTab !== 'all') {
@@ -183,8 +343,44 @@ function CommunityPageContent() {
         return;
       }
 
-      console.log('조회된 게시글:', data?.length, '개');
-      setPosts(data || []);
+      // profiles 정보를 별도로 가져와서 병합
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(post => post.user_id).filter(id => id))];
+        
+        if (userIds.length > 0) {
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url')
+            .in('id', userIds);
+          
+          if (!profilesError && profiles) {
+            const profilesMap = {};
+            profiles.forEach(profile => {
+              profilesMap[profile.id] = profile;
+            });
+            
+            // 게시글에 profiles 정보 병합
+            const postsWithProfiles = data.map(post => ({
+              ...post,
+              profiles: post.user_id ? profilesMap[post.user_id] : null
+            }));
+            
+            console.log('조회된 게시글:', postsWithProfiles.length, '개');
+            setPosts(postsWithProfiles);
+            return;
+          }
+        }
+      }
+
+      let result = data || [];
+
+      // 활성 탭에 게시글이 없으면 더미 데이터로 채움 (UI 확인용)
+      if ((activeTab !== 'all') && result.filter(p => p.category === activeTab).length === 0) {
+        result = result.concat(makeDummyPosts(activeTab, 3));
+      }
+
+      console.log('조회된 게시글:', result?.length, '개');
+      setPosts(result);
     } catch (error) {
       console.error('게시글 조회 중 오류:', error);
     }
@@ -197,9 +393,107 @@ function CommunityPageContent() {
     }));
   };
 
-  const handleReport = (postId) => {
+  const handleReport = (postId, postTitle) => {
     setSelectedPostId(postId);
+    setSelectedPostTitle(postTitle);
     setShowReportModal(true);
+  };
+
+  // 좋아요 기능
+  const handleLike = async (postId) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      // 좋아요 토글
+      const { error } = await supabase.rpc('like_post_once', {
+        p_post_id: postId,
+        p_user_id: user.id
+      });
+
+      if (error) {
+        console.error('좋아요 처리 오류:', error);
+        return;
+      }
+
+      // 게시글 목록 새로고침
+      fetchPosts();
+    } catch (error) {
+      console.error('좋아요 처리 중 오류:', error);
+    }
+  };
+
+  // 공유 기능
+  const handleShare = async (post) => {
+    try {
+      const shareData = {
+        title: post.title,
+        text: post.content,
+        url: `${window.location.origin}/community/${post.id}`,
+      };
+
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Web Share API가 지원되지 않는 경우 클립보드에 복사
+        await navigator.clipboard.writeText(shareData.url);
+        alert('링크가 클립보드에 복사되었습니다.');
+      }
+    } catch (error) {
+      console.error('공유 중 오류 발생:', error);
+    }
+  };
+
+  // 댓글 토글 기능
+  const toggleComments = (postId) => {
+    setShowComments(prev => ({
+      ...prev,
+      [postId]: !prev[postId]
+    }));
+  };
+
+  // 댓글 작성 기능
+  const handleCommentSubmit = async (postId) => {
+    const comment = commentText[postId];
+    if (!comment || !comment.trim()) {
+      alert('댓글을 입력해주세요.');
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      setSubmittingComment(prev => ({ ...prev, [postId]: true }));
+
+      const { error } = await supabase
+        .from('community_comments')
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          content: comment.trim()
+        });
+
+      if (error) {
+        console.error('댓글 작성 오류:', error);
+        alert('댓글 작성에 실패했습니다.');
+      } else {
+        setCommentText(prev => ({ ...prev, [postId]: '' }));
+        // 댓글 수 업데이트를 위해 게시글 목록 새로고침
+        fetchPosts();
+      }
+    } catch (error) {
+      console.error('댓글 작성 중 오류:', error);
+      alert('댓글 작성 중 오류가 발생했습니다.');
+    } finally {
+      setSubmittingComment(prev => ({ ...prev, [postId]: false }));
+    }
   };
 
   const seoMeta = generateSEOMeta({
@@ -227,14 +521,8 @@ function CommunityPageContent() {
         {/* 헤더 */}
         <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
           <div className="max-w-4xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-center">
               <h1 className="text-xl font-bold text-gray-900">커뮤니티</h1>
-              <Link
-                href="/community/write"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-              </Link>
             </div>
           </div>
         </div>
@@ -269,30 +557,33 @@ function CommunityPageContent() {
           </div>
         </div>
 
-        {/* 광고 배너 */}
-        {adBanner && (
-          <div className="px-4 pt-4">
-            <a 
-              href={adBanner.link_url || "#"} 
-              target={adBanner.link_url ? "_blank" : "_self"}
-              rel="noopener noreferrer"
-              className="block"
-            >
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                <div className="relative w-full h-24">
-                  <img
-                    src={adBanner.image_url}
-                    alt={adBanner.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
-                    <p className="text-white text-sm font-medium">{adBanner.title}</p>
-                  </div>
+        {/* 광고 배너 - 페이지 배경과 동일한 색상 */}
+        <div className="px-4 pt-4">
+          <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+            <div className="flex items-center gap-4">
+              {/* 광고 이미지 */}
+              <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="text-gray-600 text-xs text-center">
+                  <div className="font-bold">imgbb.com</div>
+                  <div className="text-xs">Image not found</div>
                 </div>
               </div>
-            </a>
+              
+              {/* 광고 텍스트 */}
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-900 text-lg">에어로케이 특별한 추석 특가</h3>
+                <p className="text-sm text-gray-600 mt-1">일본 항공권 편도 총액 4만원대~</p>
+              </div>
+              
+              {/* 화살표 아이콘 */}
+              <div className="text-gray-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
 
         {/* 광고 카드 섹션 */}
          {adBanners.length > 0 && (
@@ -307,18 +598,25 @@ function CommunityPageContent() {
                    className="block bg-gray-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
                  >
                    <div className="flex items-center gap-4">
-                     {/* 광고 이미지 - 파란색 배경 */}
-                     <div className="w-16 h-16 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                       <div className="text-white text-xs text-center">
-                         <div className="font-bold">imgbb.com</div>
-                         <div className="text-xs opacity-80">image not found</div>
-                       </div>
+                     {/* 광고 이미지 */}
+                     <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                       {banner.image_url ? (
+                         <img 
+                           src={banner.image_url} 
+                           alt={banner.title || "광고"}
+                           className="w-full h-full object-cover"
+                         />
+                       ) : (
+                         <div className="text-gray-500 text-xs text-center">
+                           <div className="font-bold">광고</div>
+                         </div>
+                       )}
                      </div>
                      
                      {/* 광고 텍스트 */}
                      <div className="flex-1 min-w-0">
-                       <h3 className="font-medium text-gray-900 truncate">{banner.title}</h3>
-                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">{banner.content}</p>
+                       <h3 className="font-medium text-gray-900 truncate">{banner.title || "광고"}</h3>
+                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">{banner.content || "광고 내용"}</p>
                        <div className="flex items-center mt-2">
                          <span className="text-xs text-blue-600 font-medium">자세히 보기</span>
                          <svg className="w-3 h-3 text-blue-600 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -333,160 +631,173 @@ function CommunityPageContent() {
            </div>
          )}
 
-        {/* 실시간 인기글 섹션 */}
-        {trendingPosts.length > 0 && (
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-4 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  <h2 className="text-lg font-bold text-gray-900">실시간 인기글</h2>
+        {/* 실시간 인기글 섹션 - 하나씩 돌아가면서 보이기 */}
+        <div className="px-4 pt-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="p-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 text-red-500">
+                  <svg fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
                 </div>
-              </div>
-              <div className="p-4">
-                <div className="space-y-3">
-                  {trendingPosts.map((post, index) => (
-                    <div key={post.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
-                          {index + 1}
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900 truncate">{post.title}</h3>
-                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                          <span>👁 {post.views || 0}</span>
-                          <span>💬 {post.comments_count || 0}</span>
-                          <span>❤️ {post.likes_count || 0}</span>
-                          <span className="text-xs">{new Date(post.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <Link
-                          href={`/community/${post.id}`}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                        >
-                          보기
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <h2 className="text-lg font-bold text-gray-900">실시간 인기글</h2>
               </div>
             </div>
+            <div className="p-4">
+              <TrendingPostsCarousel posts={trendingPosts} />
+            </div>
           </div>
-        )}
+        </div>
 
-        {/* 게시글 목록 */}
-        <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* 게시글 목록 - 인스타그램 피드 스타일 */}
+        <div className="max-w-2xl mx-auto px-4 py-6">
           {activeTab === 'journalist' ? (
-            /* 기자단 전용 섹션 */
-            <div className="space-y-6">
-              {/* 기자단 소개 카드 */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold">기자단</h2>
-                    <p className="text-blue-100">전문적인 예술 저널리즘을 위한 공간</p>
-                  </div>
-                </div>
-                <p className="text-blue-100 mb-4">
-                  아트앤브릿지 기자단은 예술계의 소식을 전문적으로 전달하는 역할을 합니다. 
-                  전시회 리뷰, 아티스트 인터뷰, 예술계 동향 등을 다룹니다.
-                </p>
-                <div className="flex gap-3">
+            /* 기자단 전용 섹션 - 이미지 디자인 */
+            <div className="space-y-8">
+              {/* 아트앤브릿지 기자단 배너 (좌측 정렬, 클릭 시 숨김) */}
+              {!hideJournalBanner && (
+                <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-4 sm:p-6 text-white">
+                  {/* 닫기 버튼 */}
                   <button
-                    onClick={() => setShowJournalistApplication(true)}
-                    className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+                    aria-label="배너 닫기"
+                    onClick={() => setHideJournalBanner(true)}
+                    className="absolute top-3 right-3 text-white/80 hover:text-white transition-colors"
                   >
-                    기자단 신청하기
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
                   </button>
-                  <Link
-                    href="/community/write?category=journalist"
-                    className="bg-white/20 text-white px-4 py-2 rounded-lg font-medium hover:bg-white/30 transition-colors"
-                  >
-                    기사 작성하기
-                  </Link>
-                </div>
-              </div>
-
-              {/* 기자단 활동 가이드 */}
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">기자단 활동 가이드</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">1</div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">전시회 리뷰</h4>
-                        <p className="text-sm text-gray-600">전시회를 방문하고 전문적인 관점에서 리뷰를 작성합니다.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">2</div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">아티스트 인터뷰</h4>
-                        <p className="text-sm text-gray-600">신진 작가와의 인터뷰를 통해 예술계의 새로운 소식을 전달합니다.</p>
-                      </div>
-                    </div>
+                  <div className="max-w-xl">
+                    <h1 className="text-[22px] sm:text-[28px] font-extrabold leading-snug">아트앤브릿지 기자단</h1>
+                    <p className="mt-2 text-blue-100 text-sm sm:text-base">전시회의 생생한 감동을 전하고 특별한 혜택을 누리세요!</p>
+                    <button
+                      onClick={() => { setShowJournalistApplication(true); setHideJournalBanner(true); }}
+                      className="mt-4 inline-flex items-center gap-2 bg-white text-blue-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors"
+                    >
+                      기자단 신청하기
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                    </button>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">예술계 동향</h4>
-                        <p className="text-sm text-gray-600">미술계의 최신 트렌드와 이슈를 분석하고 전달합니다.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">4</div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">전문성 향상</h4>
-                        <p className="text-sm text-gray-600">지속적인 학습과 경험을 통해 전문성을 높입니다.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 기자단 게시글 */}
-              {posts.filter(post => post.category === 'journalist').length > 0 ? (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-gray-900">기자단 기사</h3>
-                  {posts.filter(post => post.category === 'journalist').map((post) => (
-                    <div key={post.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                      <div className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">기자단</span>
-                          <span className="text-sm text-gray-500">{new Date(post.created_at).toLocaleDateString()}</span>
-                        </div>
-                        <h3 className="font-bold text-gray-900 mb-2">{post.title}</h3>
-                        <p className="text-gray-600 text-sm line-clamp-2">{post.content}</p>
-                        <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
-                          <span>👁 {post.views || 0}</span>
-                          <span>💬 {post.comments_count || 0}</span>
-                          <span>❤️ {post.likes_count || 0}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 mb-4">아직 기자단 기사가 없습니다.</p>
-                  <Link
-                    href="/community/write?category=journalist"
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    첫 번째 기사 작성하기
-                  </Link>
                 </div>
               )}
+
+              {/* 명예의 전당 */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm">
+                <div className="flex items-center gap-2 mb-6">
+                  <h2 className="text-xl font-bold text-gray-900">명예의 전당</h2>
+                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                </div>
+                <div className="grid grid-cols-3 gap-4 items-start">
+                  {/* 김민준 */}
+                  <div className="text-center">
+                    <div className="relative w-14 h-14 mx-auto mb-2">
+                      <div className="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center">
+                        <span className="text-lg font-bold text-gray-600">김</span>
+                      </div>
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
+                        <span className="text-[10px] font-bold text-white">1</span>
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-sm">김민준</h3>
+                    <p className="text-xs text-gray-600">전시 해설가</p>
+                  </div>
+                  
+                  {/* 이서연 */}
+                  <div className="text-center">
+                    <div className="relative w-14 h-14 mx-auto mb-2">
+                      <div className="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center">
+                        <span className="text-lg font-bold text-gray-600">이</span>
+                      </div>
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-400 rounded-full flex items-center justify-center">
+                        <span className="text-[10px] font-bold text-white">2</span>
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-sm">이서연</h3>
+                    <p className="text-xs text-gray-600">아트 칼럼니스트</p>
+                  </div>
+                  
+                  {/* 박지훈 */}
+                  <div className="text-center">
+                    <div className="relative w-14 h-14 mx-auto mb-2">
+                      <div className="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center">
+                        <span className="text-lg font-bold text-gray-600">박</span>
+                      </div>
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
+                        <span className="text-[10px] font-bold text-white">3</span>
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-sm">박지훈</h3>
+                    <p className="text-xs text-gray-600">사진 전문 기자</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 최신 기사 */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">최신 기사</h2>
+                <div className="space-y-4">
+                  {/* 임시 기자단 기사들 → 실제 기자단 게시글이 있으면 해당 상세로 이동 */}
+                  {(() => {
+                    const journalistPosts = posts.filter(p => p.category === 'journalist');
+                    const articles = [
+                    {
+                      id: 'journalist-1',
+                      title: 'AI가 그린 초상, 현대미술의 새로운 지평을 엿보다',
+                      content: '최근 개막한 \'AI: 새로운 시선\' 전시는 인공지능이 창작의 주체가 될 수 있는지를 묻는 도발적인 질문을 던집니다. 작가와 AI의 협업으로 탄생한 작품들은 관람객들에게 새로운 미적 경험을 선사하고 있습니다.',
+                      author: '이서연',
+                      likes: 98,
+                      image: '/images/ai-art.jpg'
+                    },
+                    {
+                      id: 'journalist-2', 
+                      title: '젊은 작가들의 도전, 전통과 현대의 조화',
+                      content: '신진 작가들이 전통 기법과 현대적 감각을 결합한 작품들을 선보이며 주목받고 있습니다. 이들의 실험적 시도는 미술계에 새로운 바람을 불러일으키고 있습니다.',
+                      author: '김민준',
+                      likes: 76,
+                      image: '/images/young-artists.jpg'
+                    },
+                    {
+                      id: 'journalist-3',
+                      title: '환경을 생각하는 예술, 지속가능한 미래를 향해',
+                      content: '환경 문제에 대한 예술가들의 관심이 높아지면서, 재활용 소재를 활용한 작품들이 주목받고 있습니다. 예술을 통한 환경 메시지 전달이 새로운 트렌드로 자리잡고 있습니다.',
+                      author: '박지훈', 
+                      likes: 124,
+                      image: '/images/eco-art.jpg'
+                    }
+                    ];
+                    return articles.map((article, idx) => {
+                      const targetId = journalistPosts[idx]?.id;
+                      const href = targetId ? `/community/${targetId}` : '/community?tab=journalist';
+                      return (
+                        <Link href={href} key={article.id} className="flex gap-4 p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors">
+                      <div className="w-28 h-28 bg-gray-200 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <span className="text-gray-500 text-sm">이미지</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                            <span className="text-xs font-bold text-gray-600">{article.author.charAt(0)}</span>
+                          </div>
+                          <span className="text-sm text-gray-600">{article.author}</span>
+                        </div>
+                        <h3 className="font-extrabold text-gray-900 mb-2 line-clamp-2 text-[18px] leading-snug">{article.title}</h3>
+                        <p className="text-gray-600 text-sm line-clamp-2 mb-3">{article.content}</p>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                            </svg>
+                            {article.likes}
+                          </span>
+                        </div>
+                      </div>
+                        </Link>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
             </div>
           ) : posts.length === 0 ? (
             <div className="text-center py-12">
@@ -499,39 +810,41 @@ function CommunityPageContent() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {posts.map((post) => (
                 <div key={post.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                  {/* 게시글 헤더 */}
+                  {/* 게시글 헤더 - 인스타그램 스타일 */}
                   <div className="p-4 border-b border-gray-100">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         {post.profiles?.avatar_url ? (
                           <img
                             src={post.profiles.avatar_url}
-                            alt={post.profiles.name}
+                            alt={post.profiles.full_name || '사용자'}
                             className="w-10 h-10 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                            <span className="text-gray-600 font-medium">
-                              {post.profiles?.name?.charAt(0) || 'U'}
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-500 text-white">
+                            <span className="text-base font-semibold">
+                              {(post.profiles?.full_name || '사용자').charAt(0)}
                             </span>
                           </div>
                         )}
                         <div>
-                          <h3 className="font-medium text-gray-900">{post.profiles?.name || '익명'}</h3>
-                          <p className="text-sm text-gray-500">
-                            {new Date(post.created_at).toLocaleDateString('ko-KR')}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium text-gray-900">
+                              {post.profiles?.full_name || '익명 사용자'}
+                            </h3>
+                            <span className={`px-2 py-0.5 text-xs rounded-full ${getCategoryBadgeClass(post.category)}`}>
+                              {CATEGORY_LABELS[post.category] || post.category}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-500">{getRelativeTime(post.created_at)}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                          {post.category}
-                        </span>
                         <button
-                          onClick={() => handleReport(post.id)}
+                          onClick={() => handleReport(post.id, post.title)}
                           className="text-gray-400 hover:text-gray-600"
                         >
                           <MoreHorizontal className="w-5 h-5" />
@@ -543,7 +856,7 @@ function CommunityPageContent() {
                   {/* 게시글 내용 */}
                   <div className="p-4">
                     <h2 className="text-lg font-semibold text-gray-900 mb-2">{post.title}</h2>
-                    <p className="text-gray-700 leading-relaxed line-clamp-3">{post.content}</p>
+                    <p className="text-gray-700 leading-relaxed">{post.content}</p>
                   </div>
 
                   {/* 비디오 (숏폼) */}
@@ -599,31 +912,67 @@ function CommunityPageContent() {
                     </div>
                   )}
 
-                  {/* 액션 버튼들 */}
+                  {/* 액션 버튼들 - 인스타그램 스타일 */}
                   <div className="p-4 border-t border-gray-100">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-6">
-                        <button className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors">
+                        <button 
+                          onClick={() => handleLike(post.id)}
+                          className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors"
+                        >
                           <Heart className="w-5 h-5" />
-                          <span>좋아요</span>
+                          <span className="text-sm font-medium">{post.likes || 0}</span>
                         </button>
-                        <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
+                        <button 
+                          onClick={() => toggleComments(post.id)}
+                          className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors"
+                        >
                           <MessageCircle className="w-5 h-5" />
-                          <span>댓글</span>
+                          <span className="text-sm font-medium">{post.comments_count || 0}</span>
                         </button>
-                        <button className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors">
+                        <button 
+                          onClick={() => handleShare(post)}
+                          className="flex items-center space-x-1 text-gray-600 hover:text-green-600 transition-colors"
+                        >
                           <Share className="w-5 h-5" />
-                          <span>공유</span>
                         </button>
                       </div>
-                      <Link
-                        href={`/community/${post.id}`}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                      >
-                        자세히 보기
-                      </Link>
                     </div>
                   </div>
+
+                  {/* 댓글 섹션 */}
+                  {showComments[post.id] && (
+                    <div className="border-t border-gray-100 p-4 bg-gray-50">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                          {user?.user_metadata?.full_name?.charAt(0) || 'U'}
+                        </div>
+                        <div className="flex-1 flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="댓글을 작성해보세요..."
+                            value={commentText[post.id] || ''}
+                            onChange={(e) => setCommentText(prev => ({ ...prev, [post.id]: e.target.value }))}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                handleCommentSubmit(post.id);
+                              }
+                            }}
+                          />
+                          <button
+                            onClick={() => handleCommentSubmit(post.id)}
+                            disabled={submittingComment[post.id]}
+                            className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-full transition-colors disabled:opacity-50"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -641,11 +990,14 @@ function CommunityPageContent() {
         {/* 신고 모달 */}
         {showReportModal && (
           <PostReportModal
-            postId={selectedPostId}
+            isOpen={showReportModal}
             onClose={() => {
               setShowReportModal(false);
               setSelectedPostId(null);
+              setSelectedPostTitle("");
             }}
+            postId={selectedPostId}
+            postTitle={selectedPostTitle}
           />
         )}
 

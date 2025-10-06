@@ -15,11 +15,18 @@ import { FiPlusCircle } from "react-icons/fi";
 import { FaRegStar, FaStar } from "react-icons/fa";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { ModernLoading } from "@/app/(client)/components/ModernLoading";
+// import { useScrollToTop } from "../components/ScrollToTop";
 
 function GalleryListContent() {
   const router = useRouter();
   const searchParams = useSearchParams({ suspense: true });
   const isBookmarkParam = searchParams.get('isBookmark');
+  
+  // 페이지 진입 시 최상단으로 스크롤
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   const [selectedTab, setSelectedTab] = useState("all");
   const [galleries, setGalleries] = useState([]);
@@ -562,14 +569,8 @@ function GalleryListContent() {
 
 function LoadingComponent() {
   return (
-    <div className="w-full flex flex-col justify-center items-center h-[200px] space-y-4">
-      <div className="relative">
-        {/* 외부 링 */}
-        <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-        {/* 내부 링 */}
-        <div className="absolute top-1 left-1 w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-      </div>
-      <p className="text-gray-600 text-sm font-medium">로딩 중...</p>
+    <div className="w-full flex flex-col justify-center items-center h-[200px]">
+      <ModernLoading size="md" text="로딩 중..." />
     </div>
   );
 }

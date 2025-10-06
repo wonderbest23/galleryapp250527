@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+// import { useScrollToTop } from "./components/ScrollToTop";
 import { FiHome, FiSearch, FiBell, FiHeart, FiMessageCircle, FiShare2, FiMoreVertical, FiChevronRight } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
@@ -65,6 +66,11 @@ export default function Home() {
   const [gallery, setGallery] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const supabase = createClient();
+
+  // 페이지 진입 시 최상단으로 스크롤
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // 티켓 수량 증가
   const increaseTicket = () => {

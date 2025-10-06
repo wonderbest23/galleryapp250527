@@ -35,6 +35,7 @@ import { FaMoneyBill } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { TbClockHour8Filled } from "react-icons/tb";
 import { BsFillDoorClosedFill } from "react-icons/bs";
+// import { useScrollToTop } from "../../components/ScrollToTop";
 
 
 export default function App() {
@@ -56,6 +57,11 @@ export default function App() {
   const supabase = createClient();
   const clientKey = process.env.NEXT_PUBLIC_TOSSPAYMENTS_API_KEY;
   const [isFreeSoldOut, setIsFreeSoldOut] = useState(false);
+
+  // 페이지 진입 시 최상단으로 스크롤
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // 애니메이션 변수 추가
   const fadeInVariants = {
@@ -493,7 +499,7 @@ export default function App() {
   function PurchaseSection() {
     if (!exhibition?.isSale) return (
       <Button 
-        className="w-full bg-gray-400 text-white text-sm font-semibold hover:bg-gray-500 transition-colors" 
+        className="w-full bg-gray-400 text-white text-sm font-semibold cursor-not-allowed opacity-60 transition-all duration-200 rounded-xl" 
         size="lg" 
         disabled
       >
@@ -503,7 +509,11 @@ export default function App() {
     if (isFreeTicket) {
       return (
         <Button
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg"
+          className={`w-full text-white text-sm font-semibold transition-all duration-200 shadow-lg rounded-xl ${
+            isFreeSoldOut 
+              ? 'bg-gray-400 cursor-not-allowed opacity-60' 
+              : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl'
+          }`}
           size="lg"
           onPress={handleFreeIssue}
           disabled={isFreeSoldOut}
@@ -515,7 +525,7 @@ export default function App() {
     return (
       <Button
         onPress={requestPayment}
-        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg"
+        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl rounded-xl"
         size="lg"
       >
         웹티켓 구매하기
@@ -650,20 +660,20 @@ export default function App() {
                 <div className="bg-white rounded-2xl p-2 shadow-sm border border-gray-100">
                   <div className="flex">
                     <button
-                      className={`relative flex-1 py-3 px-4 text-center text-sm font-semibold transition-all rounded-xl ${
+                      className={`relative flex-1 py-3 px-4 text-center text-sm font-semibold transition-all duration-300 rounded-xl ${
                         selected === 'info' 
-                          ? 'text-blue-600 bg-blue-50 shadow-sm' 
-                          : 'text-gray-500 hover:text-gray-700'
+                          ? 'text-white bg-blue-600 shadow-lg transform scale-105' 
+                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                       }`}
                       onClick={() => setSelected('info')}
                     >
                       전시 정보
                     </button>
                     <button
-                      className={`relative flex-1 py-3 px-4 text-center text-sm font-semibold transition-all rounded-xl ${
+                      className={`relative flex-1 py-3 px-4 text-center text-sm font-semibold transition-all duration-300 rounded-xl ${
                         selected === 'reviews' 
-                          ? 'text-blue-600 bg-blue-50 shadow-sm' 
-                          : 'text-gray-500 hover:text-gray-700'
+                          ? 'text-white bg-blue-600 shadow-lg transform scale-105' 
+                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                       }`}
                       onClick={() => setSelected('reviews')}
                     >
@@ -702,7 +712,7 @@ export default function App() {
                           <Button
                             target="_blank"
                             onPress={() => router.push(exhibition?.homepage_url)}
-                            className="flex-1 border-2 border-gray-300 text-gray-600 text-sm font-semibold hover:border-gray-400 hover:text-gray-700 transition-colors"
+                            className="flex-1 bg-white border-2 border-gray-300 text-gray-600 text-sm font-semibold hover:border-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-all duration-200 rounded-xl"
                             size="lg"
                             variant="bordered"
                           >

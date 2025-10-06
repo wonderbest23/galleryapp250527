@@ -4,6 +4,8 @@ import { Button, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFoot
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useUserStore } from "@/stores/userStore";
+import { ModernLoading } from "../components/ModernLoading";
+// import { useScrollToTop } from "../components/ScrollToTop";
 
 // SearchParams를 사용하는 컴포넌트를 별도로 분리
 function MyPageContent() {
@@ -11,6 +13,11 @@ function MyPageContent() {
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("redirect_to") || "/mypage/success";
   console.log("MyPage - redirect_to 파라미터:", returnUrl);
+  // 페이지 진입 시 최상단으로 스크롤
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  
   const [loading, setLoading] = useState(false);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [policyTitle, setPolicyTitle] = useState("");
@@ -250,10 +257,7 @@ function MyPageContent() {
               <Spinner size="sm" color="default" />
             ) : (
               <div className="flex items-center justify-center space-x-2">
-                <div className="relative">
-                  {/* 외부 링 */}
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                </div>
+                <ModernLoading size="sm" showText={false} />
                 <span>카카오로 시작하기</span>
               </div>
             )}

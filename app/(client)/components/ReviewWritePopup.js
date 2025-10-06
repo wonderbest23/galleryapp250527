@@ -441,7 +441,17 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
                     {exhibitions.map((exh) => (
                       <button
                         key={exh.id}
-                        onClick={() => setSelectedExhibition(exh)}
+                        onClick={() => {
+                          setSelectedExhibition(exh);
+                          setFormData(prev => ({
+                            ...prev,
+                            exhibition_id: exh.id
+                          }));
+                          // 전시회 선택 시 자동으로 다음 단계(별점)로 이동
+                          setTimeout(() => {
+                            setCurrentStep(1);
+                          }, 300);
+                        }}
                         className={`w-full p-4 border-2 rounded-xl text-left transition-all ${
                           selectedExhibition?.id === exh.id
                             ? 'border-blue-500 bg-blue-50'
@@ -502,20 +512,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
                   </div>
                 )}
                 
-                {/* 0단계 버튼 */}
-                <div className="mt-6">
-                  <Button
-                    onClick={goToNextStep}
-                    disabled={!canProceed}
-                    className={`w-full font-bold py-4 text-lg ${
-                      canProceed 
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    다음 단계
-                  </Button>
-                </div>
+                {/* 0단계에서는 다음 버튼 제거 - 전시회 선택 시 자동으로 다음 단계로 이동 */}
               </div>
             )}
 
@@ -552,6 +549,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
                     </p>
                   </div>
                 )}
+                {/* 1단계에서는 다음 버튼 제거 - 별점 선택 시 자동으로 다음 단계로 이동 */}
               </div>
             )}
 

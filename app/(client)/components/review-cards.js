@@ -18,6 +18,109 @@ const maskName = (name) => {
   return name.length > 1 ? name[0] + '**' : name;
 };
 
+// 리뷰 내용에서 메타데이터 제거 함수
+const cleanReviewContent = (content) => {
+  if (!content || typeof content !== 'string') return "리뷰 내용";
+  
+  console.log("원본 리뷰 내용:", content);
+  
+  // 메타데이터 패턴들을 제거 (더 포괄적인 패턴 추가)
+  const patterns = [
+    // [커스텀리뷰] 패턴들
+    /\[커스텀\s*리뷰\]\s*전시회:\s*[^,]*,\s*갤러리:\s*[^,]*,\s*방문일:\s*[^,]*,\s*/gi,
+    /\[커스텀\s*전시회\]\s*제목:\s*[^,]*,\s*장소:\s*[^,]*,\s*방문일:\s*[^,]*,\s*/gi,
+    /\[Custom\s*Review\]\s*전시회:\s*[^,]*,\s*갤러리:\s*[^,]*,\s*방문일:\s*[^,]*,\s*/gi,
+    
+    // 단순한 메타데이터 패턴들
+    /전시회:\s*[^,]*,\s*갤러리:\s*[^,]*,\s*방문일:\s*[^,]*,\s*/gi,
+    /제목:\s*[^,]*,\s*장소:\s*[^,]*,\s*방문일:\s*[^,]*,\s*/gi,
+    /방문일:\s*[^,]*,\s*/gi,
+    
+    // 개별 필드들
+    /전시회:\s*[^,]*,\s*/gi,
+    /갤러리:\s*[^,]*,\s*/gi,
+    /장소:\s*[^,]*,\s*/gi,
+    /제목:\s*[^,]*,\s*/gi,
+    
+    // 태그들
+    /^\[커스텀\s*리뷰\]\s*/gi,
+    /^\[커스텀\s*전시회\]\s*/gi,
+    /^\[Custom\s*Review\]\s*/gi,
+    /^\[커스텀\s*리뷰\]/gi,
+    /^\[커스텀\s*전시회\]/gi,
+    /^\[Custom\s*Review\]/gi,
+    
+    // 날짜 패턴들
+    /방문일:\s*\d{4}-\d{2}-\d{2}\s*/gi,
+    /방문일:\s*\d{4}\.\d{2}\.\d{2}\s*/gi,
+    /방문일:\s*\d{4}년\s*\d{2}월\s*\d{2}일\s*/gi,
+    
+    // 콜론으로 시작하는 패턴들
+    /^전시회:\s*/gi,
+    /^갤러리:\s*/gi,
+    /^장소:\s*/gi,
+    /^제목:\s*/gi,
+    /^방문일:\s*/gi,
+    
+    // 쉼표와 콜론 조합 패턴들
+    /,\s*전시회:\s*[^,]*/gi,
+    /,\s*갤러리:\s*[^,]*/gi,
+    /,\s*장소:\s*[^,]*/gi,
+    /,\s*제목:\s*[^,]*/gi,
+    /,\s*방문일:\s*[^,]*/gi,
+    
+    // 추가적인 메타데이터 패턴들
+    /^전시회:\s*[^,]*,\s*갤러리:\s*[^,]*,\s*방문일:\s*[^,]*,\s*/gi,
+    /^제목:\s*[^,]*,\s*장소:\s*[^,]*,\s*방문일:\s*[^,]*,\s*/gi
+  ];
+  
+  let cleanedContent = content;
+  
+  // 각 패턴을 순차적으로 제거
+  patterns.forEach(pattern => {
+    cleanedContent = cleanedContent.replace(pattern, '');
+  });
+  
+  // 연속된 쉼표나 공백 정리
+  cleanedContent = cleanedContent.replace(/,\s*,/g, ',');
+  cleanedContent = cleanedContent.replace(/\s+/g, ' ');
+  
+  // 앞뒤 공백 및 쉼표 제거
+  cleanedContent = cleanedContent.trim();
+  cleanedContent = cleanedContent.replace(/^[,.\s]+|[,.\s]+$/g, '');
+  
+  // 추가 정리: 콜론으로 시작하는 부분들 제거
+  const lines = cleanedContent.split('\n');
+  const filteredLines = lines.filter(line => {
+    const trimmedLine = line.trim();
+    return !trimmedLine.match(/^(전시회|갤러리|장소|제목|방문일):/);
+  });
+  cleanedContent = filteredLines.join('\n').trim();
+  
+  // 마지막으로 남은 메타데이터 패턴들 제거
+  const finalPatterns = [
+    /^전시회:\s*[^,]*,\s*갤러리:\s*[^,]*,\s*방문일:\s*[^,]*,\s*/gi,
+    /^제목:\s*[^,]*,\s*장소:\s*[^,]*,\s*방문일:\s*[^,]*,\s*/gi,
+    /^전시회:\s*[^,]*,\s*/gi,
+    /^갤러리:\s*[^,]*,\s*/gi,
+    /^장소:\s*[^,]*,\s*/gi,
+    /^제목:\s*[^,]*,\s*/gi,
+    /^방문일:\s*[^,]*,\s*/gi
+  ];
+  
+  finalPatterns.forEach(pattern => {
+    cleanedContent = cleanedContent.replace(pattern, '');
+  });
+  
+  // 최종 정리
+  cleanedContent = cleanedContent.trim();
+  cleanedContent = cleanedContent.replace(/^[,.\s]+|[,.\s]+$/g, '');
+  
+  // 빈 문자열이면 기본 메시지 반환
+  console.log("정리된 리뷰 내용:", cleanedContent);
+  return cleanedContent || "리뷰 내용";
+};
+
 export function ReviewCards() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,11 +138,11 @@ export function ReviewCards() {
             exhibition:exhibition_id (
               id,
               contents,
-              location,
               photo,
               status
             )
           `)
+          .eq("status", "approved") // 승인된 리뷰만
           .order("created_at", { ascending: false })
           .limit(3);
 
@@ -49,6 +152,7 @@ export function ReviewCards() {
           setReviews([]);
         } else {
           console.log("리뷰 데이터 가져오기 성공:", data?.length || 0, "개");
+          console.log("리뷰 데이터:", data);
           
           // 실제 데이터가 있으면 사용, 없으면 빈 배열
           setReviews(data || []);
@@ -82,7 +186,7 @@ export function ReviewCards() {
   }
 
   return (
-    <div className="w-[90%] space-y-3">
+    <div className="w-[90%] space-y-4">
       {reviews.length === 0 ? (
         <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 text-center">
           <div className="text-gray-400 mb-2">
@@ -95,58 +199,76 @@ export function ReviewCards() {
         </div>
       ) : (
         reviews.map((review) => (
-        <div key={review.id} className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-          <div className="flex gap-3">
+        <div key={review.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex gap-4">
             {/* 왼쪽: 텍스트 내용 */}
             <div className="flex-1">
-              <div className="flex items-center mb-2">
+              {/* 전시회 제목 */}
+              <div className="mb-3">
+                <h3 className="text-base font-semibold text-gray-900 line-clamp-1">
+                  {review.exhibition?.contents || "전시회 리뷰"}
+                </h3>
+                {review.is_custom_review && (
+                  <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-full mt-1">
+                    커스텀 리뷰
+                  </span>
+                )}
+              </div>
+              
+              {/* 별점 + 작성자 */}
+              <div className="flex items-center gap-2 mb-3">
+                {/* 별점 */}
                 <div className="flex items-center space-x-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <span 
                       key={star} 
-                      className={`text-xs ${star <= (review.rating || 5) ? 'text-yellow-400' : 'text-gray-300'}`}
+                      className={`text-sm ${star <= (review.rating || 5) ? 'text-yellow-400' : 'text-gray-300'}`}
                     >
                       ★
                     </span>
                   ))}
                 </div>
+                {/* 작성자 */}
+                <span className="text-sm font-medium text-gray-700">
+                  {maskName(review.name || "사용자")}
+                </span>
               </div>
               
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-sm font-semibold text-gray-900 line-clamp-1">{review.title || "리뷰 제목"}</h3>
-                {review.is_custom_review && (
-                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-full">
-                    커스텀
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-gray-600 mb-1 line-clamp-1">{maskName(review.author_name || review.name || "사용자")}</p>
-              <p className="text-xs text-gray-700 line-clamp-2">{review.description || review.content || "리뷰 내용"}</p>
+              {/* 리뷰 내용 */}
+              <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">
+                {cleanReviewContent(review.description || review.content)}
+              </p>
             </div>
             
             {/* 오른쪽: 증빙 사진 또는 전시회 이미지 (우측 중앙 정렬) */}
-            <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-md overflow-hidden self-center">
-              {review.proof_image ? (
-                <Image
-                  src={review.proof_image}
-                  alt="리뷰 증빙 사진"
-                  width={64}
-                  height={64}
-                  className="w-full h-full object-cover"
-                />
-              ) : review.exhibition?.photo ? (
-                <Image
-                  src={review.exhibition.photo}
-                  alt={review.exhibition.contents || "전시회 이미지"}
-                  width={64}
-                  height={64}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                  <span className="text-xs text-gray-500">📸</span>
-                </div>
-              )}
+            <div className="flex flex-col items-center justify-center">
+              <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden mb-2">
+                {review.proof_image ? (
+                  <Image
+                    src={review.proof_image}
+                    alt="리뷰 증빙 사진"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
+                  />
+                ) : review.exhibition?.photo ? (
+                  <Image
+                    src={review.exhibition.photo}
+                    alt={review.exhibition.contents || "전시회 이미지"}
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                    <span className="text-lg text-gray-500">📸</span>
+                  </div>
+                )}
+              </div>
+              {/* 날짜 (이미지 바로 아래) */}
+              <span className="text-xs text-gray-500">
+                {new Date(review.created_at).toLocaleDateString('ko-KR')}
+              </span>
             </div>
           </div>
         </div>

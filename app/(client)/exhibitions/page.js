@@ -1,6 +1,7 @@
 "use client";
 import React, { Suspense } from "react";
 import { ExhibitionCards } from "./components/exhibition-cards";
+// import { useScrollToTop } from "../components/ScrollToTop";
 import ExhibitionCarousel from "./components/exhibition-carousel";
 import {
   Tabs,
@@ -90,8 +91,10 @@ function ExhibitionListContent() {
 
   useEffect(() => {
     // 페이지 진입 시 최상단으로 스크롤
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     // 북마크 필터 상태가 변경될 때마다 전시회 목록 초기화 및 다시 불러오기
     setPage(1);
     setExhibitions([]);

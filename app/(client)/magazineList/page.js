@@ -5,6 +5,8 @@ import { User, Calendar, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from "next/link";
 import Image from "next/image";
 import { ReportModal } from "../components/report-modal";
+import { ModernLoading } from "../components/ModernLoading";
+// import { useScrollToTop } from "../components/ScrollToTop";
 
 export default function MagazineList() {
   const supabase = createClient();
@@ -14,6 +16,11 @@ export default function MagazineList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const itemsPerPage = 11; // 4(이미지+텍스트) + 5(텍스트만) + 2(그리드)
+  
+  // 페이지 진입 시 최상단으로 스크롤
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   const categories = ["전체", "전시리뷰", "작가인터뷰", "아트뉴스", "트렌드"];
 
@@ -92,16 +99,8 @@ export default function MagazineList() {
 
   if (isLoading) {
     return (
-      <div className="bg-white min-h-screen">
-        <div className="bg-white px-4 py-4 border-b">
-          <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full animate-pulse w-32 mx-auto"></div>
-        </div>
-        <div className="h-64 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse"></div>
-        <div className="p-4 space-y-4">
-          {[...Array(3)].map((_, index) => (
-            <div key={index} className="h-20 bg-gradient-to-r from-gray-100 to-gray-200 rounded-2xl animate-pulse"></div>
-          ))}
-        </div>
+      <div className="bg-white min-h-screen flex flex-col items-center justify-center">
+        <ModernLoading size="lg" text="매거진을 불러오는 중..." />
       </div>
     );
   }
