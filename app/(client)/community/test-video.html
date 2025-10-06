@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>비디오 업로드 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .video-preview {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s ease;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>비디오 업로드 및 재생 테스트</h1>
+
+    <div class="test-section">
+        <h2>1. 비디오 파일 선택</h2>
+        <input type="file" id="videoInput" accept="video/*">
+        <div id="fileInfo"></div>
+        <div id="validationResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 비디오 미리보기</h2>
+        <video id="videoPreview" class="video-preview" controls style="display: none;"></video>
+        <div id="previewInfo"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 비디오 최적화 테스트</h2>
+        <button id="optimizeBtn" disabled>비디오 최적화</button>
+        <div class="progress-bar" id="optimizeProgress" style="display: none;">
+            <div class="progress-fill" id="optimizeProgressFill"></div>
+        </div>
+        <div id="optimizeResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 서버 업로드 테스트</h2>
+        <button id="uploadBtn" disabled>서버 업로드</button>
+        <div class="progress-bar" id="uploadProgress" style="display: none;">
+            <div class="progress-fill" id="uploadProgressFill"></div>
+        </div>
+        <div id="uploadResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. 업로드된 비디오 재생 테스트</h2>
+        <video id="uploadedVideo" class="video-preview" controls style="display: none;"></video>
+        <div id="playbackInfo"></div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let optimizedFile = null;
+        let uploadedUrl = null;
+
+        // 비디오 최적화 클래스 (간단한 버전)
+        class SimpleVideoOptimizer {
+            validateVideo(file) {
+                const errors = [];
+                
+                if (!file.type.startsWith('video/')) {
+                    errors.push('비디오 파일만 업로드 가능합니다.');
+                }
+                
+                if (file.size > 100 * 1024 * 1024) {
+                    errors.push('파일 크기는 100MB를 초과할 수 없습니다.');
+                }
+                
+                return {
+                    isValid: errors.length === 0,
+                    errors
+                };
+            }
+
+            async getVideoMetadata(file) {
+                return new Promise((resolve, reject) => {
+                    const video = document.createElement('video');
+                    video.preload = 'metadata';
+                    
+                    video.onloadedmetadata = () => {
+                        resolve({
+                            duration: video.duration,
+                            width: video.videoWidth,
+                            height: video.videoHeight,
+                            aspectRatio: video.videoWidth / video.videoHeight,
+                            needsOptimization: video.duration > 60 || video.videoWidth > 1080 || video.videoHeight > 1920
+                        });
+                    };
+                    
+                    video.onerror = () => {
+                        reject(new Error('비디오 메타데이터를 읽을 수 없습니다.'));
+                    };
+                    
+                    video.src = URL.createObjectURL(file);
+                });
+            }
+        }
+
+        const optimizer = new SimpleVideoOptimizer();
+
+        // 파일 선택 이벤트
+        document.getElementById('videoInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            selectedFile = file;
+            
+            // 파일 정보 표시
+            document.getElementById('fileInfo').innerHTML = `
+                <p><strong>파일명:</strong> ${file.name}</p>
+                <p><strong>크기:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p><strong>타입:</strong> ${file.type}</p>
+            `;
+
+            // 유효성 검사
+            const validation = optimizer.validateVideo(file);
+            const validationDiv = document.getElementById('validationResult');
+            
+            if (validation.isValid) {
+                validationDiv.innerHTML = '<div class="success">✓ 파일이 유효합니다.</div>';
+            } else {
+                validationDiv.innerHTML = `<div class="error">✗ ${validation.errors.join('<br>')}</div>`;
+                return;
+            }
+
+            // 미리보기 표시
+            const videoPreview = document.getElementById('videoPreview');
+            videoPreview.src = URL.createObjectURL(file);
+            videoPreview.style.display = 'block';
+
+            // 메타데이터 가져오기
+            try {
+                const metadata = await optimizer.getVideoMetadata(file);
+                document.getElementById('previewInfo').innerHTML = `
+                    <p><strong>재생시간:</strong> ${Math.round(metadata.duration)}초</p>
+                    <p><strong>해상도:</strong> ${metadata.width} x ${metadata.height}</p>
+                    <p><strong>비율:</strong> ${metadata.aspectRatio.toFixed(2)}</p>
+                    <p><strong>최적화 필요:</strong> ${metadata.needsOptimization ? '예' : '아니오'}</p>
+                `;
+            } catch (error) {
+                document.getElementById('previewInfo').innerHTML = `<div class="error">메타데이터 읽기 오류: ${error.message}</div>`;
+            }
+
+            // 버튼 활성화
+            document.getElementById('optimizeBtn').disabled = false;
+            document.getElementById('uploadBtn').disabled = false;
+        });
+
+        // 최적화 버튼 이벤트
+        document.getElementById('optimizeBtn').addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            const progressBar = document.getElementById('optimizeProgress');
+            const progressFill = document.getElementById('optimizeProgressFill');
+            const resultDiv = document.getElementById('optimizeResult');
+
+            progressBar.style.display = 'block';
+            resultDiv.innerHTML = '최적화 중...';
+
+            // 시뮬레이션된 진행률
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressFill.style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    
+                    // 실제로는 여기서 비디오 최적화를 수행
+                    optimizedFile = selectedFile; // 간단히 원본 파일 사용
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">✓ 비디오 최적화 완료</div>
+                        <p>최적화된 파일 크기: ${(optimizedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                    `;
+                }
+            }, 200);
+        });
+
+        // 업로드 버튼 이벤트
+        document.getElementById('uploadBtn').addEventListener('click', async () => {
+            const fileToUpload = optimizedFile || selectedFile;
+            if (!fileToUpload) return;
+
+            const progressBar = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('uploadProgressFill');
+            const resultDiv = document.getElementById('uploadResult');
+
+            progressBar.style.display = 'block';
+            resultDiv.innerHTML = '업로드 중...';
+
+            try {
+                const formData = new FormData();
+                formData.append('video', fileToUpload);
+
+                // XMLHttpRequest를 사용하여 진행률 추적
+                const xhr = new XMLHttpRequest();
+                
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        progressFill.style.width = percentComplete + '%';
+                    }
+                });
+
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        const result = JSON.parse(xhr.responseText);
+                        uploadedUrl = result.url;
+                        
+                        resultDiv.innerHTML = `
+                            <div class="success">✓ 업로드 성공!</div>
+                            <p><strong>URL:</strong> <a href="${result.url}" target="_blank">${result.url}</a></p>
+                            <p><strong>경로:</strong> ${result.path}</p>
+                        `;
+
+                        // 업로드된 비디오 재생
+                        const uploadedVideo = document.getElementById('uploadedVideo');
+                        uploadedVideo.src = result.url;
+                        uploadedVideo.style.display = 'block';
+                        
+                        document.getElementById('playbackInfo').innerHTML = `
+                            <div class="success">✓ 비디오 재생 준비 완료</div>
+                            <p>위의 비디오 플레이어에서 재생을 테스트해보세요.</p>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `<div class="error">✗ 업로드 실패: ${xhr.status}</div>`;
+                    }
+                };
+
+                xhr.onerror = () => {
+                    resultDiv.innerHTML = '<div class="error">✗ 업로드 중 네트워크 오류 발생</div>';
+                };
+
+                xhr.open('POST', '/api/upload-video');
+                xhr.send(formData);
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">✗ 업로드 오류: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>

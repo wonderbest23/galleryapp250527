@@ -5,6 +5,8 @@ import MainBannerManager from "../components/MainBannerManager";
 import EventBannerManager from "../components/EventBannerManager";
 import GalleryFeatureManager from "../components/GalleryFeatureManager";
 import ExhibitionFeatureManager from "../components/ExhibitionFeatureManager";
+import CommunityAdManager from "../components/CommunityAdManager";
+import AdBannerManager from "../components/AdBannerManager";
 
 export default function Banner() {
   // 메인 배너 상태 관리
@@ -135,6 +137,16 @@ export default function Banner() {
           onBannerChange={handleEventBannerChange} 
           onSave={saveEventBanners} 
         />
+        
+        {/* 커뮤니티 광고 배너 섹션 */}
+        <div className="col-span-2">
+          <CommunityAdManager />
+        </div>
+        
+        {/* 광고 카드 관리 섹션 */}
+        <div className="col-span-2">
+          <AdBannerManager />
+        </div>
         
         {/* 갤러리 관리 섹션 */}
         <GalleryFeatureManager 

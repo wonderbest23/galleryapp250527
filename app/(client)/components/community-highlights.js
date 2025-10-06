@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
-import Image from "next/image";
-import { FaHeart, FaComment } from "react-icons/fa";
+import { Heart, MessageCircle, Share, MoreHorizontal } from 'lucide-react';
 
 export function CommunityHighlights() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedPosts, setExpandedPosts] = useState({}); // 각 게시글의 확장 상태 관리
   const supabase = createClient();
 
   useEffect(() => {
@@ -17,187 +17,108 @@ export function CommunityHighlights() {
         // 커뮤니티 포스트 데이터를 가져오는 쿼리
         const { data, error } = await supabase
           .from("community_post")
-          .select(`
-            *,
-            profiles:user_id(name, avatar_url)
-          `)
+          .select("*")
           .order("created_at", { ascending: false })
-          .limit(4);
+          .limit(3);
 
         if (error) {
-          console.error("Error fetching community posts:", error);
+          console.log("Error fetching community posts:", error);
+          console.log("Using sample data due to error");
           // 에러 시 샘플 데이터 사용
           setPosts([
             {
               id: 1,
-              title: "전시 관람 후기",
-              content: "방금 다녀온 전시회가 정말 인상적이었...",
-              author: "박관람객",
-              created_at: new Date(Date.now() - 17 * 60 * 60 * 1000).toISOString(),
-              category: "숏폼",
-              likes: 156,
-              comments: 23,
+              title: "현대미술 vs 고전미술, 어리분은 어느 쪽을 더 선호하시나요?",
+              content: "최근에 루브르 박물관과 유명 롤 기웃는데 확실히 다른 매력이 있더라구요.. 고전 미술은 완성도와 기법이 압도적이고, 현대미술은 창의성과 실험성의 끌리는 것 같아요. 루브르의 허황된 작품들!!",
+              author: "아트취향조사단",
+              created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+              likes: 145,
+              comments: 67,
               image_url: null,
-              type: "video"
+              type: "text"
             },
             {
               id: 2,
-              title: "오늘의 작업실",
-              content: "새로운 작품 작업 중입니다! 여러분의 ...",
-              author: "김작가",
-              created_at: new Date(Date.now() - 17 * 60 * 60 * 1000).toISOString(),
-              category: "작품",
-              likes: 24,
-              comments: 5,
-              image_url: null,
+              title: "오늘 MZ세대는 왜 클래식한 작품보다 미디어아트를 좋아할까요?",
+              content: "최근에 팀파티나 디지털의 갑은 곳이 인가가 많았어요. 저희 부모님은 '그게 무슨 예술이야'라고 하시는데, 전 오히려 새롭고 재미있더라구요. 인터랙티브하고 SNS에 올리기도 좋고... 전통 미술과 디지털 아트, 어떤 게 더 가치 있다고 생각하세요?",
+              author: "MZ미술관러",
+              created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+              likes: 128,
+              comments: 45,
+              image_url: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800",
               type: "image"
-            },
-            {
-              id: 3,
-              title: "처음 작품 구매해봤어요",
-              content: "아트샵에서 김작가님의 추상화를 구매...",
-              author: "신규컬렉터",
-              created_at: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
-              category: "작품",
-              likes: 23,
-              comments: 12,
-              image_url: null,
-              type: "text"
-            },
-            {
-              id: 4,
-              title: "전시회 관람 팁 공유",
-              content: "전시회 갈 때 꼭 오디오 가이드 들으세...",
-              author: "문화애호가",
-              created_at: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
-              category: "토론",
-              likes: 22,
-              comments: 7,
-              image_url: null,
-              type: "text"
             }
           ]);
         } else {
-          // 실제 데이터가 있으면 사용, 없으면 샘플 데이터 사용
           if (data && data.length > 0) {
-            const mappedData = data.map((post, index) => ({
+            console.log("Using real community posts");
+            const mappedData = data.map((post) => ({
               id: post.id,
               title: post.title || "제목 없음",
               content: post.content || "내용 없음",
-              author: post.profiles?.name || "익명",
+              author: post.author || "사용자",
               created_at: post.created_at,
-              category: post.category || ["숏폼", "작품", "토론"][index % 3],
-              likes: post.likes || Math.floor(Math.random() * 200),
-              comments: post.comments || Math.floor(Math.random() * 50),
+              likes: post.likes || 0,
+              comments: post.comments || 0,
               image_url: post.image_url,
               type: post.type || "text"
             }));
             setPosts(mappedData);
           } else {
+            console.log("No real community posts found, using sample data");
             // 실제 데이터가 없으면 샘플 데이터 사용
             setPosts([
               {
                 id: 1,
-                title: "전시 관람 후기",
-                content: "방금 다녀온 전시회가 정말 인상적이었...",
-                author: "박관람객",
-                created_at: new Date(Date.now() - 17 * 60 * 60 * 1000).toISOString(),
-                category: "숏폼",
-                likes: 156,
-                comments: 23,
+                title: "현대미술 vs 고전미술, 어리분은 어느 쪽을 더 선호하시나요?",
+                content: "최근에 루브르 박물관과 유명 롤 기웃는데 확실히 다른 매력이 있더라구요.. 고전 미술은 완성도와 기법이 압도적이고, 현대미술은 창의성과 실험성의 끌리는 것 같아요. 루브르의 허황된 작품들!!",
+                author: "아트취향조사단",
+                created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                likes: 145,
+                comments: 67,
                 image_url: null,
-                type: "video"
+                type: "text"
               },
               {
                 id: 2,
-                title: "오늘의 작업실",
-                content: "새로운 작품 작업 중입니다! 여러분의 ...",
-                author: "김작가",
-                created_at: new Date(Date.now() - 17 * 60 * 60 * 1000).toISOString(),
-                category: "작품",
-                likes: 24,
-                comments: 5,
-                image_url: null,
+                title: "오늘 MZ세대는 왜 클래식한 작품보다 미디어아트를 좋아할까요?",
+                content: "최근에 팀파티나 디지털의 갑은 곳이 인가가 많았어요. 저희 부모님은 '그게 무슨 예술이야'라고 하시는데, 전 오히려 새롭고 재미있더라구요. 인터랙티브하고 SNS에 올리기도 좋고... 전통 미술과 디지털 아트, 어떤 게 더 가치 있다고 생각하세요?",
+                author: "MZ미술관러",
+                created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                likes: 128,
+                comments: 45,
+                image_url: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800",
                 type: "image"
-              },
-              {
-                id: 3,
-                title: "처음 작품 구매해봤어요",
-                content: "아트샵에서 김작가님의 추상화를 구매...",
-                author: "신규컬렉터",
-                created_at: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
-                category: "작품",
-                likes: 23,
-                comments: 12,
-                image_url: null,
-                type: "text"
-              },
-              {
-                id: 4,
-                title: "전시회 관람 팁 공유",
-                content: "전시회 갈 때 꼭 오디오 가이드 들으세...",
-                author: "문화애호가",
-                created_at: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
-                category: "토론",
-                likes: 22,
-                comments: 7,
-                image_url: null,
-                type: "text"
               }
             ]);
           }
         }
       } catch (error) {
-        console.error("Error:", error);
+        console.log("Error:", error);
+        console.log("Using sample data due to catch error");
         // 에러 시 샘플 데이터 사용
         setPosts([
           {
             id: 1,
-            title: "전시 관람 후기",
-            content: "방금 다녀온 전시회가 정말 인상적이었...",
-            author: "박관람객",
-            created_at: new Date(Date.now() - 17 * 60 * 60 * 1000).toISOString(),
-            category: "숏폼",
-            likes: 156,
-            comments: 23,
+            title: "현대미술 vs 고전미술, 어리분은 어느 쪽을 더 선호하시나요?",
+            content: "최근에 루브르 박물관과 유명 롤 기웃는데 확실히 다른 매력이 있더라구요.. 고전 미술은 완성도와 기법이 압도적이고, 현대미술은 창의성과 실험성의 끌리는 것 같아요. 루브르의 허황된 작품들!!",
+            author: "아트취향조사단",
+            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+            likes: 145,
+            comments: 67,
             image_url: null,
-            type: "video"
+            type: "text"
           },
           {
             id: 2,
-            title: "오늘의 작업실",
-            content: "새로운 작품 작업 중입니다! 여러분의 ...",
-            author: "김작가",
-            created_at: new Date(Date.now() - 17 * 60 * 60 * 1000).toISOString(),
-            category: "작품",
-            likes: 24,
-            comments: 5,
-            image_url: null,
+            title: "오늘 MZ세대는 왜 클래식한 작품보다 미디어아트를 좋아할까요?",
+            content: "최근에 팀파티나 디지털의 갑은 곳이 인가가 많았어요. 저희 부모님은 '그게 무슨 예술이야'라고 하시는데, 전 오히려 새롭고 재미있더라구요. 인터랙티브하고 SNS에 올리기도 좋고... 전통 미술과 디지털 아트, 어떤 게 더 가치 있다고 생각하세요?",
+            author: "MZ미술관러",
+            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+            likes: 128,
+            comments: 45,
+            image_url: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800",
             type: "image"
-          },
-          {
-            id: 3,
-            title: "처음 작품 구매해봤어요",
-            content: "아트샵에서 김작가님의 추상화를 구매...",
-            author: "신규컬렉터",
-            created_at: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
-            category: "작품",
-            likes: 23,
-            comments: 12,
-            image_url: null,
-            type: "text"
-          },
-          {
-            id: 4,
-            title: "전시회 관람 팁 공유",
-            content: "전시회 갈 때 꼭 오디오 가이드 들으세...",
-            author: "문화애호가",
-            created_at: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
-            category: "토론",
-            likes: 22,
-            comments: 7,
-            image_url: null,
-            type: "text"
           }
         ]);
       } finally {
@@ -208,103 +129,152 @@ export function CommunityHighlights() {
     fetchCommunityPosts();
   }, []);
 
-  const getCategoryColor = (category) => {
-    switch (category) {
-      case "숏폼":
-        return "bg-red-100 text-red-800";
-      case "작품":
-        return "bg-purple-100 text-purple-800";
-      case "토론":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   const getTimeAgo = (createdAt) => {
     const now = new Date();
     const postTime = new Date(createdAt);
-    const diffInHours = Math.floor((now - postTime) / (1000 * 60 * 60));
+    const diffInMinutes = Math.floor((now - postTime) / (1000 * 60));
     
-    if (diffInHours < 1) return "방금 전";
+    if (diffInMinutes < 1) return "방금 전";
+    if (diffInMinutes < 60) return `${diffInMinutes}분 전`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours}시간 전`;
+    
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays}일 전`;
   };
 
+  // 더보기/접기 토글 함수
+  const toggleExpand = (postId) => {
+    setExpandedPosts(prev => ({
+      ...prev,
+      [postId]: !prev[postId]
+    }));
+  };
+
   if (loading) {
     return (
-      <div className="w-[90%] grid grid-cols-2 gap-3">
-        {[...Array(4)].map((_, index) => (
-          <div key={index} className="bg-white rounded-lg p-3 shadow-sm border border-gray-100 animate-pulse">
-            <div className="h-24 bg-gray-200 rounded mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded mb-1"></div>
-            <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-          </div>
-        ))}
+      <div className="bg-white w-full">
+        <div className="space-y-0">
+          {[...Array(2)].map((_, index) => (
+            <div key={index} className="border-b-8 border-gray-100 animate-pulse">
+              <div className="flex items-center gap-3 p-4">
+                <div className="w-10 h-10 rounded-full bg-gray-200"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-24 mb-1"></div>
+                  <div className="h-3 bg-gray-200 rounded w-16"></div>
+                </div>
+              </div>
+              <div className="px-4 pb-3">
+                <div className="h-5 bg-gray-200 rounded mb-2"></div>
+                <div className="h-16 bg-gray-200 rounded"></div>
+              </div>
+              <div className="px-4 py-3">
+                <div className="flex items-center gap-6">
+                  <div className="h-4 bg-gray-200 rounded w-12"></div>
+                  <div className="h-4 bg-gray-200 rounded w-12"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-[90%] grid grid-cols-2 gap-3">
-      {posts.map((post) => (
-        <Link key={post.id} href={`/community/${post.id}`} className="block">
-          <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            {/* 이미지/비디오 영역 */}
-            <div className="relative h-24 bg-gray-100 rounded mb-2 flex items-center justify-center">
-              {post.image_url ? (
-                <Image
-                  src={post.image_url}
-                  alt={post.title}
-                  width={200}
-                  height={96}
-                  className="w-full h-full object-cover rounded"
+    <div className="bg-white w-full">
+      <div className="space-y-0 pt-4">
+        {posts.map((post) => {
+          const isExpanded = expandedPosts[post.id];
+          // 글자 수로 더보기 버튼 필요 여부 판단 (약 150자 = 3줄)
+          const needsExpand = post.content && post.content.length > 150;
+          
+          return (
+            <div key={post.id} className="border-b-8 border-gray-100">
+              {/* 작성자 헤더 */}
+              <div className="flex items-center gap-3 p-4">
+                {/* 프로필 이미지 */}
+                <img 
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(post.author)}&background=random`}
+                  alt={post.author}
+                  className="w-10 h-10 rounded-full object-cover" 
                 />
-              ) : (
-                <div className="text-gray-400 text-2xl">
-                  {post.type === "video" ? "▶️" : post.type === "image" ? "🖼️" : "💬"}
+                
+                {/* 작성자 정보 */}
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-gray-900">{post.author}</p>
+                  <p className="text-xs text-gray-500">{getTimeAgo(post.created_at)}</p>
+                </div>
+                
+                {/* 더보기 메뉴 */}
+                <button className="text-gray-400 p-1 hover:bg-gray-100 rounded-full transition-colors">
+                  <MoreHorizontal className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* 게시글 본문 */}
+              <div className="px-4 pb-3">
+                {/* 제목 (클릭 시 상세 페이지로 이동) */}
+                <Link href={`/community/${post.id}`}>
+                  <h3 className="font-semibold text-lg mb-2 text-gray-900 hover:text-blue-600 transition-colors">
+                    {post.title}
+                  </h3>
+                </Link>
+                
+                {/* 본문 내용 */}
+                <div className="text-gray-800 text-sm leading-relaxed">
+                  <div className={isExpanded || !needsExpand ? "" : "line-clamp-3"}>
+                    {post.content}
+                  </div>
+                  {needsExpand && (
+                    <button 
+                      onClick={() => toggleExpand(post.id)}
+                      className="text-blue-500 text-sm font-medium mt-2 hover:text-blue-600 transition-colors"
+                    >
+                      {isExpanded ? "접기" : "더보기..."}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 이미지/영상 (선택적) */}
+              {post.image_url && (
+                <div className="bg-gray-100">
+                  <img 
+                    src={post.image_url}
+                    alt={post.title}
+                    className="w-full max-h-[500px] object-contain" 
+                  />
                 </div>
               )}
-              
-              {/* 카테고리 태그 */}
-              <div className="absolute top-1 left-1">
-                <span className={`text-xs px-2 py-1 rounded-full font-medium ${getCategoryColor(post.category)}`}>
-                  {post.category}
-                </span>
+
+              {/* 액션 버튼 영역 */}
+              <div className="flex items-center justify-between px-4 py-3">
+                {/* 좌측: 좋아요 + 댓글 */}
+                <div className="flex items-center gap-6 text-gray-600">
+                  {/* 좋아요 버튼 */}
+                  <button className="flex items-center gap-2 transition-colors hover:text-red-500">
+                    <Heart className="w-5 h-5" />
+                    <span className="text-sm font-medium">{post.likes}</span>
+                  </button>
+                  
+                  {/* 댓글 버튼 */}
+                  <button className="flex items-center gap-2 transition-colors hover:text-blue-500">
+                    <MessageCircle className="w-5 h-5" />
+                    <span className="text-sm font-medium">{post.comments}</span>
+                  </button>
+                </div>
+                
+                {/* 우측: 공유 버튼 */}
+                <button className="text-gray-600 hover:text-green-500 transition-colors">
+                  <Share className="w-5 h-5" />
+                </button>
               </div>
             </div>
-
-            {/* 제목 */}
-            <h3 className="font-bold text-gray-900 text-sm mb-1 line-clamp-1">
-              {post.title}
-            </h3>
-
-            {/* 내용 미리보기 */}
-            <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-              {post.content}
-            </p>
-
-            {/* 작성자와 시간 */}
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-gray-500">{post.author}</span>
-              <span className="text-xs text-gray-400">{getTimeAgo(post.created_at)}</span>
-            </div>
-
-            {/* 좋아요와 댓글 수 */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <FaHeart className="w-3 h-3 text-gray-400" />
-                <span className="text-xs text-gray-500">{post.likes}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <FaComment className="w-3 h-3 text-gray-400" />
-                <span className="text-xs text-gray-500">{post.comments}</span>
-              </div>
-            </div>
-          </div>
-        </Link>
-      ))}
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -1,0 +1,98 @@
+{
+  "name": "아트앤브릿지 - 전시회 리뷰와 예술 커뮤니티",
+  "short_name": "아트앤브릿지",
+  "description": "전시회 리뷰를 쓰고 전시티켓을 구매하세요! 아트앤브릿지에서 즐기는 예술 여행",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ko",
+  "categories": ["art", "culture", "entertainment"],
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "아트앤브릿지 데스크톱 화면"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "아트앤브릿지 모바일 화면"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "커뮤니티",
+      "short_name": "커뮤니티",
+      "description": "예술 커뮤니티 게시글 보기",
+      "url": "/community",
+      "icons": [
+        {
+          "src": "/shortcuts/community.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "전시회",
+      "short_name": "전시회",
+      "description": "전시회 정보 보기",
+      "url": "/exhibitions",
+      "icons": [
+        {
+          "src": "/shortcuts/exhibitions.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "아트 스토어",
+      "short_name": "아트 스토어",
+      "description": "작가 작품 구매",
+      "url": "/artstore",
+      "icons": [
+        {
+          "src": "/shortcuts/artstore.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { ExhibitionCards } from "./components/BookmarkedExhibition";
+import JournalistModal from "./components/JournalistModal";
 import {
   Tabs,
   Tab,
@@ -18,6 +19,11 @@ import {
   Input,
   Textarea,
 } from "@heroui/react";
+import { 
+  ChevronRight, Gift, Ticket, LogOut, Award, 
+  Palette, CheckCircle, Clock, Shield, MessageCircle, 
+  Bell, HelpCircle, ShoppingCart, PenTool, Heart, User 
+} from 'lucide-react';
 import { FaChevronLeft, FaFileContract, FaCheckCircle, FaClock, FaUserSlash, FaPlus, FaPlusSquare } from "react-icons/fa";
 import { BiSupport } from "react-icons/bi";
 import { FiLogOut } from "react-icons/fi";
@@ -32,6 +38,14 @@ import { FaArrowLeft } from "react-icons/fa";
 import { FaChevronRight } from "react-icons/fa";
 import MyArtworks from "./components/MyArtworks";
 import Messages from "./components/Messages";
+import RewardShopPopup from "./components/RewardShopPopup";
+import RewardBenefitsPopup from "./components/RewardBenefitsPopup";
+import NewMessages from "./components/NewMessages";
+import BookmarkedExhibitionPopup from "./components/BookmarkedExhibitionPopup";
+import ReviewsPopup from "./components/ReviewsPopup";
+import MessagesPopup from "./components/MessagesPopup";
+import JournalistApplicationPopup from "./components/JournalistApplicationPopup";
+import AnnouncementsPopup from "./components/AnnouncementsPopup";
 import { MdCircleNotifications } from "react-icons/md";
 import Link from "next/link";
 import { useUserStore } from "@/stores/userStore";
@@ -49,7 +63,13 @@ const Success = () => {
   const [title, setTitle] = useState(null);
   const [content, setContent] = useState(null);
   const [selectedModal, setSelectedModal] = useState(null);
-  const [selectedTab, setSelectedTab] = useState("favorite");
+  const [selectedTab, setSelectedTab] = useState(null); // null로 변경 (초기에는 아무것도 선택 안됨)
+  const [showJournalistModal, setShowJournalistModal] = useState(false);
+  const [showBookmarkedExhibition, setShowBookmarkedExhibition] = useState(false);
+  const [showReviews, setShowReviews] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
+  const [showJournalistApplication, setShowJournalistApplication] = useState(false);
+  const [showAnnouncements, setShowAnnouncements] = useState(false);
   const [selectedGalleryTab, setSelectedGalleryTab] = useState("recommended");
   const [isArtist, setIsArtist] = useState(false);
   const [profile, setProfile] = useState(null);
@@ -61,6 +81,28 @@ const Success = () => {
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [requestTitle, setRequestTitle] = useState("");
   const [requestContent, setRequestContent] = useState("");
+  
+  // 각 탭별 모달 상태
+  const [isFavoriteOpen, setIsFavoriteOpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
+  const [isOrderOpen, setIsOrderOpen] = useState(false);
+  const [isMyArtOpen, setIsMyArtOpen] = useState(false);
+  const [isRewardShopOpen, setIsRewardShopOpen] = useState(false);
+  const [isRewardBenefitsOpen, setIsRewardBenefitsOpen] = useState(false);
+  const [isJournalistOpen, setIsJournalistOpen] = useState(false);
+  const [isAnnouncementsOpen, setIsAnnouncementsOpen] = useState(false);
+  const [userPoints, setUserPoints] = useState(0);
+
+  // 포인트 상태 조회
+  const [pointStatus, setPointStatus] = useState({
+    total_points: 0,
+    available_points: 0,
+    locked_points: 0,
+    grade: 'bronze',
+    exchange_points: 1500,
+    next_unlock: null
+  });
 
   const getPolicy = async () => {
     const supabase = createClient();
@@ -171,6 +213,28 @@ const Success = () => {
     getPolicy();
   }, []);
 
+  useEffect(() => {
+    const fetchPointStatus = async () => {
+      try {
+        const response = await fetch('/api/points/status');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setPointStatus(data.data);
+            setUserPoints(data.data.available_points || 0);
+          }
+        }
+      } catch (error) {
+        console.error('포인트 상태 조회 오류:', error);
+      }
+    };
+
+    if (user) {
+      fetchPointStatus();
+    }
+  }, [user]);
+
+
   // 작가 인증 계정이면 자동으로 [나의작품] 탭으로 이동
   useEffect(() => {
     if (profile && isArtist && profile.isArtistApproval && selectedTab !== "myArt") {
@@ -178,9 +242,9 @@ const Success = () => {
     }
   }, [profile, isArtist]);
 
-  console.log("policy", policy);
-  console.log("customerService", customerService);
-  console.log("isArtist", isArtist);
+  // console.log("policy", policy);
+  // console.log("customerService", customerService);
+  // console.log("isArtist", isArtist);
 
   const handleLogout = async () => {
     try {
@@ -345,228 +409,554 @@ const Success = () => {
     );
   }
 
+
+  // 등급 정보 계산
+  const getGradeInfo = () => {
+    const grade = pointStatus.grade;
+    const availablePoints = pointStatus.available_points;
+    
+    switch (grade) {
+      case 'platinum':
+        return { 
+          label: '플래티넘', 
+          color: 'text-blue-300', 
+          progress: 100, 
+          nextGoal: '최고 등급입니다',
+          exchangePoints: 1200
+        };
+      case 'gold':
+        return { 
+          label: '골드', 
+          color: 'text-yellow-400', 
+          progress: 75, 
+          nextGoal: '플래티넘 등급까지 더 많은 리뷰가 필요합니다',
+          exchangePoints: 1300
+        };
+      case 'silver':
+        return { 
+          label: '실버', 
+          color: 'text-gray-400', 
+          progress: 50, 
+          nextGoal: '골드 등급까지 더 많은 리뷰가 필요합니다',
+          exchangePoints: 1400
+        };
+      default:
+        return { 
+          label: '브론즈', 
+          color: 'text-yellow-600', 
+          progress: 25, 
+          nextGoal: '실버 등급까지 3개 이상의 리뷰가 필요합니다',
+          exchangePoints: 1500
+        };
+    }
+  };
+  
+  const gradeInfo = getGradeInfo();
+
   return (
-    <div className="flex flex-col items-center justify-center ">
-      <div className="bg-white flex items-center w-[90%] justify-between">
-        <Button
-          isIconOnly
-          variant="light"
-          className="mr-2"
-          onPress={() => router.push("/")}
-        >
-          <FaArrowLeft className="text-xl" />
-        </Button>
-        <h2 className="text-lg font-bold text-center flex-grow">마이페이지</h2>
-        <div className="w-10"></div>
-      </div>
-      <div className="w-full h-auto flex justify-center items-center my-6 flex-col gap-y-4">
-        <div className="w-24 h-24 flex justify-center items-center bg-black rounded-full relative overflow-hidden">
-          {(() => {
-            const raw = (isArtist && profile?.isArtistApproval && profile?.avatar_url)
-              ? profile.avatar_url
-              : (user?.user_metadata?.picture || user?.user_metadata?.avatar_url);
-            if(!raw) return null;
-            const safeSrc = raw.startsWith('http://')
-              ? raw.replace('http://', 'https://')
-              : (raw.startsWith('//') ? `https:${raw}` : raw);
-            return <Image src={safeSrc} alt="프로필 이미지" fill className="rounded-full object-cover" />;
-          })()}
-        </div>
-        <div className="text-lg font-bold flex flex-col justify-center items-center">
-          <div className="flex flex-row items-center gap-x-2 text-[#0B437E]">
-            {(isArtist && profile?.isArtistApproval && profile?.artist_name)
-              ? profile.artist_name
-              : (user?.user_metadata?.full_name || user?.email || "사용자")}
+    <div className="bg-gray-100 min-h-screen pb-20">
+      
+      {/* ==================== 홍보 헤더 - 기자단 승인 계정은 기자단 전용 버튼 표시 ==================== */}
+      {profile?.is_journalist_approved ? (
+        <header className="bg-gradient-to-r from-purple-500 to-pink-600 px-4 py-4 sticky top-0 z-10 shadow-sm">
+          <div className="text-center">
+            <button
+              onClick={() => setShowJournalistModal(true)}
+              className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-6 py-3 text-white font-semibold hover:bg-white/30 transition-all duration-300 shadow-lg"
+            >
+              <div className="flex items-center gap-2">
+                <PenTool className="w-5 h-5" />
+                <span>기자단 전용 페이지</span>
+              </div>
+            </button>
+            <p className="text-purple-100 text-xs mt-2">기자단 전용 기능을 이용해보세요</p>
           </div>
-          <div className="flex flex-row items-center text-sm justify-center gap-x-1 mt-2">
-            {isArtist ? (
-              profile?.is_artist_rejected ? (
-                <button
-                  className="px-4 py-2 rounded-lg border border-orange-400 bg-orange-50 text-orange-700 font-semibold flex items-center gap-2 shadow-sm hover:bg-orange-100 transition-colors"
-                  onClick={openReject}
-                  type="button"
-                >
-                  <FaPlus className="text-orange-500 text-sm" /> 작가 재등록
-                </button>
-              ) : (
-                profile?.isArtistApproval === false ? (
-                  <button
-                    className="px-4 py-2 rounded-lg border border-yellow-400 bg-yellow-50 text-yellow-700 font-semibold flex items-center gap-2 cursor-not-allowed select-none"
-                    type="button" disabled
-                >
-                  <FaClock className="text-yellow-500 text-sm animate-pulse" /> 승인 대기중
-                </button>
-              ) : (
-                <button
-                    className="px-4 py-2 rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-semibold flex items-center gap-2 shadow-sm hover:bg-blue-100 transition-colors"
-                    onClick={() => router.push('/register')}
-                  type="button"
-                >
-                  <FaCheckCircle className="text-blue-500 text-sm" /> 작가 정보 수정하기
-                </button>
-                )
-              )
-            ) : (
+        </header>
+      ) : (
+        <header className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-4 sticky top-0 z-10 shadow-sm">
+          <div className="text-center">
+            <h1 className="text-lg font-bold text-white mb-1">전시회 리뷰쓰고 전시티켓 구매하기!</h1>
+            <p className="text-blue-100 text-xs">아트앤브릿지에서 즐기는 예술 여행</p>
+          </div>
+        </header>
+      )}
+
+      {/* ==================== 프로필 카드 ==================== */}
+      <div className="bg-white rounded-2xl p-6 mx-4 mt-4 border border-gray-100 shadow-sm">
+        
+        {/* 프로필 정보 */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {/* 프로필 이미지 */}
+            <div className="relative">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center shadow-lg">
+                {(() => {
+                  const raw = (isArtist && profile?.isArtistApproval && profile?.avatar_url)
+                    ? profile.avatar_url
+                    : (user?.user_metadata?.picture || user?.user_metadata?.avatar_url);
+                  if(!raw) {
+                    return <span className="text-3xl font-bold text-gray-600">👤</span>;
+                  }
+                  const safeSrc = raw.startsWith('http://')
+                    ? raw.replace('http://', 'https://')
+                    : (raw.startsWith('//') ? `https:${raw}` : raw);
+                  return <img src={safeSrc} alt="프로필" className="w-full h-full object-cover" />;
+                })()}
+              </div>
+              
+              {/* 상태 배지 */}
+              {(isArtist && profile?.isArtistApproval) && (
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-md">
+                  <CheckCircle className="w-3 h-3 text-white" />
+                </div>
+              )}
+            </div>
+            
+            {/* 이름 + 배지 */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {user?.user_metadata?.full_name || user?.email || "사용자"}
+                </h2>
+                
+                {/* 배지들 */}
+                <div className="flex items-center gap-2">
+                  {/* 작가 배지 */}
+                  {isArtist && profile?.isArtistApproval && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      인증 작가
+                    </span>
+                  )}
+
+                  {/* 기자단 배지 */}
+                  {profile?.is_journalist && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      기자단
+                    </span>
+                  )}
+                  
+                  {/* 승인 대기중 배지 */}
+                  {isArtist && !profile?.isArtistApproval && !profile?.is_artist_rejected && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 border border-yellow-200">
+                      <Clock className="w-3 h-3 mr-1" />
+                      승인 대기중
+                    </span>
+                  )}
+                  
+                  {/* 작가 재등록 필요 배지 */}
+                  {isArtist && profile?.is_artist_rejected && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
+                      <Clock className="w-3 h-3 mr-1" />
+                      재등록 필요
+                    </span>
+                  )}
+                </div>
+              </div>
+              <p className="text-sm text-gray-500">{user?.email}</p>
+            </div>
+          </div>
+          
+          {/* 설정 버튼 */}
+          <button 
+            onClick={() => router.push('/mypage/settings')}
+            className="p-3 rounded-xl hover:bg-gray-100 transition-colors"
+          >
+            <User className="w-6 h-6 text-gray-500" />
+          </button>
+        </div>
+
+        {/* ==================== 포인트/등급 카드 ==================== */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-200 mt-6">
+          
+          {/* 등급 + 포인트 헤더 */}
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-3">
+              <div className={`w-12 h-12 bg-gradient-to-br ${gradeInfo.color.includes('yellow') ? 'from-yellow-400 to-orange-500' : gradeInfo.color.includes('gray') ? 'from-gray-400 to-gray-500' : gradeInfo.color.includes('purple') ? 'from-purple-400 to-purple-500' : 'from-orange-400 to-orange-500'} rounded-2xl flex items-center justify-center shadow-lg`}>
+                <Award className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">{gradeInfo.label}</h3>
+                <p className="text-sm text-gray-600">멤버십 등급</p>
+              </div>
+            </div>
+            
+            <div className="text-right">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">P</span>
+                </div>
+                <div className="flex flex-col justify-center h-12">
+                  <div className="text-3xl font-bold text-gray-900 leading-none mb-1 pt-3">
+                    {pointStatus.available_points.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-gray-500">사용 가능</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* 포인트 상세 정보 */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-white rounded-xl p-4 border border-blue-100">
+              <div className="text-sm text-gray-500 mb-1">총 포인트</div>
+              <div className="text-lg font-bold text-gray-900">{(pointStatus.available_points + pointStatus.locked_points).toLocaleString()}P</div>
+            </div>
+            <div className="bg-white rounded-xl p-4 border border-blue-100">
+              <div className="text-sm text-gray-500 mb-1">검토 필요</div>
+              <div className="text-lg font-bold text-blue-600">{pointStatus.locked_points.toLocaleString()}P</div>
+            </div>
+          </div>
+          
+          {/* 프로그레스 바 */}
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-700">등급 진행률</span>
+              <span className="text-sm font-bold text-blue-600">{gradeInfo.progress}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500 shadow-sm"
+                style={{ width: `${gradeInfo.progress}%` }}
+              ></div>
+            </div>
+            <p className="text-xs text-gray-600 mt-2 text-center">
+              {gradeInfo.nextGoal}
+            </p>
+          </div>
+          
+          {/* 다음 해제 시간 */}
+          {pointStatus.next_unlock && (
+            <div className="bg-white/80 rounded-xl p-4 border border-blue-100">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-blue-500" />
+                <span className="text-sm text-gray-700">다음 해제:</span>
+                <span className="text-sm font-medium text-blue-600">
+                  {new Date(pointStatus.next_unlock).toLocaleString('ko-KR', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+
+      {/* ==================== 통합 메뉴 영역 ==================== */}
+      <div className="px-4 space-y-4 mt-6">
+        
+        {/* 주요 기능 그리드 */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">주요 기능</h3>
+          <div className="grid grid-cols-2 gap-4">
+            
+            {/* 즐겨찾기 */}
+            <button
+              onClick={() => setIsFavoriteOpen(true)}
+              className="flex items-center gap-4 p-4 rounded-xl hover:bg-red-50 hover:border-red-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <Heart className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-left">
+                <div className="text-gray-900 font-semibold whitespace-nowrap">즐겨찾기</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">저장한 전시회</div>
+              </div>
+            </button>
+            
+            {/* 나의 예매 */}
+            <button 
+              onClick={() => setIsOrderOpen(true)}
+              className="flex items-center gap-4 p-4 rounded-xl hover:bg-orange-50 hover:border-orange-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Ticket className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-left">
+                <div className="text-gray-900 font-semibold whitespace-nowrap">나의 예매</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">예매 내역 확인</div>
+              </div>
+            </button>
+            
+            {/* 리뷰 */}
+            <button
+              onClick={() => setIsReviewOpen(true)}
+              className="flex items-center gap-4 p-4 rounded-xl hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <MessageCircle className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-left">
+                <div className="text-gray-900 font-semibold whitespace-nowrap">리뷰</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">작성한 리뷰</div>
+              </div>
+            </button>
+            
+            {/* 메시지 */}
+            <button
+              onClick={() => setIsMessageOpen(true)}
+              className="flex items-center gap-4 p-4 rounded-xl hover:bg-green-50 hover:border-green-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <MessageCircle className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-left">
+                <div className="text-gray-900 font-semibold whitespace-nowrap">메시지</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">받은 메시지</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* 리워드 섹션 */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">리워드</h3>
+          <div className="grid grid-cols-2 gap-4">
+            
+            {/* 리워드샵 */}
+            <button 
+              onClick={() => setIsRewardShopOpen(true)}
+              className="flex items-center gap-4 p-4 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <ShoppingCart className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-left">
+                <div className="text-gray-900 font-semibold whitespace-nowrap">리워드샵</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">포인트로 구매</div>
+              </div>
+            </button>
+            
+            {/* 리워드 혜택 */}
+            <button 
+              onClick={() => setIsRewardBenefitsOpen(true)}
+              className="flex items-center gap-4 p-4 rounded-xl hover:bg-yellow-50 hover:border-yellow-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg" style={{minWidth: '48px', minHeight: '48px', maxWidth: '48px', maxHeight: '48px'}}>
+                <Gift className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-left">
+                <div className="text-gray-900 font-semibold whitespace-nowrap">리워드 혜택</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">등급별 혜택</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* 특별 활동 섹션 */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">특별 활동</h3>
+          <div className="grid grid-cols-2 gap-4">
+            
+            {/* 기자단 신청 */}
+            <button 
+              onClick={() => setIsJournalistOpen(true)}
+              className="flex items-center gap-4 p-4 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg" style={{minWidth: '48px', minHeight: '48px', maxWidth: '48px', maxHeight: '48px'}}>
+                <PenTool className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-left">
+                <div className="text-gray-900 font-semibold whitespace-nowrap">기자단 신청</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">아트 기자단 활동</div>
+              </div>
+            </button>
+            
+            {/* 나의 작품 (인증 작가만) */}
+            {isArtist && profile?.isArtistApproval && (
               <button
-                className="px-4 py-2 rounded-lg border border-gray-400 bg-white text-gray-700 font-semibold flex items-center gap-2 shadow-sm hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
-                onClick={() => router.push("/register")}
-                type="button"
+                onClick={() => setIsMyArtOpen(true)}
+                className="flex items-center gap-4 p-4 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
               >
-                작가 등록하기 <FaChevronRight className="text-sm" />
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg" style={{minWidth: '48px', minHeight: '48px', maxWidth: '48px', maxHeight: '48px'}}>
+                  <Palette className="w-7 h-7 text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="text-gray-900 font-semibold whitespace-nowrap">나의 작품</div>
+                  <div className="text-xs text-gray-500 whitespace-nowrap">등록한 작품 관리</div>
+                </div>
               </button>
             )}
           </div>
         </div>
-      </div>
 
-      {/* 첫 번째 커스텀 탭바 */}
-      <div className="flex flex-row w-[90%] border-t border-gray-200 mb-2 justify-center items-center">
-        <div className="w-[5%]"></div>
-        <div className={`flex w-full${!isArtist ? ' justify-center' : ''}`}>
-          <button
-            className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "favorite" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-            onClick={() => setSelectedTab("favorite")}
-          >
-            즐겨찾기
-          </button>
-          <button
-            className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "review" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-            onClick={() => setSelectedTab("review")}
-          >
-            리뷰
-          </button>
-          <button
-            className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "message" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-            onClick={() => setSelectedTab("message")}
-          >
-            메시지
-          </button>
-          <button
-            className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "order" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-            onClick={() => setSelectedTab("order")}
-          >
-            주문내역
-          </button>
-          {isArtist && (
-            <button
-              className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "myArt" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-              onClick={() => setSelectedTab("myArt")}
-            >
-              나의 작품
-            </button>
-          )}
-        </div>
-        <div className="w-[5%]"></div>
-      </div>
-
-      {/* 즐겨찾기 탭 상단 알림 영역 */}
-      {selectedTab === "favorite" && notifications.length > 0 && alarmExhibition && (
-        <div className="w-full flex flex-col items-center justify-center mb-4">
-          <div className="relative flex flex-col items-center justify-center w-full max-w-md mx-auto">
-            <div
-              className="w-full bg-yellow-100 border border-yellow-300 rounded-lg p-3 flex flex-col gap-2 items-center justify-center cursor-pointer transition hover:bg-yellow-200"
-              onClick={async () => {
-                if (!notifications[0]) return;
-                await createClient().from("notification").delete().eq("id", notifications[0].id);
-                setNotifications([]);
-                setAlarmExhibition(null);
-                window.location.href = `/exhibition/${alarmExhibition.id}`;
-              }}
-            >
-              <div className="flex items-center gap-2 text-yellow-700 font-semibold justify-center">
-                <MdCircleNotifications className="text-xl" />
-                {notifications[0].message}
-              </div>
-              <div className="flex flex-col items-center gap-2 mt-2">
-                <img src={alarmExhibition.photo} alt="전시회 이미지" className="w-20 h-20 rounded-md object-cover mx-auto" />
-                <div className="flex flex-col items-center">
-                  <span className="font-bold text-black text-center">{alarmExhibition.contents}</span>
-                  <span className="text-xs text-gray-500 text-center">{alarmExhibition.start_date} ~ {alarmExhibition.end_date}</span>
+        {/* ==================== 설정 및 도움말 ==================== */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">설정 및 도움말</h3>
+          <div className="space-y-3">
+            
+            {/* 작가 등록/재등록 (작가 미등록 또는 재등록 필요 시) */}
+            {(!isArtist || profile?.is_artist_rejected) && (
+              <button
+                onClick={() => profile?.is_artist_rejected ? openReject() : router.push("/register")}
+                className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-orange-50 hover:border-orange-200 border border-transparent transition-all duration-200"
+              >
+                <div className={`w-10 h-10 bg-gradient-to-br ${profile?.is_artist_rejected ? 'from-orange-400 to-red-500' : 'from-blue-400 to-indigo-500'} rounded-xl flex items-center justify-center shadow-lg`}>
+                  <PenTool className="w-5 h-5 text-white" />
                 </div>
-              </div>
-            </div>
-            {/* X 버튼 */}
-            <button
-              onClick={handleDeleteAlarm}
-              className="absolute left-2 bottom-2 bg-white border border-gray-300 rounded-full w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-200 z-10"
-              title="알림 닫기"
+                <div className="text-left flex-1">
+                  <div className="text-gray-900 font-semibold whitespace-nowrap">
+                    {profile?.is_artist_rejected ? '작가 재등록' : '작가 등록하기'}
+                  </div>
+                  <div className="text-xs text-gray-500 whitespace-nowrap">
+                    {profile?.is_artist_rejected ? '작가 정보를 다시 등록해주세요' : '작가로 활동을 시작해보세요'}
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </button>
+            )}
+            
+            {/* 작가 정보 수정 (승인된 작가만) */}
+            {isArtist && profile?.isArtistApproval && (
+              <button
+                onClick={() => router.push('/register')}
+                className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-all duration-200"
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <div className="text-gray-900 font-semibold whitespace-nowrap">작가 정보 수정</div>
+                  <div className="text-xs text-gray-500 whitespace-nowrap">작가 프로필 정보 수정</div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </button>
+            )}
+            
+            {/* 고객센터 */}
+            <a 
+              href="http://pf.kakao.com/_sBnXn" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-green-50 hover:border-green-200 border border-transparent transition-all duration-200"
             >
-              ×
+              <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                <HelpCircle className="w-5 h-5 text-white" />
+              </div>
+              <div className="text-left flex-1">
+                <div className="text-gray-900 font-semibold whitespace-nowrap">고객센터</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">카카오톡으로 문의하기</div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </a>
+            
+            {/* 공지사항 */}
+            <button 
+              onClick={() => setIsAnnouncementsOpen(true)}
+              className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-yellow-50 hover:border-yellow-200 border border-transparent transition-all duration-200"
+            >
+              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                <Bell className="w-5 h-5 text-white" />
+              </div>
+              <div className="text-left flex-1">
+                <div className="text-gray-900 font-semibold whitespace-nowrap">공지사항</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">최신 소식 및 업데이트</div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
             </button>
+            
+            {/* 관리자 페이지 (관리자만) */}
+            {user && profile?.role === 'admin' && (
+              <Link href="/admin" className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-all duration-200">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <div className="text-gray-900 font-semibold whitespace-nowrap">관리자 페이지</div>
+                  <div className="text-xs text-gray-500 whitespace-nowrap">시스템 관리 및 설정</div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </Link>
+            )}
           </div>
         </div>
-      )}
-
-      <div className="w-full px-2 flex justify-center items-center">
-        {selectedTab === "favorite" && <BookmarkedExhibition user={user} alarmExhibition={alarmExhibition} />}
-        {selectedTab === "review" && <Reviews user={user} />}
-        {selectedTab === "message" && <Messages user={user} />}
-        {selectedTab === "order" && <OrderHistory user={user} />}
-        {isArtist && selectedTab === "myArt" && <MyArtworks user={user} profile={profile} />}
-      </div>
-
-      {/* 북마크 없음 안내와 하단 메뉴 사이에 여백 추가 */}
-      <div className="h-6" />
-
-      <div className="w-full h-auto flex justify-center items-center flex-col gap-y-4 mb-24 px-4">
-        <div
-          className="flex items-center gap-x-2 w-full cursor-pointer"
-          onClick={() => setIsRequestOpen(true)}
-        >
-          <FaPlusSquare className="text-gray-600" size={20} />
-          <span>전시회 등록 요청</span>
-        </div>
-        <Divider></Divider>
-        <div
-          onClick={() => {
-            setSelectedModal("policy");
-            onOpen();
-          }}
-          className="flex items-center gap-x-2 w-full cursor-pointer"
-        >
-          <FaFileContract className="text-gray-600" size={20} />
-          <span>이용약관 및 정책</span>
-        </div>
-        <Divider></Divider>
-        <div
-          className="flex items-center gap-x-2 w-full cursor-pointer"
-          onClick={() => {
-            router.push("http://pf.kakao.com/_sBnXn/chat");
-          }}
-        >
-          <BiSupport className="text-gray-600" size={20} />
-          <span>고객센터</span>
-        </div>
-        <Divider></Divider>
-        <div
-          className="flex items-center gap-x-2 w-full cursor-pointer"
-          onClick={handleLogout}
-        >
-          <FiLogOut className="text-gray-600" size={20} />
-          <span>로그아웃</span>
-        </div>
-        <Divider></Divider>
-        {/* 개인정보처리방침 & 탈퇴하기 나란히 */}
-        <div className="flex flex-row justify-center items-center gap-x-4 mt-2">
-          <span
-            className="text-xs text-gray-500 underline cursor-pointer text-center"
+        
+        {/* ==================== 하단 액션 버튼 ==================== */}
+        <div className="flex gap-3 pt-4 pb-8">
+          <button 
             onClick={() => {
               setTitle("개인정보 처리방침");
               setContent(privacyPolicy);
               onOpen();
             }}
+            className="flex-1 py-3 text-sm text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors font-medium border border-gray-200 whitespace-nowrap"
           >
             개인정보 처리방침
-          </span>
-          <span
-            className="text-xs text-gray-500 underline cursor-pointer text-center"
+          </button>
+          <button 
             onClick={() => setIsWithdrawOpen(true)}
-            style={{ minWidth: '60px' }}
+            className="flex-1 py-3 text-sm text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors font-medium border border-gray-200 whitespace-nowrap"
           >
-            탈퇴하기
-          </span>
+            회원 탈퇴
+          </button>
         </div>
       </div>
+
+      {/* ==================== 각 탭별 모달 ==================== */}
+      
+      {/* 즐겨찾기 팝업 */}
+      <BookmarkedExhibitionPopup 
+        isOpen={isFavoriteOpen} 
+        onClose={() => setIsFavoriteOpen(false)}
+        user={user}
+        alarmExhibition={alarmExhibition}
+      />
+
+      {/* 리뷰 팝업 */}
+      <ReviewsPopup 
+        isOpen={isReviewOpen} 
+        onClose={() => setIsReviewOpen(false)}
+        user={user}
+      />
+
+      {/* 메시지 팝업 */}
+      <MessagesPopup 
+        isOpen={isMessageOpen} 
+        onClose={() => setIsMessageOpen(false)}
+        user={user}
+      />
+
+      {/* 나의 예매 팝업 */}
+      {isOrderOpen && <OrderHistory user={user} onClose={() => setIsOrderOpen(false)} />}
+
+      {/* 나의 작품 팝업 */}
+      {isArtist && profile?.isArtistApproval && isMyArtOpen && <MyArtworks user={user} profile={profile} onClose={() => setIsMyArtOpen(false)} />}
+
+      {/* 리워드샵 팝업 */}
+      <RewardShopPopup 
+        isOpen={isRewardShopOpen} 
+        onClose={() => setIsRewardShopOpen(false)}
+        userPoints={userPoints}
+        onPurchaseComplete={async () => {
+          // 포인트 상태 새로고침
+          try {
+            const response = await fetch('/api/points/status');
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success) {
+                setPointStatus(data.data);
+                setUserPoints(data.data.available_points || 0);
+              }
+            }
+          } catch (error) {
+            console.error('포인트 상태 조회 오류:', error);
+          }
+        }}
+      />
+
+      {/* 리워드 혜택 팝업 */}
+      <RewardBenefitsPopup 
+        isOpen={isRewardBenefitsOpen} 
+        onClose={() => setIsRewardBenefitsOpen(false)}
+      />
+
+      {/* ==================== 모달들 ==================== */}
+      
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
           {(onClose) => (
@@ -642,6 +1032,24 @@ const Success = () => {
           </>)}
         </ModalContent>
       </Modal>
+
+      {/* 기자단 신청 팝업 */}
+      <JournalistApplicationPopup 
+        isOpen={isJournalistOpen} 
+        onClose={() => setIsJournalistOpen(false)}
+      />
+
+      {/* 공지사항 팝업 */}
+      <AnnouncementsPopup 
+        isOpen={isAnnouncementsOpen} 
+        onClose={() => setIsAnnouncementsOpen(false)}
+      />
+
+      {/* 기자단 전용 모달 */}
+      <JournalistModal 
+        isOpen={showJournalistModal} 
+        onClose={() => setShowJournalistModal(false)}
+      />
     </div>
   );
 };

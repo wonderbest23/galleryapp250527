@@ -3,6 +3,8 @@ import { Card, CardBody, Skeleton } from "@heroui/react";
 import { FaRegStar } from "react-icons/fa";
 import { FaStar } from "react-icons/fa";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa6";
+import { FaCalendar } from "react-icons/fa6";
+import { IoMdPin } from "react-icons/io";
 import Link from "next/link";
 import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
@@ -17,20 +19,20 @@ export default function ExhibitionCarousel({ exhibitions, user, bookmarks, toggl
 
   // 로딩 상태에서 사용할 스켈레톤 UI 컴포넌트
   const SkeletonCard = () => (
-    <div className="w-[200px] h-[300px] ">
-      <Card className="w-[200px] space-y-5 p-4" radius="lg" shadow="none" >
+    <div className="w-[140px] h-[180px] ">
+      <Card className="w-[140px] space-y-3 p-3" radius="lg" shadow="none" >
         <Skeleton className="rounded-lg">
-          <div className="h-24 rounded-lg bg-default-300" />
+          <div className="h-16 rounded-lg bg-default-300" />
         </Skeleton>
-        <div className="space-y-3">
+        <div className="space-y-2">
           <Skeleton className="w-3/5 rounded-lg">
-            <div className="h-3 w-3/5 rounded-lg bg-default-200" />
+            <div className="h-2 w-3/5 rounded-lg bg-default-200" />
           </Skeleton>
           <Skeleton className="w-4/5 rounded-lg">
-            <div className="h-3 w-4/5 rounded-lg bg-default-200" />
+            <div className="h-2 w-4/5 rounded-lg bg-default-200" />
           </Skeleton>
           <Skeleton className="w-2/5 rounded-lg">
-            <div className="h-3 w-2/5 rounded-lg bg-default-300" />
+            <div className="h-2 w-2/5 rounded-lg bg-default-300" />
           </Skeleton>
         </div>
       </Card>
@@ -47,7 +49,7 @@ export default function ExhibitionCarousel({ exhibitions, user, bookmarks, toggl
     ({ exhibition }) => (
       <Link
         href={`/exhibition/${exhibition.id}`}
-        className="flex-shrink-0 w-[180px] h-[240px] block"
+        className="flex-shrink-0 w-[140px] h-[180px] block"
         onClick={(e) => {
           // 드래그 중에는 링크 이동을 방지
           if (isDraggingRef.current) {
@@ -55,14 +57,14 @@ export default function ExhibitionCarousel({ exhibitions, user, bookmarks, toggl
           }
         }}
       >
-        <Card className="h-[240px] overflow-hidden shadow hover:shadow-lg transition-shadow rounded-xl">
+        <Card className="h-[180px] overflow-hidden shadow hover:shadow-lg transition-shadow rounded-xl">
           <div className="relative">
             <Image
               src={getImageUrl(exhibition.photo)}
               alt={exhibition.name || "전시회 이미지"}
-              width={280}
-              height={140}
-              className="h-[140px] w-full object-cover"
+              width={200}
+              height={100}
+              className="h-[100px] w-full object-cover"
             />
             {/* <div
               className="absolute top-2 right-2 z-10 p-1 rounded-full bg-white/70"
@@ -75,18 +77,18 @@ export default function ExhibitionCarousel({ exhibitions, user, bookmarks, toggl
               )}
             </div> */}
           </div>
-          <CardBody className="flex flex-col justify-between h-[100px] p-3">
-            <div className="text-[16px] font-bold line-clamp-1">{exhibition.contents}</div>
-            <div className="text-[10px]">
+          <CardBody className="flex flex-col justify-between h-[80px] p-2">
+            <div className="text-[12px] font-bold line-clamp-1">{exhibition.contents}</div>
+            <div className="text-[8px]">
               <p className="line-clamp-1 text-[#BDBDBD]">
                 {exhibition.gallery?.address || "주소 정보 없음"}
               </p>
             </div>
-            <div className="flex text-sm justify-between items-center">
-              <div className="rounded-md text-[10px] text-[#BDBDBD]">평균별점</div>
+            <div className="flex text-xs justify-between items-center">
+              <div className="rounded-md text-[8px] text-[#BDBDBD]">평균별점</div>
               <div className="flex items-center gap-x-1">
-                <span className="text-[10px] text-[#007AFF]">{exhibition.review_average || "1.0"}</span>
-                <FaStar className="text-[#007AFF]" />
+                <span className="text-[8px] text-[#007AFF]">{exhibition.review_average || "1.0"}</span>
+                <FaStar className="text-[#007AFF] w-2 h-2" />
               </div>
             </div>
           </CardBody>
@@ -202,7 +204,7 @@ export default function ExhibitionCarousel({ exhibitions, user, bookmarks, toggl
         <div className="w-full relative overflow-hidden">
           <div
             ref={sliderRef}
-            className="flex overflow-x-auto gap-3 pb-1 scrollbar-hide h-full slider-container"
+            className="flex overflow-x-auto gap-2 pb-1 scrollbar-hide h-full slider-container"
             style={{
               scrollSnapType: "x mandatory",
               scrollBehavior: "auto",
@@ -215,7 +217,7 @@ export default function ExhibitionCarousel({ exhibitions, user, bookmarks, toggl
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
           >
-            <div className="flex gap-3  pr-8 relative z-10">
+            <div className="flex gap-2 pr-6 relative z-10">
               {exhibitions.map((exhibition, index) => (
                 <ExhibitionCard key={index} exhibition={exhibition} />
               ))}

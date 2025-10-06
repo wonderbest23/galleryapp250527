@@ -1,5 +1,32 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    scrollRestoration: false, // 스크롤 복원 비활성화
+  },
+  
+  // SEO 최적화 설정
+  async headers() {
+    return [
+      {
+        source: '/sitemap.xml',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, s-maxage=3600',
+          },
+        ],
+      },
+      {
+        source: '/robots.txt',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, s-maxage=86400',
+          },
+        ],
+      },
+    ];
+  },
   webpack: (config, { isServer }) => {
     // SVG 파일 처리를 위한 설정
     config.module.rules.push({

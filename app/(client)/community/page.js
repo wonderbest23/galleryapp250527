@@ -1,488 +1,676 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { FiHome, FiSearch, FiBell, FiHeart, FiMessageCircle, FiShare2, FiMoreVertical } from "react-icons/fi";
+import { Heart, MessageCircle, Share, Plus, MoreHorizontal, Flame, Volume2, VolumeX } from 'lucide-react';
 import Link from "next/link";
-import Image from "next/image";
-import { useDisclosure } from "@heroui/react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
-import TopNavigation from "../components/TopNavigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { PostReportModal } from "../components/post-report-modal";
+import JournalistApplicationPopup from "../mypage/success/components/JournalistApplicationPopup";
+import VideoPlayer from "./components/VideoPlayer";
+import Head from "next/head";
+import { generateSEOMeta, PAGE_SEO } from "@/utils/seo";
 
-// 샘플 데이터 함수
-const getSamplePosts = () => [
-  {
-    id: 1,
-    title: "테스트글작성",
-    content: "테스트에요",
-    user_id: "test-user-1",
-    profiles: { name: "아트앤브릿지", avatar_url: null },
-    created_at: new Date(Date.now() - 15 * 60 * 60 * 1000).toISOString(),
-    likes: 0,
-    comments: 0,
-    category: "all"
-  },
-  {
-    id: 2,
-    title: "이번전시회 볼만한없을까요?",
-    content: "커뮤니티 페이지에 \"더보기\" 기능을 추가했습니다. 이제 150자 이상의 긴 글에는 자동으로 \"더보기...\" 버튼이 나타나고, 클릭하면 전체 내용을 볼 수 있으며, \"접기\" 버튼으로 다시 축소할 수 있습니다. 커뮤니티 페이지의 사용자 경험이 훨씬 개선되었습니다. 이 기능은 긴 글을 읽기 편하게 만들어주며, 피드의 깔끔함도 유지할 수 있습니다. 앞으로도 더 많은 기능을 추가할 예정입니다.",
-    user_id: "test-user-2",
-    profiles: { name: "아트앤브릿지", avatar_url: null },
-    created_at: new Date(Date.now() - 15 * 60 * 60 * 1000).toISOString(),
-    likes: 5,
-    comments: 3,
-    category: "exhibition"
-  },
-  {
-    id: 3,
-    title: "전시 관람 후기",
-    content: "방금 다녀온 전시회가 정말 인상적이었습니다. 작가의 새로운 시도와 표현 방식이 돋보였고, 특히 색감과 구도가 매우 인상적이었습니다. 전시장 분위기도 좋았고, 관람객들도 많아서 활기찬 분위기였습니다. 다음에도 이런 전시회가 열리면 꼭 가보고 싶습니다.",
-    user_id: "test-user-3",
-    profiles: { name: "박관람객", avatar_url: null },
-    created_at: new Date(Date.now() - 17 * 60 * 60 * 1000).toISOString(),
-    likes: 156,
-    comments: 23,
-    category: "exhibition"
-  },
-  {
-    id: 4,
-    title: "오늘의 작업실",
-    content: "새로운 작품 작업 중입니다! 여러분의 의견이 궁금해요. 어떤 색감이 더 좋을까요? 추상적인 표현과 구체적인 표현 중 어떤 것이 더 매력적일까요? 작가로서 항상 고민이 많습니다.",
-    user_id: "test-user-4",
-    profiles: { name: "김작가", avatar_url: null },
-    created_at: new Date(Date.now() - 17 * 60 * 60 * 1000).toISOString(),
-    likes: 24,
-    comments: 5,
-    category: "artwork"
-  },
-  {
-    id: 5,
-    title: "처음 작품 구매해봤어요",
-    content: "아트샵에서 김작가님의 추상화를 구매했습니다. 처음으로 원화를 구매해보는 경험이었는데, 정말 신기하고 설레는 경험이었습니다. 집에 걸어놓으니 분위기가 완전히 달라졌어요!",
-    user_id: "test-user-5",
-    profiles: { name: "신규컬렉터", avatar_url: null },
-    created_at: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
-    likes: 23,
-    comments: 12,
-    category: "artwork"
-  },
-  {
-    id: 6,
-    title: "전시회 관람 팁 공유",
-    content: "전시회 갈 때 꼭 오디오 가이드를 들으세요! 작가의 의도와 작품의 배경을 이해하는 데 정말 도움이 됩니다. 그리고 평일 오전에 가시면 사람이 적어서 여유롭게 관람할 수 있어요.",
-    user_id: "test-user-6",
-    profiles: { name: "문화애호가", avatar_url: null },
-    created_at: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
-    likes: 22,
-    comments: 7,
-    category: "discussion"
-  }
-];
-
-export default function CommunityPage() {
+function CommunityPageContent() {
   const supabase = createClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState('all');
   const [posts, setPosts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [activeTab, setActiveTab] = useState("all");
-  const [sortBy, setSortBy] = useState("latest");
-  const [expandedPosts, setExpandedPosts] = useState(new Set());
+  const [trendingPosts, setTrendingPosts] = useState([]);
+  const [user, setUser] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [mutedVideos, setMutedVideos] = useState({});
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState(null);
+  const [showJournalistApplication, setShowJournalistApplication] = useState(false);
   
-  // 상단 네비게이션바 관련 상태
-  const [search, setSearch] = useState("");
-  const [exhibitions, setExhibitions] = useState([]);
-  const [gallery, setGallery] = useState([]);
-  const [showSearchResults, setShowSearchResults] = useState(false);
-  const [notificationDisclosure, setNotificationDisclosure] = useState({ isOpen: false, onOpen: () => {}, onClose: () => {} });
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUser(user);
-    };
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      setIsLoading(true);
-      try {
-        let query = supabase
-          .from("community_post")
-          .select(`
-            *,
-            profiles:user_id(name, avatar_url)
-          `)
-          .order("created_at", { ascending: false });
-
-        if (activeTab !== "all") {
-          query = query.eq("category", activeTab);
-        }
-
-        if (sortBy === "popular") {
-          query = query.order("likes", { ascending: false });
-        }
-
-        const { data, error } = await query.limit(20);
-
-        if (error) {
-          console.error("Error fetching posts:", error);
-          // 에러 시 샘플 데이터 사용
-          setPosts(getSamplePosts());
-        } else {
-          // 실제 데이터가 있으면 사용, 없으면 샘플 데이터 사용
-          if (data && data.length > 0) {
-            setPosts(data);
-          } else {
-            setPosts(getSamplePosts());
-          }
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        setPosts(getSamplePosts());
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, [activeTab, sortBy]);
-
-  const getTimeAgo = (createdAt) => {
-    const now = new Date();
-    const postTime = new Date(createdAt);
-    const diffInHours = Math.floor((now - postTime) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return "방금 전";
-    if (diffInHours < 24) return `${diffInHours}시간 전`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays}일 전`;
-  };
-
-  const toggleExpanded = (postId) => {
-    setExpandedPosts(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(postId)) {
-        newSet.delete(postId);
-      } else {
-        newSet.add(postId);
-      }
-      return newSet;
-    });
-  };
-
-  const shouldShowMoreButton = (content) => {
-    return content && content.length > 150;
-  };
-
-  const getDisplayContent = (post) => {
-    if (!post.content) return "";
-    
-    if (expandedPosts.has(post.id) || !shouldShowMoreButton(post.content)) {
-      return post.content;
-    }
-    
-    return post.content.substring(0, 150) + "...";
-  };
+  // 광고 배너 상태
+  const [adBanner, setAdBanner] = useState(null);
+  const [adBanners, setAdBanners] = useState([]);
 
   const tabs = [
-    { id: "all", label: "전체" },
-    { id: "exhibition", label: "전시회" },
-    { id: "artwork", label: "작품" },
-    { id: "shortform", label: "숏폼" },
-    { id: "discussion", label: "토론" }
+    { id: 'all', label: '전체' },
+    { id: 'free', label: '자유' },
+    { id: 'exhibition', label: '전시회' },
+    { id: 'short_video', label: '숏폼' },
+    { id: 'discussion', label: '토론' },
+    { id: 'review', label: '리뷰' },
+    { id: 'journalist', label: '기자단' }
   ];
 
-  const sortTabs = [
-    { id: "latest", label: "최신순" },
-    { id: "popular", label: "인기순" }
-  ];
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    console.log('URL 파라미터 tab:', tab);
+    if (tab && ['all', 'exhibition', 'short_video', 'discussion', 'free', 'review'].includes(tab)) {
+      console.log('탭 변경:', activeTab, '->', tab);
+      setActiveTab(tab);
+    }
+    setIsInitialized(true);
+  }, [searchParams]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 pb-16">
-        <div className="bg-white border-b border-gray-200">
-          <div className="px-4 py-4">
-            <h1 className="text-xl font-bold text-gray-900">커뮤니티</h1>
-          </div>
-        </div>
-        <div className="space-y-4">
-          {[...Array(3)].map((_, index) => (
-            <div key={index} className="bg-white p-4 shadow-sm animate-pulse">
-              <div className="flex items-center mb-3">
-                <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                <div className="ml-3">
-                  <div className="h-4 bg-gray-200 rounded w-24 mb-1"></div>
-                  <div className="h-3 bg-gray-200 rounded w-16"></div>
-                </div>
-              </div>
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-full mb-1"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    // 페이지 진입 시 최상단으로 스크롤
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    
+    const initUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    initUser();
+    fetchTrendingPosts();
+    fetchAdBanner();
+    fetchAdBanners();
+  }, []);
+
+  // 초기화 완료 후에만 fetchPosts 호출
+  useEffect(() => {
+    if (isInitialized) {
+      console.log('초기화 완료, activeTab:', activeTab);
+      fetchPosts();
+    }
+  }, [activeTab, isInitialized]);
+
+  // posts 상태 변경 감지
+  useEffect(() => {
+    console.log('posts 상태 변경됨:', posts.length, '개 항목');
+    console.log('첫 번째 항목:', posts[0]);
+  }, [posts]);
+
+  const fetchTrendingPosts = async () => {
+    try {
+      // 트렌딩 포스트 가져오기 (좋아요 수 기준)
+      const { data, error } = await supabase
+        .from('community_post')
+        .select(`
+          *,
+          profiles:user_id (
+            id,
+            name,
+            avatar_url
+          )
+        `)
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error('트렌딩 포스트 조회 오류:', error);
+        return;
+      }
+
+      console.log('트렌딩 포스트:', data);
+      setTrendingPosts(data || []);
+    } catch (error) {
+      console.error('트렌딩 포스트 조회 중 오류:', error);
+    }
+  };
+
+  const fetchAdBanner = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gallery_notification')
+        .select('*')
+        .eq('type', 'banner')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!error && data) {
+        setAdBanner(data);
+      }
+    } catch (error) {
+      console.error('광고 배너 조회 오류:', error);
+    }
+  };
+
+  const fetchAdBanners = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gallery_notification')
+        .select('*')
+        .eq('type', 'ad_banner')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (!error && data) {
+        setAdBanners(data);
+      }
+    } catch (error) {
+      console.error('광고 배너들 조회 오류:', error);
+    }
+  };
+
+  const fetchPosts = async () => {
+    try {
+      console.log('fetchPosts 호출됨, activeTab:', activeTab);
+      
+      let query = supabase
+        .from('community_post')
+        .select(`
+          *,
+          profiles:user_id (
+            id,
+            name,
+            avatar_url
+          )
+        `)
+        .or('is_published.eq.true,is_published.is.null');
+
+      // 카테고리별 필터링
+      if (activeTab !== 'all') {
+        const categoryMap = {
+          'free': 'free',
+          'exhibition': 'exhibition',
+          'short_video': 'short_video',
+          'discussion': '토론',
+          'review': 'review',
+          'journalist': 'journalist'
+        };
+        
+        if (categoryMap[activeTab]) {
+          query = query.eq('category', categoryMap[activeTab]);
+        }
+      }
+
+      const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) {
+        console.error('게시글 조회 오류:', error);
+        return;
+      }
+
+      console.log('조회된 게시글:', data?.length, '개');
+      setPosts(data || []);
+    } catch (error) {
+      console.error('게시글 조회 중 오류:', error);
+    }
+  };
+
+  const toggleMute = (postId) => {
+    setMutedVideos(prev => ({
+      ...prev,
+      [postId]: !prev[postId]
+    }));
+  };
+
+  const handleReport = (postId) => {
+    setSelectedPostId(postId);
+    setShowReportModal(true);
+  };
+
+  const seoMeta = generateSEOMeta({
+    title: PAGE_SEO.community.title,
+    description: PAGE_SEO.community.description,
+    keywords: PAGE_SEO.community.keywords,
+    url: '/community'
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16">
-      {/* 상단 네비게이션 바 */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            {/* 홈 버튼 */}
-            <Link href="/" className="cursor-pointer">
-              <FiHome className="w-6 h-6 text-gray-700 hover:text-blue-500 transition-colors" />
-            </Link>
+    <>
+      <Head>
+        <title>{seoMeta.title}</title>
+        <meta name="description" content={seoMeta.description} />
+        <meta name="keywords" content={seoMeta.keywords} />
+        <meta property="og:title" content={seoMeta.openGraph.title} />
+        <meta property="og:description" content={seoMeta.openGraph.description} />
+        <meta property="og:url" content={seoMeta.openGraph.url} />
+        <meta property="og:type" content={seoMeta.openGraph.type} />
+        <meta property="og:image" content={seoMeta.openGraph.images[0].url} />
+        <link rel="canonical" href={seoMeta.alternates.canonical} />
+      </Head>
 
-            {/* 검색바 */}
-            <div className="flex-1 mx-4 relative">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="갤러리, 전시회를 검색해보세요"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full px-4 py-2 pl-10 pr-4 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                />
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              </div>
-
-              {/* 검색 결과 */}
-              {showSearchResults && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
-                  <div className="p-3">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">전시회</h3>
-                    {exhibitions.length > 0 ? (
-                      <div className="space-y-2">
-                        {exhibitions.slice(0, 3).map((item) => (
-                          <Link
-                            key={item.id}
-                            href={`/exhibition/${item.id}`}
-                            className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg"
-                            onClick={() => setShowSearchResults(false)}
-                          >
-                            <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
-                              <span className="text-xs">🎨</span>
-                            </div>
-                            <span className="text-sm">{item.name}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-500 p-2">검색 결과가 없습니다</div>
-                    )}
-                  </div>
-
-                  <div className="border-t border-gray-200 my-2"></div>
-
-                  <div className="p-3">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">갤러리</h3>
-                    {gallery.length > 0 ? (
-                      <div className="space-y-2">
-                        {gallery.slice(0, 3).map((item) => (
-                          <Link
-                            key={item.id}
-                            href={`/gallery/${item.id}`}
-                            className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg"
-                            onClick={() => setShowSearchResults(false)}
-                          >
-                            <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
-                              <span className="text-xs">🏛️</span>
-                            </div>
-                            <span className="text-sm">{item.title || item.contents}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-500 p-2">검색 결과가 없습니다</div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 알림 아이콘 */}
-            <div className="relative">
-              <button
-                onClick={() => setNotificationDisclosure({ ...notificationDisclosure, isOpen: true })}
-                className="relative p-1"
+      <div className="min-h-screen bg-gray-50">
+        {/* 헤더 */}
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-bold text-gray-900">커뮤니티</h1>
+              <Link
+                href="/community/write"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                <FiBell className="w-6 h-6 text-gray-700" />
-                {unreadCount > 0 && (
-                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {unreadCount}
-                  </div>
-                )}
-              </button>
+                <Plus className="w-5 h-5" />
+              </Link>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-16 z-10">
-        <div className="px-4 py-4">
-          <h1 className="text-xl font-bold text-gray-900">커뮤니티</h1>
+        {/* 탭 메뉴 */}
+        <div className="bg-white border-b border-gray-200 sticky top-16 z-10">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="flex space-x-1 overflow-x-auto">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    const url = new URL(window.location);
+                    if (tab.id === 'all') {
+                      url.searchParams.delete('tab');
+                    } else {
+                      url.searchParams.set('tab', tab.id);
+                    }
+                    router.push(url.pathname + url.search);
+                  }}
+                  className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        
-        {/* Primary Tabs */}
-        <div className="flex border-b border-gray-200">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-3 text-sm font-medium ${
-                activeTab === tab.id
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        
-        {/* Secondary Tabs */}
-        <div className="flex border-b border-gray-200">
-          {sortTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setSortBy(tab.id)}
-              className={`flex-1 py-3 text-sm font-medium ${
-                sortBy === tab.id
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
 
-      {/* Posts Feed */}
-      <div className="space-y-4">
-        {posts.map((post) => (
-          <div key={post.id} className="bg-white p-4 shadow-sm">
-            {/* Post Header */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">아트</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    {post.profiles?.name || "익명"}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {getTimeAgo(post.created_at)}
-                  </p>
+        {/* 광고 배너 */}
+        {adBanner && (
+          <div className="px-4 pt-4">
+            <a 
+              href={adBanner.link_url || "#"} 
+              target={adBanner.link_url ? "_blank" : "_self"}
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                <div className="relative w-full h-24">
+                  <img
+                    src={adBanner.image_url}
+                    alt={adBanner.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                    <p className="text-white text-sm font-medium">{adBanner.title}</p>
+                  </div>
                 </div>
               </div>
-              <button className="p-1">
-                <FiMoreVertical className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-
-            {/* Post Title */}
-            <h2 className="text-lg font-bold text-gray-900 mb-2">
-              {post.title}
-            </h2>
-
-            {/* Post Content */}
-            <div className="text-gray-900 mb-3">
-              <p className="whitespace-pre-wrap">
-                {getDisplayContent(post)}
-              </p>
-              {shouldShowMoreButton(post.content) && (
-                <button
-                  onClick={() => toggleExpanded(post.id)}
-                  className="text-blue-600 text-sm mt-1"
-                >
-                  {expandedPosts.has(post.id) ? "접기" : "더보기..."}
-                </button>
-              )}
-            </div>
-
-            {/* Post Actions */}
-            <div className="flex items-center space-x-4 pt-3 border-t border-gray-100">
-              <button className="flex items-center space-x-1">
-                <FiHeart className="w-5 h-5 text-gray-400" />
-                <span className="text-sm text-gray-500">{post.likes || 0}</span>
-              </button>
-              <button className="flex items-center space-x-1">
-                <FiMessageCircle className="w-5 h-5 text-gray-400" />
-                <span className="text-sm text-gray-500">{post.comments || 0}</span>
-              </button>
-              <button className="flex items-center space-x-1">
-                <FiShare2 className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-          </div>
-        ))}
-        
-        {posts.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-gray-500">아직 게시글이 없습니다.</p>
+            </a>
           </div>
         )}
-      </div>
 
-      {/* 알림 모달 */}
-      <Modal
-        placement="center"
-        isOpen={notificationDisclosure.isOpen}
-        onClose={() => setNotificationDisclosure({ ...notificationDisclosure, isOpen: false })}
-        size="md"
-        scrollBehavior="inside"
-      >
-        <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-lg font-bold">알림</h2>
-          </ModalHeader>
-          <ModalBody>
-            {notifications.length > 0 ? (
-              <div className="space-y-3">
-                {notifications.map((notification) => (
-                  <div key={notification.id} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <FiBell className="w-4 h-4 text-blue-600" />
+        {/* 광고 카드 섹션 */}
+         {adBanners.length > 0 && (
+           <div className="px-4 pt-4">
+             <div className="space-y-3">
+               {adBanners.map((banner, index) => (
+                 <a
+                   key={banner.id}
+                   href={banner.link_url || '#'}
+                   target={banner.link_url?.startsWith('http') ? '_blank' : '_self'}
+                   rel={banner.link_url?.startsWith('http') ? 'noopener noreferrer' : ''}
+                   className="block bg-gray-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+                 >
+                   <div className="flex items-center gap-4">
+                     {/* 광고 이미지 - 파란색 배경 */}
+                     <div className="w-16 h-16 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                       <div className="text-white text-xs text-center">
+                         <div className="font-bold">imgbb.com</div>
+                         <div className="text-xs opacity-80">image not found</div>
+                       </div>
+                     </div>
+                     
+                     {/* 광고 텍스트 */}
+                     <div className="flex-1 min-w-0">
+                       <h3 className="font-medium text-gray-900 truncate">{banner.title}</h3>
+                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">{banner.content}</p>
+                       <div className="flex items-center mt-2">
+                         <span className="text-xs text-blue-600 font-medium">자세히 보기</span>
+                         <svg className="w-3 h-3 text-blue-600 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                         </svg>
+                       </div>
+                     </div>
+                   </div>
+                 </a>
+               ))}
+             </div>
+           </div>
+         )}
+
+        {/* 실시간 인기글 섹션 */}
+        {trendingPosts.length > 0 && (
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                  <h2 className="text-lg font-bold text-gray-900">실시간 인기글</h2>
+                </div>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3">
+                  {trendingPosts.map((post, index) => (
+                    <div key={post.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
+                          {index + 1}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 truncate">{post.title}</h3>
+                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                          <span>👁 {post.views || 0}</span>
+                          <span>💬 {post.comments_count || 0}</span>
+                          <span>❤️ {post.likes_count || 0}</span>
+                          <span className="text-xs">{new Date(post.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <Link
+                          href={`/community/${post.id}`}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
+                          보기
+                        </Link>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">
-                        {notification.title}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        {notification.time}
-                      </p>
-                    </div>
-                    {!notification.isRead && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>
-                    )}
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 게시글 목록 */}
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          {activeTab === 'journalist' ? (
+            /* 기자단 전용 섹션 */
+            <div className="space-y-6">
+              {/* 기자단 소개 카드 */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
                   </div>
-                ))}
+                  <div>
+                    <h2 className="text-xl font-bold">기자단</h2>
+                    <p className="text-blue-100">전문적인 예술 저널리즘을 위한 공간</p>
+                  </div>
+                </div>
+                <p className="text-blue-100 mb-4">
+                  아트앤브릿지 기자단은 예술계의 소식을 전문적으로 전달하는 역할을 합니다. 
+                  전시회 리뷰, 아티스트 인터뷰, 예술계 동향 등을 다룹니다.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowJournalistApplication(true)}
+                    className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+                  >
+                    기자단 신청하기
+                  </button>
+                  <Link
+                    href="/community/write?category=journalist"
+                    className="bg-white/20 text-white px-4 py-2 rounded-lg font-medium hover:bg-white/30 transition-colors"
+                  >
+                    기사 작성하기
+                  </Link>
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <FiBell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>알림이 없습니다</p>
+
+              {/* 기자단 활동 가이드 */}
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">기자단 활동 가이드</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">전시회 리뷰</h4>
+                        <p className="text-sm text-gray-600">전시회를 방문하고 전문적인 관점에서 리뷰를 작성합니다.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">아티스트 인터뷰</h4>
+                        <p className="text-sm text-gray-600">신진 작가와의 인터뷰를 통해 예술계의 새로운 소식을 전달합니다.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">예술계 동향</h4>
+                        <p className="text-sm text-gray-600">미술계의 최신 트렌드와 이슈를 분석하고 전달합니다.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">전문성 향상</h4>
+                        <p className="text-sm text-gray-600">지속적인 학습과 경험을 통해 전문성을 높입니다.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button color="primary" onPress={() => setNotificationDisclosure({ ...notificationDisclosure, isOpen: false })}>
-              닫기
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </div>
+
+              {/* 기자단 게시글 */}
+              {posts.filter(post => post.category === 'journalist').length > 0 ? (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-gray-900">기자단 기사</h3>
+                  {posts.filter(post => post.category === 'journalist').map((post) => (
+                    <div key={post.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                      <div className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">기자단</span>
+                          <span className="text-sm text-gray-500">{new Date(post.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <h3 className="font-bold text-gray-900 mb-2">{post.title}</h3>
+                        <p className="text-gray-600 text-sm line-clamp-2">{post.content}</p>
+                        <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                          <span>👁 {post.views || 0}</span>
+                          <span>💬 {post.comments_count || 0}</span>
+                          <span>❤️ {post.likes_count || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 mb-4">아직 기자단 기사가 없습니다.</p>
+                  <Link
+                    href="/community/write?category=journalist"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    첫 번째 기사 작성하기
+                  </Link>
+                </div>
+              )}
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">아직 게시글이 없습니다.</p>
+              <Link
+                href="/community/write"
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                첫 번째 게시글 작성하기
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {posts.map((post) => (
+                <div key={post.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                  {/* 게시글 헤더 */}
+                  <div className="p-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        {post.profiles?.avatar_url ? (
+                          <img
+                            src={post.profiles.avatar_url}
+                            alt={post.profiles.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                            <span className="text-gray-600 font-medium">
+                              {post.profiles?.name?.charAt(0) || 'U'}
+                            </span>
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="font-medium text-gray-900">{post.profiles?.name || '익명'}</h3>
+                          <p className="text-sm text-gray-500">
+                            {new Date(post.created_at).toLocaleDateString('ko-KR')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                          {post.category}
+                        </span>
+                        <button
+                          onClick={() => handleReport(post.id)}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <MoreHorizontal className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 게시글 내용 */}
+                  <div className="p-4">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">{post.title}</h2>
+                    <p className="text-gray-700 leading-relaxed line-clamp-3">{post.content}</p>
+                  </div>
+
+                  {/* 비디오 (숏폼) */}
+                  {post.video_url && (
+                    <div className="bg-black relative">
+                      <VideoPlayer
+                        src={post.video_url}
+                        className="w-full max-h-[600px]"
+                        autoPlay={false}
+                        loop={true}
+                        muted={mutedVideos[post.id] !== false}
+                        controls={true}
+                        onPlay={() => {
+                          // 다른 비디오들 정지
+                          setMutedVideos(prev => {
+                            const newMuted = { ...prev };
+                            Object.keys(newMuted).forEach(id => {
+                              if (id !== post.id) {
+                                newMuted[id] = true;
+                              }
+                            });
+                            return newMuted;
+                          });
+                          setMutedVideos(prev => ({ ...prev, [post.id]: false }));
+                        }}
+                        onPause={() => {
+                          setMutedVideos(prev => ({ ...prev, [post.id]: true }));
+                        }}
+                      />
+                      
+                      {/* 음소거 토글 버튼 */}
+                      <button
+                        onClick={() => toggleMute(post.id)}
+                        className="absolute bottom-4 right-4 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 transition-colors z-10"
+                      >
+                        {mutedVideos[post.id] !== false ? (
+                          <VolumeX className="w-5 h-5" />
+                        ) : (
+                          <Volume2 className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* 이미지 (선택적) */}
+                  {post.image_url && !post.video_url && (
+                    <div className="bg-gray-100">
+                      <img 
+                        src={post.image_url}
+                        alt={post.title}
+                        className="w-full h-auto max-h-96 object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {/* 액션 버튼들 */}
+                  <div className="p-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-6">
+                        <button className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors">
+                          <Heart className="w-5 h-5" />
+                          <span>좋아요</span>
+                        </button>
+                        <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
+                          <MessageCircle className="w-5 h-5" />
+                          <span>댓글</span>
+                        </button>
+                        <button className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors">
+                          <Share className="w-5 h-5" />
+                          <span>공유</span>
+                        </button>
+                      </div>
+                      <Link
+                        href={`/community/${post.id}`}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
+                        자세히 보기
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 기자단 신청 팝업 */}
+        {showJournalistApplication && (
+          <JournalistApplicationPopup
+            showJournalistApplication={showJournalistApplication}
+            setShowJournalistApplication={setShowJournalistApplication}
+          />
+        )}
+
+        {/* 신고 모달 */}
+        {showReportModal && (
+          <PostReportModal
+            postId={selectedPostId}
+            onClose={() => {
+              setShowReportModal(false);
+              setSelectedPostId(null);
+            }}
+          />
+        )}
+
+        {/* 하단 플로팅 + 버튼 */}
+        <div className="fixed bottom-20 right-4 z-50">
+          <Link
+            href="/community/write"
+            className="bg-blue-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-6 h-6" />
+          </Link>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default function CommunityPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <CommunityPageContent />
+    </Suspense>
   );
 }

@@ -1,284 +1,363 @@
 "use client";
-import React from "react";
-import { Button, Skeleton } from "@heroui/react";
-import { FaChevronLeft } from "react-icons/fa";
-import { useRouter } from "next/navigation";
-import { Card, CardBody, Divider } from "@heroui/react";
-import { FaPlusCircle } from "react-icons/fa";
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { useState, useEffect } from "react";
-import { FaArrowLeft } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { User, Calendar, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
+import Link from "next/link";
 import Image from "next/image";
-import { Pagination } from "@heroui/react";
-import { Eye } from "lucide-react";
+import { ReportModal } from "../components/report-modal";
 
 export default function MagazineList() {
-  const [magazines, setMagazines] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 5;
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
   const supabase = createClient();
+  const [magazines, setMagazines] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const itemsPerPage = 11; // 4(이미지+텍스트) + 5(텍스트만) + 2(그리드)
+  
+  const categories = ["전체", "전시리뷰", "작가인터뷰", "아트뉴스", "트렌드"];
 
-  const fadeInVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: (i) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.05,
-        duration: 0.4,
-        ease: "easeOut",
-      },
-    }),
-  };
-
-  const getMagazines = async () => {
-    const { data, error } = await supabase
-      .from("magazine")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setMagazines(data);
-    setIsLoading(false);
+  // 카테고리 변경 시 페이지를 1로 리셋
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setCurrentPage(1);
   };
 
   useEffect(() => {
-    getMagazines();
+    // 페이지 진입 시 최상단으로 스크롤
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    
+    const fetchMagazines = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("magazine")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Error fetching magazines:", error);
+          setMagazines([]);
+        } else {
+          setMagazines(data || []);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        setMagazines([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMagazines();
   }, []);
 
-  // 대형 카드로 사용된 첫 번째 매거진을 제외한 나머지 목록
-  const restMagazines = magazines.slice(1);
-  const totalPages = Math.ceil(restMagazines.length / ITEMS_PER_PAGE);
-  const pagedMagazines = restMagazines.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE,
-  );
+  // 카테고리별 필터링 (카테고리가 없으면 "전시리뷰"로 간주)
+  const filteredMagazines = magazines.filter(magazine => {
+    if (selectedCategory === "전체") return true;
+    const magazineCategory = magazine.category || "전시리뷰";
+    return magazineCategory === selectedCategory;
+  });
 
-  console.log("magazines:", magazines);
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(filteredMagazines.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedMagazines = filteredMagazines.slice(startIndex, endIndex);
 
-  // utility hash and view function
-  function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i);h|=0;}return Math.abs(h);} 
-  function calcViews(item){
-    let msAgo = Date.now() - new Date(item.created_at).getTime();
-    if (msAgo < 0) msAgo = 0;
-    const days = Math.floor(msAgo / 864e5);
+  // Featured 매거진 (첫 페이지의 첫 번째)
+  const featuredMagazine = currentPage === 1 ? paginatedMagazines[0] : null;
+  // 나머지 매거진들
+  const remainingMagazines = currentPage === 1 ? paginatedMagazines.slice(1) : paginatedMagazines;
+  
+  // 섹션별로 분리
+  // 1페이지: 대표 1개 제외 후 남은 10개를 4(이미지+텍스트) + 4(텍스트만) + 2(그리드)
+  // 2페이지 이상: 11개를 4(이미지+텍스트) + 5(텍스트만) + 2(그리드)
+  const imageTextList = remainingMagazines.slice(0, 4);
+  const textOnlyEndIndex = currentPage === 1 ? 8 : 9;
+  const textOnlyList = remainingMagazines.slice(4, textOnlyEndIndex);
+  const gridList = remainingMagazines.slice(textOnlyEndIndex, textOnlyEndIndex + 2);
 
-    if (msAgo < 864e5) { // 업로드 후 24h 이내
-      const hours = Math.floor(msAgo / 3600000); // 0~23
-
-      const base = 10 + (hashStr(item.id.toString()) % 90); // 10~99
-      const hourlyInc = 5 + (hashStr(item.id.toString() + 'h') % 40); // 5~44
-      let views = base + hours * hourlyInc;
-      views = Math.min(views, 1000);
-      return views;
-    }
-
-    // === 기존 글 (24h 이후) ===
-    // 인기 등급 결정 (85% 일반, 10% 중간, 5% 상위)
-    const popSeed = hashStr(item.id.toString() + 'pop') % 100; // 0~99
-    let views;
-    let dailyMin, dailyMax;
-
-    if (popSeed < 5) {
-      // 상위 5% – 10k 이상도 가능
-      views = 10000 + (hashStr(item.id.toString()) % 9000); // 10,000~18,999 기본
-      dailyMin = 50; dailyMax = 500;
-    } else if (popSeed < 15) {
-      // 중간 10% – 5~9k
-      views = 5000 + (hashStr(item.id.toString()) % 4000); // 5,000~8,999
-      dailyMin = 20; dailyMax = 150;
-    } else {
-      // 일반 85% – 2~4k
-      views = 2000 + (hashStr(item.id.toString()) % 2000); // 2,000~3,999
-      dailyMin = 5; dailyMax = 60;
-    }
-
-    // 일별 증가 (최대 2년치 루프 제한)
-    const maxLoop = Math.min(days, 730);
-    for (let d = 1; d <= maxLoop; d++) {
-      const incRange = dailyMax - dailyMin + 1;
-      const inc = dailyMin + (hashStr(item.id.toString() + '-' + d) % incRange);
-      views += inc;
-      if (views >= 100000) { views = 100000; break; }
-    }
-
-    views += (item.real_views || 0);
-
-    return Math.min(views, 100000);
-  }
-
-  // yyyy-mm-dd 혹은 ISO 문자열을 "YYYY년 M월 D일" 한국형으로 변환
-  const fmtDate = (str) => {
-    if (!str) return '';
-    const [y, m, d] = str.slice(0, 10).split('-');
-    return `${y}년 ${parseInt(m)}월 ${parseInt(d)}일`;
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
   };
 
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen pb-24">
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center w-full h-full gap-y-6 mt-12">
-          {[...Array(5)].map((_, index) => (
-            <div key={index} className="max-w-[300px] w-full flex items-center gap-3">
-              <div>
-                <Skeleton className="flex rounded-full w-12 h-12" />
-              </div>
-              <div className="w-full flex flex-col gap-2">
-                <Skeleton className="h-3 w-3/5 rounded-lg" />
-                <Skeleton className="h-3 w-4/5 rounded-lg" />
-              </div>
-            </div>
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white min-h-screen">
+        <div className="bg-white px-4 py-4 border-b">
+          <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full animate-pulse w-32 mx-auto"></div>
+        </div>
+        <div className="h-64 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse"></div>
+        <div className="p-4 space-y-4">
+          {[...Array(3)].map((_, index) => (
+            <div key={index} className="h-20 bg-gradient-to-r from-gray-100 to-gray-200 rounded-2xl animate-pulse"></div>
           ))}
         </div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-full flex flex-col items-center"
-        >
-          <div className="bg-white flex items-center w-[90%] justify-between">
-            <Button
-              isIconOnly
-              variant="light"
-              className="mr-2"
-              onPress={() => router.back()}
-            >
-              <FaArrowLeft className="text-xl" />
-            </Button>
-            <div className="flex items-center justify-center flex-grow gap-3">
-              <h2 className="text-lg font-bold text-center flex-grow">전시나그네 매거진</h2>
-            </div>
-            <div className="w-10"></div>
-          </div>
-          {/* 1. 가장 최근 매거진(대형 카드) */}
-          {magazines[0] && (
-            <motion.div
-              className="relative w-[90%] bg-white rounded-2xl mb-6 shadow hover:cursor-pointer mt-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              onClick={() => router.push(`/magazine/${magazines[0].id}`)}
-            >
-              {/* NEW badge */}
-              <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded">NEW</span>
-              {magazines[0].photo?.[0]?.url && (
-                <Image
-                  src={
-                    (magazines[0].photo?.[0]?.url) || "/images/noimage.jpg"
-                  }
-                  alt="대표 이미지"
-                  width={400}
-                  height={256}
-                  priority
-                  className="w-full h-64 object-cover rounded-t-2xl"
-                  style={{ borderRadius: '16px' }}
-                />
-              )}
-              <div className="p-4">
-                {/* 카테고리 있으면 */}
-                {magazines[0].category && (
-                  <div className="text-xs font-bold text-gray-500 mb-1">{magazines[0].category}</div>
-                )}
-                <div className="text-lg font-bold mb-2 text-black leading-tight line-clamp-2 break-keep">{magazines[0].title}</div>
-                {magazines[0].subtitle && (
-                  <span className="flex items-center text-sm text-gray-500 mb-2">
-                    {magazines[0].subtitle === '전시나그네' && (
-                      <span className="inline-block w-7 h-7 rounded-full bg-white shadow-lg mr-1 flex items-center justify-center">
-                        <img src="https://teaelrzxuigiocnukwha.supabase.co/storage/v1/object/public/notification//imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-5 h-5 rounded-full object-cover" style={{margin: '2px'}} />
-                      </span>
-                    )}
-                    {magazines[0].subtitle}
-                  </span>
-                )}
-                <div className="text-xs text-gray-400 flex items-center gap-1">
-                  {fmtDate(magazines[0].created_at)}
-                  <span className="mx-1">·</span>
-                  <Eye size={14} className="text-gray-400" /> {calcViews(magazines[0]).toLocaleString()}
-                  {magazines[0].author && (
-                    <span className="flex items-center gap-1">| by
-                      <span className="inline-block w-6 h-6 rounded-full overflow-hidden align-middle mr-1 ml-1 shadow">
-                        <img src="https://teaelrzxuigiocnukwha.supabase.co/storage/v1/object/public/notification//imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-full h-full object-cover" />
-                      </span>
-                      {magazines[0].author}
-                    </span>
-                  )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white min-h-screen pb-20">
+      
+      {/* ==================== 헤더 ==================== */}
+      <div className="bg-white px-4 py-4 border-b sticky top-0 z-10">
+        <h1 className="text-lg font-bold text-center">아트 매거진</h1>
+      </div>
+
+      {/* ==================== Featured Article (대표 기사) ==================== */}
+      {featuredMagazine && (
+        <Link href={`/magazine/${featuredMagazine.id}`} className="block">
+          <div className="relative h-64 bg-white">
+            {/* 배경 이미지 */}
+            {featuredMagazine.photo?.[0]?.url ? (
+              <Image
+                src={featuredMagazine.photo[0].url}
+                alt={featuredMagazine.title}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800"></div>
+            )}
+            
+            {/* 그라데이션 오버레이 */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            
+            {/* 텍스트 영역 */}
+            <div className="absolute bottom-6 left-4 right-4 text-white">
+              {/* Featured 배지 */}
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-3 bg-white/20 backdrop-blur-sm">
+                FEATURED
+              </span>
+              
+              {/* 제목 */}
+              <h2 className="font-bold text-xl mb-2 line-clamp-2 leading-tight">
+                {featuredMagazine.title}
+              </h2>
+              
+              {/* 메타 정보 */}
+              <div className="flex items-center gap-4 text-sm opacity-90">
+                <div className="flex items-center gap-1">
+                  <User className="w-4 h-4" />
+                  <span>{featuredMagazine.subtitle || "에디터"}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  <span>{formatDate(featuredMagazine.created_at)}</span>
                 </div>
               </div>
-            </motion.div>
-          )}
+            </div>
+          </div>
+        </Link>
+      )}
 
-          {/* 2. 나머지 매거진(작은 리스트) */}
-          <div className="w-full flex flex-col gap-4 justify-center items-center">
-            {pagedMagazines.map((item, index) => (
-              <React.Fragment key={item.id}>
-                <motion.div
-                  className="w-[90%]"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <div className="hover:cursor-pointer" onClick={() => router.push(`/magazine/${item.id}`)}>
-                    <div className="flex flex-row items-center gap-4 w-full">
-                      {/* 썸네일 좌측 */}
-                      {item.photo?.[0]?.url && (
-                        <Image
-                          alt="Card thumbnail"
-                          className="object-cover w-[96px] h-[96px] min-w-[96px] min-h-[96px] rounded-none border border-gray-200"
-                          src={
-                            (item.photo?.[0]?.url) || "/images/noimage.jpg"
-                          }
-                          width={96}
-                          height={96}
-                          loading="lazy"
-                        />
-                      )}
-                      {/* 텍스트 우측 */}
-                      <div className="flex flex-col space-y-1 flex-1 min-w-0">
-                        {item.category && (
-                          <div className="text-xs font-bold text-gray-500 mb-1 truncate">{item.category}</div>
-                        )}
-                        <h3 className="text-[15px] font-bold text-black leading-tight line-clamp-2 break-keep">{item.title}</h3>
-                        <div className="flex flex-row items-center gap-2">
-                          {item.subtitle && (
-                            <span className="flex items-center text-[12px] text-gray-500 truncate">
-                              {item.subtitle === '전시나그네' && (
-                                <span className="inline-block w-7 h-7 rounded-full bg-white shadow-lg mr-1 flex items-center justify-center">
-                                  <img src="https://teaelrzxuigiocnukwha.supabase.co/storage/v1/object/public/notification//imgi_1_272626601_246980864252824_1484718971353683993_n.jpg" alt="author" className="w-5 h-5 rounded-full object-cover" style={{margin: '2px'}} />
-                                </span>
-                              )}
-                              {item.subtitle}
-                            </span>
-                          )}
-                          <span className="text-[12px] text-gray-400">·</span>
-                          <span className="text-[11px] text-gray-400 flex items-center gap-1 whitespace-nowrap">
-                            {fmtDate(item.created_at)}
-                            <span className="mx-1">·</span><Eye size={10} className="text-gray-400"/>{calcViews(item).toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
+      {/* ==================== 카테고리 탭 ==================== */}
+      <div className="bg-white border-b">
+        <div className="flex gap-2 p-4 overflow-x-auto scrollbar-hide">
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => handleCategoryChange(category)}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                selectedCategory === category
+                  ? 'bg-blue-500 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ==================== 독자 제보 배너 ==================== */}
+      <div className="p-4">
+        <button 
+          onClick={() => setIsReportModalOpen(true)}
+          className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center hover:border-blue-400 hover:bg-blue-50 transition-all"
+        >
+          <Edit className="w-5 h-5 mr-3 text-red-500" />
+          <p className="font-medium text-gray-700">
+            <span className="text-red-500">독자 여러분의 제보</span>를 기다립니다
+          </p>
+        </button>
+      </div>
+
+      {/* 제보 모달 */}
+      <ReportModal 
+        isOpen={isReportModalOpen} 
+        onClose={() => setIsReportModalOpen(false)} 
+      />
+
+      {/* ==================== 매거진 리스트 ==================== */}
+      <div className="border-t border-gray-200">
+        
+        {/* Section 1: 이미지+텍스트 리스트 (4개) */}
+        {imageTextList.length > 0 && (
+          <div className="divide-y divide-gray-200">
+            {imageTextList.map((magazine) => (
+              <Link
+                key={magazine.id}
+                href={`/magazine/${magazine.id}`}
+                className="flex gap-4 p-4 hover:bg-gray-50 transition-colors"
+              >
+                {/* 썸네일 이미지 */}
+                <div className="flex-shrink-0 w-28 h-[74px]">
+                  {magazine.photo?.[0]?.url ? (
+                    <Image
+                      src={magazine.photo[0].url}
+                      alt={magazine.title}
+                      width={112}
+                      height={74}
+                      className="w-full h-full object-cover rounded-md"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded-md flex items-center justify-center">
+                      <span className="text-gray-500 text-2xl">📰</span>
                     </div>
-                  </div>
-                </motion.div>
-              </React.Fragment>
+                  )}
+                </div>
+                
+                {/* 텍스트 영역 */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-medium text-gray-900 line-clamp-2 leading-snug mb-1">
+                    {magazine.title}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {magazine.subtitle || "에디터"}
+                  </p>
+                </div>
+              </Link>
             ))}
           </div>
-          {/* 페이지네이션 */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center mt-6 mb-24">
-              <Pagination
-                total={totalPages}
-                page={currentPage}
-                onChange={setCurrentPage}
-                showControls
-                color="primary"
-                size="lg"
-              />
+        )}
+
+        {/* Section 2: 텍스트 헤드라인만 (5개) */}
+        {textOnlyList.length > 0 && (
+          <div className="border-t border-gray-200 px-4">
+            {textOnlyList.map((magazine) => (
+              <Link
+                key={magazine.id}
+                href={`/magazine/${magazine.id}`}
+                className="block py-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition-colors"
+              >
+                <h3 className="text-base font-medium text-gray-800 truncate hover:text-blue-600 transition-colors">
+                  {magazine.title}
+                </h3>
+              </Link>
+            ))}
+          </div>
+        )}
+        
+        {/* Section 3: 이미지 그리드 (2열, 2개) */}
+        {gridList.length > 0 && (
+          <div className="p-4 grid grid-cols-2 gap-x-4 gap-y-6 pt-6">
+            {gridList.map((magazine) => (
+              <Link
+                key={magazine.id}
+                href={`/magazine/${magazine.id}`}
+                className="block group"
+              >
+                {/* 이미지 */}
+                <div className="overflow-hidden rounded-md aspect-[4/3] bg-gray-200">
+                  {magazine.photo?.[0]?.url ? (
+                    <Image
+                      src={magazine.photo[0].url}
+                      alt={magazine.title}
+                      width={400}
+                      height={300}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                      <span className="text-gray-500 text-3xl">📰</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* 제목 */}
+                <h4 className="mt-3 text-sm font-semibold text-gray-900 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
+                  {magazine.title}
+                </h4>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* 매거진 없을 때 */}
+        {remainingMagazines.length === 0 && !featuredMagazine && (
+          <div className="text-center py-12 text-gray-500">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">📰</span>
             </div>
-          )}
-        </motion.div>
+            <p className="text-sm mb-2">등록된 매거진이 없습니다</p>
+            <p className="text-xs text-gray-400">새로운 매거진이 등록되면 여기에 표시됩니다</p>
+          </div>
+        )}
+      </div>
+
+      {/* ==================== 페이지네이션 ==================== */}
+      {totalPages > 1 && (
+        <div className="py-8">
+          <div className="flex items-center justify-center gap-3">
+            {/* Prev */}
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`w-9 h-9 rounded-lg border flex items-center justify-center transition-colors ${
+                currentPage === 1
+                  ? 'border-gray-200 text-gray-300 cursor-not-allowed bg-white'
+                  : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'
+              }`}
+              aria-label="이전 페이지"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Page numbers (최대 5개 표시) */}
+            {[...Array(Math.min(totalPages, 5))].map((_, index) => {
+              const pageNumber = index + 1;
+              const isActive = currentPage === pageNumber;
+              return (
+                <button
+                  key={pageNumber}
+                  onClick={() => handlePageChange(pageNumber)}
+                  className={`w-9 h-9 rounded-lg border font-medium flex items-center justify-center transition-colors ${
+                    isActive
+                      ? 'bg-black text-white border-black'
+                      : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {pageNumber}
+                </button>
+              );
+            })}
+
+            {/* Next */}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`w-9 h-9 rounded-lg border flex items-center justify-center transition-colors ${
+                currentPage === totalPages
+                  ? 'border-gray-200 text-gray-300 cursor-not-allowed bg-white'
+                  : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'
+              }`}
+              aria-label="다음 페이지"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

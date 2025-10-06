@@ -68,9 +68,29 @@ function PaymentProcessor() {
 export default function PaymentProcessPage() {
   return (
     <Suspense fallback={
-      <div className="flex flex-col items-center justify-center w-full min-h-[70vh] px-4">
-        <Spinner size="lg" color="primary" />
-        <p className="mt-4 text-lg">로딩 중...</p>
+      <div className="flex flex-col items-center justify-center w-full min-h-[70vh] px-4 space-y-6">
+        <div className="relative">
+          {/* 외부 링 */}
+          <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          {/* 내부 링 */}
+          <div className="absolute top-1 left-1 w-18 h-18 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          {/* 중앙 아이콘 */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+          </div>
+        </div>
+        <div className="text-center">
+          <p className="text-gray-700 font-medium text-xl">결제를 처리하고 있습니다...</p>
+          <p className="text-gray-500 text-sm mt-2">잠시만 기다려주세요</p>
+        </div>
+        {/* 진행률 바 */}
+        <div className="w-64">
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-pulse"></div>
+          </div>
+        </div>
       </div>
     }>
       <PaymentProcessor />

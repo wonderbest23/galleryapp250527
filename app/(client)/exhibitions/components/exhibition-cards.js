@@ -74,74 +74,95 @@ export function ExhibitionCards({
               variants={cardVariants}
               className="w-full relative"
             >
-              <Card classNames={{body: 'px-2 py-1 '}} shadow="sm">
-                <Link href={`/exhibition/${exhibition.id}`}>
-                  <CardBody className="grid grid-cols-7 items-center justify-center gap-x-3">
-                    <div className="col-span-2">
-                      <div className="w-20 h-20 relative">
-                        <Image
-                          src={getImageUrl(exhibition.photo)}
+              <Link href={`/exhibition/${exhibition.id}`} className="w-full justify-center items-center">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="flex items-center space-x-3">
+                    {/* 전시회 이미지 */}
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      <Image
+                        src={getImageUrl(exhibition.photo)}
                         alt={exhibition.title}
-                          fill
-                          className="object-cover rounded"
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
                       />
-                      </div>
                     </div>
 
-                    <div className="flex flex-col col-span-5">
-                      <div className="flex flex-row justify-between items-start">
-                        <div className="flex flex-col flex-1">
-                          <div className="text-[10px] text-gray-500">
-                            {exhibition.naver_gallery_url?.name || exhibition.gallery?.name || '미등록'}
-                          </div>
-                          <div className="text-base font-semibold">
-                            {exhibition.name}
-                          </div>
-                          <div className="text-[12px] font-bold mb-2">
+                    {/* 전시회 정보 */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500 mb-1">
+                            {exhibition.naver_gallery_url?.name || exhibition.gallery?.name || '갤러리'}
+                          </p>
+                          <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-1">
                             {exhibition.contents}
+                          </h3>
+                          
+                          {/* 날짜 정보 */}
+                          <div className="flex items-center gap-1 text-[10px] mb-1">
+                            <FaCalendar className="text-[#007AFF] w-[12px] h-[12px]" />
+                            {exhibition.start_date?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")} - {exhibition.end_date?.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")}
                           </div>
-                          <div className="flex items-center w-full">
-                            <Divider orientation="horizontal" className="bg-gray-300 mb-2 w-full" />
+                          
+                          {/* 가격 정보 */}
+                          <div className="flex items-center gap-1 text-[10px] mb-1">
+                            <IoMdPin className="text-[#007AFF] w-[12px] h-[12px]" />
+                            {exhibition.price === 0 ? "무료" : `${exhibition.price?.toLocaleString()}원`}
+                          </div>
+                          
+                          {/* 평점 정보 */}
+                          <div className="flex items-center gap-1 text-[10px]">
+                            <FaStar className="text-[#007AFF] w-[12px] h-[12px]" />
+                            {exhibition.review_average?.toFixed(1) || "0.0"} ({exhibition.review_count || 0})
                           </div>
                         </div>
-                        <div className="flex-shrink-0 ml-2" onClick={(e) => toggleBookmark(e, exhibition)}
-                             aria-label={isBookmarked(exhibition.id) ? "북마크 삭제" : "북마크 추가"}
-                             role="button"
-                             tabIndex={0}
-                        >
-                          {isBookmarked(exhibition.id) ? (
-                            <FaBookmark className="text-red-500 text-lg bg-gray-300 rounded-full p-1 cursor-pointer font-bold" />
-                          ) : (
-                            <FaRegBookmark className="text-white font-bold text-lg bg-gray-300 rounded-full p-1 cursor-pointer" />
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="text-xs flex flex-col mt-0">
-                        <div className="flex flex-row gap-1 text-[10px]">
-                          <FaCalendar className="text-[#007AFF] w-[12px] h-[12px] align-middle relative top-[1px]" />
-                          {exhibition.start_date?.replace(/(\d{4})(\d{2})(\d{2})/, "$1년$2월$3일")} ~ {exhibition.end_date?.replace(/(\d{4})(\d{2})(\d{2})/, "$1년$2월$3일")}
-                        </div>
-                        <div className="flex flex-row gap-1 text-[10px]">
-                          <FaMoneyBillWaveAlt className="text-[#007AFF] w-[12px] h-[12px] align-middle relative top-[2px]" />
-                          {exhibition.price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} 원
-                        </div>
-                        <div className="flex flex-row gap-1 text-[10px]">
-                          <FaStar className="text-[#007AFF] w-[12px] h-[12px] align-middle relative top-[1px]" />
-                          {exhibition.review_average === 0 ? "1.0" : exhibition.review_average?.toFixed(1) || "1.0"} ({exhibition.review_count || 0})
-                        </div>
+                        
+                        {/* 상태 태그 */}
+                        {(() => {
+                          const parseDate = (s) => {
+                            if (!s) return null;
+                            if (s.includes('-')) return new Date(s);
+                            const y = s.slice(0, 4);
+                            const m = s.slice(4, 6);
+                            const d = s.slice(6, 8);
+                            return new Date(`${y}-${m}-${d}`);
+                          };
+                          const diffDays = (() => {
+                            const dt = parseDate(exhibition.end_date);
+                            if (!dt || isNaN(dt)) return null;
+                            return Math.ceil((dt - new Date()) / 86400000);
+                          })();
+                          
+                          return (
+                            <div className={`px-2 py-1 rounded-full text-xs font-medium ml-2 ${
+                              diffDays && diffDays > 0 && diffDays <= 3 
+                                ? "bg-red-100 text-red-800" 
+                                : diffDays && diffDays > 0 
+                                  ? "bg-green-100 text-green-800" 
+                                  : "bg-blue-100 text-blue-800"
+                            }`}>
+                              {diffDays && diffDays > 0 && diffDays <= 3 
+                                ? "종료임박" 
+                                : diffDays && diffDays > 0 
+                                  ? "진행중" 
+                                  : "예정"
+                              }
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
-                  </CardBody>
-                </Link>
-                {(() => {
-                  const parseDate=(s)=>{if(!s) return null; if(s.includes('-')) return new Date(s); const y=s.slice(0,4); const m=s.slice(4,6); const d=s.slice(6,8); return new Date(`${y}-${m}-${d}`);} ;
-                  const diff=(()=>{const dt=parseDate(exhibition.end_date); if(!dt||isNaN(dt)) return null; return Math.ceil((dt-new Date())/86400000);})();
-                  return diff&&diff>0&&diff<=3? (
-                    <div className="absolute bottom-2 right-2 px-1.5 py-0.5 border border-gray-400 rounded text-[10px] text-red-500 bg-white/80 backdrop-blur-sm font-semibold">종료 D-{diff}</div>
-                  ):null;
-                })()}
-              </Card>
+                  </div>
+                </div>
+              </Link>
+              {(() => {
+                const parseDate=(s)=>{if(!s) return null; if(s.includes('-')) return new Date(s); const y=s.slice(0,4); const m=s.slice(4,6); const d=s.slice(6,8); return new Date(`${y}-${m}-${d}`);} ;
+                const diff=(()=>{const dt=parseDate(exhibition.end_date); if(!dt||isNaN(dt)) return null; return Math.ceil((dt-new Date())/86400000);})();
+                return diff&&diff>0&&diff<=3? (
+                  <div className="absolute bottom-2 right-2 px-1.5 py-0.5 border border-gray-400 rounded text-[10px] text-red-500 bg-white/80 backdrop-blur-sm font-semibold">종료 D-{diff}</div>
+                ):null;
+              })()}
             </motion.div>
           ))}
         </div>

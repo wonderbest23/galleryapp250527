@@ -39,7 +39,7 @@ import { BsFillDoorClosedFill } from "react-icons/bs";
 
 export default function App() {
   const { id } = useParams();
-  const [selected, setSelected] = useState("home");
+  const [selected, setSelected] = useState("info");
   const router = useRouter();
   const [exhibition, setExhibition] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -492,14 +492,18 @@ export default function App() {
   // 구매/무료발급 버튼 분기 렌더링
   function PurchaseSection() {
     if (!exhibition?.isSale) return (
-      <Button className="w-full mt-4 bg-gray-400 text-white text-[13px] font-bold" size="lg" disabled>
+      <Button 
+        className="w-full bg-gray-400 text-white text-sm font-semibold hover:bg-gray-500 transition-colors" 
+        size="lg" 
+        disabled
+      >
         웹티켓구매 미지원
       </Button>
     );
     if (isFreeTicket) {
       return (
         <Button
-          className="w-full mt-4 bg-[#004BFE] text-white text-[13px] font-bold"
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg"
           size="lg"
           onPress={handleFreeIssue}
           disabled={isFreeSoldOut}
@@ -511,7 +515,7 @@ export default function App() {
     return (
       <Button
         onPress={requestPayment}
-        className="w-full mt-4 bg-[#004BFE] text-white text-[13px] font-bold"
+        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg"
         size="lg"
       >
         웹티켓 구매하기
@@ -534,23 +538,49 @@ export default function App() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          {/* 상단 네비게이션 바 */}
+          {/* 상단 네비게이션 바 (뒤로가기 / 전시 상세 / 하트,공유) */}
           <motion.div 
-            className="w-full mx-auto bg-white flex items-center"
+            className="w-full mx-auto bg-white/95 backdrop-blur-sm flex items-center justify-between px-4 py-3 border-b border-gray-100 relative shadow-sm"
             initial="hidden"
             animate="visible"
             variants={fadeInVariants}
             transition={{ duration: 0.3, delay: 0.1 }}
           >
+            {/* Back */}
             <Button
               isIconOnly
               variant="light"
-              className="mr-2"
               onPress={() => router.back()}
+              className="hover:bg-gray-100 transition-colors"
             >
-              <FaArrowLeft className="text-xl" />
+              <FaArrowLeft className="text-xl text-gray-700" />
             </Button>
-            <h2 className="text-lg font-medium"></h2>
+
+            {/* Title (정중앙 고정) */}
+            <h2 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-gray-800">전시 상세</h2>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <Button
+                isIconOnly
+                variant="light"
+                onPress={toggleBookmark}
+                className="hover:bg-red-50 transition-colors"
+              >
+                <Icon
+                  icon={isBookmarked ? "mdi:heart" : "mdi:heart-outline"}
+                  className={`text-2xl ${isBookmarked ? 'text-red-500' : 'text-gray-600'}`}
+                />
+              </Button>
+              <Button
+                isIconOnly
+                variant="light"
+                onPress={handleShare}
+                className="hover:bg-blue-50 transition-colors"
+              >
+                <Icon icon="mdi:share-variant" className="text-2xl text-gray-600" />
+              </Button>
+            </div>
           </motion.div>
 
           {/* Image section: use same settings as product page */}
@@ -566,345 +596,310 @@ export default function App() {
               alt="전시 이미지"
               className="object-contain w-full h-full"
             />
-            <div className="absolute bottom-4 right-4 flex gap-2">
-              <div
-                className="bg-gray-300 rounded-lg hover:cursor-pointer w-7 h-7 flex items-center justify-center"
-                onClick={toggleBookmark}
-              >
-                <Icon
-                  icon={isBookmarked ? "mdi:bookmark" : "mdi:bookmark-outline"}
-                  className="text-lg text-white font-bold "
-                />
-              </div>
-              <div
-                className="bg-gray-300 rounded-lg hover:cursor-pointer w-7 h-7 flex items-center justify-center"
-                onClick={handleShare}
-              >
-                <LuSend className="text-lg text-white font-bold " />
-              </div>
-            </div>
           </motion.div>
 
-          {/* Restaurant Info */}
+          {/* Exhibition Info */}
           <motion.div 
-            className="w-[90%] mx-auto mt-4"
+            className="w-[90%] mx-auto mt-6"
             initial="hidden"
             animate="visible"
             variants={fadeInVariants}
             transition={{ duration: 0.4, delay: 0.3 }}
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-[10px] text-[#494949]">
-                  {exhibition?.gallery?.name}
-                </h3>
-                <h1 className="text-[20px] font-bold text-[#333333]">
-                  {exhibition?.contents}
-                </h1>
-                {exhibition?.isPreSale && (
-                  <div className="mt-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium inline-block">
-                    🎫 사전예매 진행중
-                  </div>
-                )}
-
-                <div className="flex items-center gap-1 mt-1">
-                  <div className="flex items-center">
-                    {/* <Icon icon="lucide:star" className="text-yellow-400" /> */}
-                    <FaStar className="w-3 h-3 text-[#007AFF]" />
-                    <span className="ml-1">
-                      {exhibition?.review_average?.toFixed(1) || "0.0"}
-                    </span>
-                    <span className="text-gray-500">
-                      ({exhibition?.review_count || 0})
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <Divider orientation="horizontal" className="my-2" />
-
-            <div className="mt-4 space-y-2 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <FaCalendar className="w-3 h-3 text-[#007AFF]" />
-                <span>
-                  기간 :{" "}
-                  {exhibition?.start_date?.replace(
-                    /(\d{4})(\d{2})(\d{2})/,
-                    "$1년$2월$3일"
-                  )}{" "}
-                  ~{" "}
-                  {exhibition?.end_date?.replace(
-                    /(\d{4})(\d{2})(\d{2})/,
-                    "$1년$2월$3일"
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="text-sm text-gray-500 font-medium mb-1">
+                    {exhibition?.gallery?.name}
+                  </h3>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-3 leading-tight">
+                    {exhibition?.contents}
+                  </h1>
+                  
+                  {exhibition?.isPreSale && (
+                    <div className="mb-3 px-4 py-2 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 rounded-full text-sm font-semibold inline-flex items-center gap-2">
+                      🎫 사전예매 진행중
+                    </div>
                   )}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                
-                <FaMap className="w-3 h-3 text-[#007AFF]" />
-                <span>위치 :{" "}{exhibition?.gallery?.address}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaMoneyBill className="w-3 h-3 text-[#007AFF]" />
-                <span>
-                  금액 :{" "}
-                  {exhibition?.price
-                    ?.toString()
-                    .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                  원
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TbClockHour8Filled className="w-3 h-3 text-[#007AFF]" />
-                <span>
-                  운영시간 :{" "}{exhibition?.working_hour}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <BsFillDoorClosedFill className="w-3 h-3 text-[#007AFF]" />
-                <span>
-                  휴관일 :{" "}{exhibition?.off_date}
-                </span>
-              </div>
-            </div>
-            {/* 구매/무료발급 버튼 분기 */}
-            <div className="flex flex-row gap-2">
-              <div className="w-full">{PurchaseSection()}</div>
-              <Button
-                target="_blank"
-                onPress={() => router.push(exhibition?.homepage_url)}
-                className="w-full mt-4 border-3 border-gray-400 text-gray-400 text-[13px] font-bold"
-                size="lg"
-                variant="bordered"
-              >
-                사이트연결
-              </Button>
-            </div>
-            {/* 합계금액/수량조절 UI: 무료티켓이면 숨김 */}
-            {exhibition?.isSale && !isFreeTicket && (
-            <div className="flex flex-row items-center justify-between mt-4 rounded-lg p-4 shadow-md">
-              <div className="text-[14px] font-bold">합계금액</div>
-              <div className="flex flex-row items-center gap-2">
-                <div className="text-[14px] font-bold">
-                  ₩ {calculateTotalPrice().toLocaleString()}
-                </div>
-                <div className="flex flex-row items-center border border-gray-200 rounded-lg">
-                  <button 
-                    className="px-3 py-1 text-gray-500"
-                    onClick={decreaseTicketCount}
-                  >
-                    -
-                  </button>
-                  <div className="px-3 py-1 border-x border-gray-200">{ticketCount}</div>
-                  <button 
-                    className="px-3 py-1 text-gray-500"
-                    onClick={increaseTicketCount}
-                  >
-                    +
-                  </button>
+
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center bg-yellow-50 px-3 py-1 rounded-full">
+                      <FaStar className="w-4 h-4 text-yellow-500 mr-1" />
+                      <span className="text-sm font-semibold text-gray-700">
+                        {exhibition?.review_average?.toFixed(1) || "0.0"}
+                      </span>
+                      <span className="text-xs text-gray-500 ml-1">
+                        ({exhibition?.review_count || 0})
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            )}
-          </motion.div>
 
-          {/* 커스텀 탭바 섹션 */}
-          <motion.div 
-            className="mt-4 pb-16 flex flex-col items-center justify-start"
-            initial="hidden"
-            animate="visible"
-            variants={fadeInVariants}
-            transition={{ duration: 0.4, delay: 0.4 }}
-          >
-            {/* 커스텀 탭바 - 전체 폭의 2/3 크기로 중앙 정렬 */}
-            <div className="flex w-[90%] border-t border-gray-200 mb-2">
-              <div className="w-1/6"></div>
-              <div className="flex w-2/3">
-                <button
-                  className={`text-[12px] flex-1 py-3 text-center font-medium ${selected === "home" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-                  onClick={() => setSelected("home")}
-                >
-                  홈
-                </button>
-                <button
-                  className={`text-[12px] flex-1 py-3 text-center font-medium ${selected === "gallery" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-                  onClick={() => setSelected("gallery")}
-                >
-                  전시회 공지
-                </button>
-                <button
-                  className={`text-[12px] flex-1 py-3 text-center font-medium ${selected === "reviews" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-                  onClick={() => setSelected("reviews")}
-                >
-                  리뷰
-                </button>
+            {/* Tab Section - moved right after exhibition info */}
+            <motion.div 
+              className="mt-6"
+              initial="hidden"
+              animate="visible"
+              variants={fadeInVariants}
+              transition={{ duration: 0.4, delay: 0.4 }}
+            >
+              {/* Tab Navigation */}
+              <div className="mb-6">
+                <div className="bg-white rounded-2xl p-2 shadow-sm border border-gray-100">
+                  <div className="flex">
+                    <button
+                      className={`relative flex-1 py-3 px-4 text-center text-sm font-semibold transition-all rounded-xl ${
+                        selected === 'info' 
+                          ? 'text-blue-600 bg-blue-50 shadow-sm' 
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                      onClick={() => setSelected('info')}
+                    >
+                      전시 정보
+                    </button>
+                    <button
+                      className={`relative flex-1 py-3 px-4 text-center text-sm font-semibold transition-all rounded-xl ${
+                        selected === 'reviews' 
+                          ? 'text-blue-600 bg-blue-50 shadow-sm' 
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                      onClick={() => setSelected('reviews')}
+                    >
+                      리뷰
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="w-1/6"></div>
-            </div>
 
-            {/* 탭 컨텐츠 */}
-            <div className="px-2 w-full flex justify-center">
-              {selected === "home" && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  key="home-tab"
-                  className="w-full"
-                >
-                  <Card className="my-4 p-2 w-full">
-                    <CardBody className="p-2">
-                      <h3 className="text-lg font-bold mb-2">전시회 안내</h3>
+              {/* Tab Content */}
+              <div className="flex justify-center">
+                {selected === "info" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    key="info-tab"
+                    className="w-full"
+                  >
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                      <h3 className="text-xl font-bold mb-4 text-gray-800">전시회 안내</h3>
                       <div 
-                        className="fr-element text-[15px] sm:text-[14px] md:text-base whitespace-pre-line"
+                        className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
                         style={{ 
-                          lineHeight: 1.6,
+                          lineHeight: 1.7,
                           wordBreak: 'keep-all',
-                          letterSpacing: '-0.3px'
+                          letterSpacing: '-0.2px'
                         }}
                         dangerouslySetInnerHTML={{ __html: exhibition?.add_info }}
                       />
-                    </CardBody>
-                  </Card>
-                </motion.div>
-              )}
+                      
+                      {/* Action Buttons in Info Tab */}
+                      <div className="mt-6 flex flex-col gap-3">
+                        <div className="flex flex-row gap-3">
+                          <div className="flex-1">{PurchaseSection()}</div>
+                          <Button
+                            target="_blank"
+                            onPress={() => router.push(exhibition?.homepage_url)}
+                            className="flex-1 border-2 border-gray-300 text-gray-600 text-sm font-semibold hover:border-gray-400 hover:text-gray-700 transition-colors"
+                            size="lg"
+                            variant="bordered"
+                          >
+                            사이트연결
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* 합계금액/수량조절 UI: 무료티켓이면 숨김 */}
+                      {exhibition?.isSale && !isFreeTicket && (
+                        <div className="mt-4 bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                          <div className="flex items-center justify-between">
+                            <div className="text-lg font-bold text-gray-800">합계금액</div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-xl font-bold text-blue-600">
+                                ₩ {calculateTotalPrice().toLocaleString()}
+                              </div>
+                              <div className="flex items-center bg-white rounded-xl border border-gray-300">
+                                <button 
+                                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors rounded-l-xl"
+                                  onClick={decreaseTicketCount}
+                                >
+                                  −
+                                </button>
+                                <div className="px-4 py-2 border-x border-gray-300 bg-white font-semibold text-gray-800">{ticketCount}</div>
+                                <button 
+                                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors rounded-r-xl"
+                                  onClick={increaseTicketCount}
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
 
-              {selected === "gallery" && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  key="gallery-tab"
-                  className="w-full"
-                >
-                  {notice && notice.length > 0 ? (
-                    <motion.div
+                {selected === "reviews" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    key="reviews-tab"
+                    className="w-full"
+                  >
+                    <motion.div 
+                      className="flex flex-col gap-4"
                       variants={containerVariants}
                       initial="hidden"
                       animate="visible"
                     >
-                      {notice.slice(0, displayedNoticeCount).map((item, i) => (
-                        <motion.div
-                          key={item.id || i}
-                          variants={itemVariants}
-                        >
-                          <Card className="my-4 mx-2">
-                            <CardBody>
-                              <h3 className="text-lg font-bold">
-                                {item.title || `공지사항 ${i + 1}`}
-                              </h3>
-                              <p className="text-sm text-gray-500 mt-1">
-                                {new Date(item.created_at).toLocaleDateString()}
-                              </p>
-                              <p className="mt-2">
-                                {item.content ||
-                                  "전시회 관람 시간 안내 및 주의사항입니다."}
-                              </p>
-                            </CardBody>
-                          </Card>
-                        </motion.div>
-                      ))}
+                      {reviews
+                        .slice(0, displayedReviewCount)
+                        .map((review, index) => (
+                          <motion.div className="w-full" key={index} variants={itemVariants}>
+                            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                              <CardReview
+                                review={review}
+                                content={review.description}
+                                createdAt={review.created_at}
+                                rating={review.rating}
+                                title={review.title}
+                                user={{
+                                  name: review.name,
+                                  avatar:
+                                    "https://i.pravatar.cc/150?u=a04258114e29026708c",
+                                }}
+                              />
+                            </div>
+                          </motion.div>
+                        ))}
                     </motion.div>
-                  ) : (
+                    
+                    {reviews.length === 0 && (
+                      <motion.div 
+                        className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                      >
+                        <p className="text-gray-500 text-lg">리뷰가 없습니다.</p>
+                        <p className="text-gray-400 text-sm mt-2">첫 번째 리뷰를 작성해보세요!</p>
+                      </motion.div>
+                    )}
+
                     <motion.div 
-                      className="flex justify-center items-center text-gray-500 my-4"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                      전시회 공지가 없습니다.
-                    </motion.div>
-                  )}
-                  {notice && notice.length > displayedNoticeCount && (
-                    <motion.div 
-                      className="flex justify-center items-center my-4"
+                      className="flex justify-center items-center my-6"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.3 }}
                     >
-                      <Button
-                        isIconOnly
-                        variant="light"
-                        onPress={handleLoadMoreNotices}
-                        className="hover:cursor-pointer"
-                      >
-                        <FaPlusCircle className="text-gray-500 text-2xl font-bold" />
-                      </Button>
+                      {reviews.length > displayedReviewCount ? (
+                        <Button
+                          variant="bordered"
+                          onPress={handleLoadMoreReviews}
+                          className="border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors"
+                          startContent={<FaPlusCircle className="text-gray-500" />}
+                        >
+                          더 보기
+                        </Button>
+                      ) : reviews.length > 0 &&
+                        reviews.length <= displayedReviewCount ? (
+                        <p className="text-gray-400 text-sm">더 이상 리뷰가 없습니다.</p>
+                      ) : null}
                     </motion.div>
-                  )}
-                </motion.div>
-              )}
-
-              {selected === "reviews" && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  key="reviews-tab"
-                  className="w-full"
-                >
-                  <motion.div 
-                    className="flex flex-col items-center gap-2 mx-2"
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {reviews
-                      .slice(0, displayedReviewCount)
-                      .map((review, index) => (
-                        <motion.div className="w-full" key={index} variants={itemVariants}>
-                          <CardReview
-                            review={review}
-                            content={review.description}
-                            createdAt={review.created_at}
-                            rating={review.rating}
-                            title={review.title}
-                            user={{
-                              name: review.name,
-                              avatar:
-                                "https://i.pravatar.cc/150?u=a04258114e29026708c",
-                            }}
-                          />
-                        </motion.div>
-                      ))}
                   </motion.div>
-                  {reviews.length === 0 && (
-                    <motion.div 
-                      className="flex justify-center items-center my-4"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                      <p className="text-gray-500">리뷰가 없습니다.</p>
-                    </motion.div>
-                  )}
+                )}
+              </div>
+            </motion.div>
 
-                  <motion.div 
-                    className="flex justify-center items-center my-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                  >
-                    {reviews.length > displayedReviewCount ? (
-                      <Button
-                        isIconOnly
-                        variant="light"
-                        onPress={handleLoadMoreReviews}
-                        className="hover:cursor-pointer"
-                      >
-                        <FaPlusCircle className="text-gray-500 text-2xl font-bold" />
-                      </Button>
-                    ) : reviews.length > 0 &&
-                      reviews.length <= displayedReviewCount ? (
-                      <p className="text-gray-500">더 이상 리뷰가 없습니다.</p>
-                    ) : null}
-                  </motion.div>
-                </motion.div>
-              )}
+            {/* Exhibition Details */}
+            <div className="mt-6 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">전시 정보</h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <FaCalendar className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 mb-1">기간</p>
+                    <p className="text-sm text-gray-600">
+                      {exhibition?.start_date?.replace(
+                        /(\d{4})(\d{2})(\d{2})/,
+                        "$1년$2월$3일"
+                      )}{" "}
+                      ~{" "}
+                      {exhibition?.end_date?.replace(
+                        /(\d{4})(\d{2})(\d{2})/,
+                        "$1년$2월$3일"
+                      )}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <FaMap className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 mb-1">위치</p>
+                    <p className="text-sm text-gray-600">{exhibition?.gallery?.address}</p>
+                  </div>
+                </div>
+                
+                {exhibition?.price !== null && exhibition?.price !== undefined && (
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <FaMoneyBill className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700 mb-1">금액</p>
+                      <p className="text-sm text-gray-600">
+                        {exhibition?.price === 0
+                          ? "무료"
+                          : `${exhibition?.price
+                              ?.toString()
+                              .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}원`}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {exhibition?.working_hour && (
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <TbClockHour8Filled className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700 mb-1">운영시간</p>
+                      <p className="text-sm text-gray-600">{exhibition?.working_hour}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {exhibition?.off_date && (
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <BsFillDoorClosedFill className="w-4 h-4 text-red-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700 mb-1">휴관일</p>
+                      <p className="text-sm text-gray-600">{exhibition?.off_date}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
+
         </motion.div>
       )}
+      
+      {/* 하단 여백 추가 */}
+      <div className="h-20"></div>
     </>
   );
 }

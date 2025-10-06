@@ -6,10 +6,21 @@ import { addToast } from "@heroui/toast";
 
 export default function AdminLoginPage({ searchParams }) {
   const [errors, setErrors] = useState({});
-  const error = searchParams?.error;
+  const [error, setError] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberLogin, setRememberLogin] = useState(true);
+
+  // searchParams 처리
+  useEffect(() => {
+    const handleSearchParams = async () => {
+      if (searchParams) {
+        const resolvedSearchParams = await searchParams;
+        setError(resolvedSearchParams?.error);
+      }
+    };
+    handleSearchParams();
+  }, [searchParams]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && rememberLogin) {

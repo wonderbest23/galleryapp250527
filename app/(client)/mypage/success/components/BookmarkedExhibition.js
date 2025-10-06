@@ -14,6 +14,8 @@ import { Spinner } from "@heroui/spinner";
 import { FaMoneyBillWaveAlt } from "react-icons/fa";
 import { FaCalendar } from "react-icons/fa6";
 import { IoMdPin } from "react-icons/io";
+import { motion } from "framer-motion";
+import { Heart, Calendar, MapPin, DollarSign, User, X, Plus } from "lucide-react";
 
 
 export default function BookmarkedExhibition({ user, alarmExhibition }) {
@@ -198,9 +200,14 @@ export default function BookmarkedExhibition({ user, alarmExhibition }) {
 
   // 로딩 중일 때 표시할 컴포넌트
   if (isLoading) {
-    return <div className="text-center py-4">
-      <Spinner variant="wave" color="primary" />
-    </div>;
+    return (
+      <div className="flex justify-center items-center py-16">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">즐겨찾기를 불러오는 중...</p>
+        </div>
+      </div>
+    );
   }
 
   // 아이템 타입에 따른 링크 URL 생성
@@ -216,18 +223,21 @@ export default function BookmarkedExhibition({ user, alarmExhibition }) {
   };
 
   return (
-    <>
-      <div className="flex flex-col items-center gap-4 w-full px-2 justify-center">
-        <div className="grid gap-4 w-full justify-center items-center">
-          {finalExhibitions.length > 0 ? (
-            finalExhibitions.slice(0, displayCount).map((item, index) => (
-              <Card key={index} className="w-full relative">
-                <Link href={getItemUrl(item)}>
-                  <CardBody className="flex gap-4 flex-row justify-center items-center">
-                    {/* 북마크 해제 버튼 */}
-                    <div className="absolute top-2 right-2 z-10" onClick={e => handleUnbookmark(e, item)}>
-                      <FaBookmark className="text-red-500 text-lg bg-gray-300 rounded-full p-1 cursor-pointer font-bold" title="즐겨찾기 해제" />
-                    </div>
+    <div className="w-full px-4 py-2">
+      {finalExhibitions.length > 0 ? (
+        <div className="space-y-4">
+          {finalExhibitions.slice(0, displayCount).map((item, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              <Link href={getItemUrl(item)}>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-blue-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+                  
+                  {/* 이미지 영역 */}
+                  <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100">
                     <img
                       src={item.type === 'gallery' 
                         ? item.thumbnail 
@@ -235,93 +245,114 @@ export default function BookmarkedExhibition({ user, alarmExhibition }) {
                           ? (item.image && item.image.length > 0 ? item.image[0] : "/noimage.jpg")
                           : item.photo}
                       alt={item.type === 'product' ? item.name : item.title || item.contents}
-                      className="w-24 h-24 object-cover rounded flex-shrink-0"
+                      className="w-full h-full object-cover"
                     />
-                    <div className="flex flex-col w-full min-w-0">
-                      <div className="flex flex-row justify-between items-start">
-                        <div className="flex flex-col min-w-0">
-                          <div className="text-xs text-gray-500 sm:text-xs text-[11px] max-[390px]:text-[10px]">
-                            {item.type === 'gallery' 
-                              ? '갤러리' 
-                              : item.type === 'product'
-                                ? '작품'
-                                : '전시회'}
-                          </div>
-                          <div className="text-lg font-bold truncate sm:text-lg text-[13px] max-[390px]:text-[12px]">
-                            {item.type === 'gallery' 
-                              ? item.name 
-                              : item.type === 'product'
-                                ? item.name
-                                : item.contents}
-                          </div>
-                        </div>
-                      </div>
-
-                      <Divider
-                        orientation="horizontal"
-                        className="bg-gray-300"
-                      />
-                      <div className="text-xs flex flex-col my-2 sm:text-xs text-[11px] max-[390px]:text-[10px]">
-                        {item.type === 'gallery' ? (
-                          <div className="flex flex-row gap-1 items-center">
-                            <IoMdPin className="w-3 h-3 text-[#007AFF]" />
-                            {item.address}
-                          </div>
-                        ) : item.type === 'product' ? (
-                          <>
-                            <div className="flex flex-row gap-1 items-center ">
-                              <FaMoneyBillWaveAlt className="w-3 h-3 text-[#007AFF]" />
-                              ₩{formatPrice(item.price)}원
-                            </div>
-                            
-                            
-                            {item.artist_id && (
-                              <div className="flex flex-row gap-1 items-center">
-                                <FaTag className="w-3 h-3 text-[#007AFF]" />
-                                {item.artist_id.artist_name || '작가 정보 없음'}
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <div className="flex flex-row gap-1 items-center">
-                              <FaCalendar className="w-3 h-3 text-[#007AFF]" />
-                              {item.start_date?.substring(0,4)}년 {item.start_date?.substring(4,6)}월 {item.start_date?.substring(6,8)}일 ~ {item.end_date?.substring(0,4)}년 {item.end_date?.substring(4,6)}월 {item.end_date?.substring(6,8)}일
-                            </div>
-                            <div className="flex flex-row gap-1 items-center">
-                              <IoMdPin className="w-3 h-3 text-[#007AFF]" />
-                              {item.gallery?.address || '-'}
-                            </div>
-                            <div className="flex flex-row gap-1 items-center">
-                              <FaMoneyBillWaveAlt className="w-3 h-3 text-[#007AFF]" />
-                              {formatPrice(item.price)}원
-                            </div>
-                          </>
-                        )}
-                      </div>
+                    
+                    {/* 타입 배지 */}
+                    <div className="absolute top-3 left-3">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        item.type === 'gallery' 
+                          ? 'bg-green-100 text-green-700 border border-green-200'
+                          : item.type === 'product'
+                            ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                            : 'bg-blue-100 text-blue-700 border border-blue-200'
+                      }`}>
+                        {item.type === 'gallery' ? '갤러리' : item.type === 'product' ? '작품' : '전시회'}
+                      </span>
                     </div>
-                  </CardBody>
-                </Link>
-              </Card>
-            ))
-          ) : (
-            <div className="text-center py-4">북마크한 항목이 없습니다.</div>
-          )}
+                    
+                    {/* 즐겨찾기 해제 버튼 */}
+                    <button
+                      onClick={e => handleUnbookmark(e, item)}
+                      className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors shadow-sm"
+                      title="즐겨찾기 해제"
+                    >
+                      <Heart className="w-4 h-4 text-red-500 fill-current" />
+                    </button>
+                  </div>
+                  
+                  {/* 정보 영역 */}
+                  <div className="p-5">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2">
+                      {item.type === 'gallery' 
+                        ? item.name 
+                        : item.type === 'product'
+                          ? item.name
+                          : item.contents}
+                    </h3>
+                    
+                    <div className="space-y-2">
+                      {item.type === 'gallery' ? (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <MapPin className="w-4 h-4 text-blue-500" />
+                          <span className="text-sm">{item.address}</span>
+                        </div>
+                      ) : item.type === 'product' ? (
+                        <>
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <DollarSign className="w-4 h-4 text-green-500" />
+                            <span className="text-sm font-semibold">₩{formatPrice(item.price)}</span>
+                          </div>
+                          {item.artist_id && (
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <User className="w-4 h-4 text-purple-500" />
+                              <span className="text-sm">{item.artist_id.artist_name || '작가 정보 없음'}</span>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Calendar className="w-4 h-4 text-blue-500" />
+                            <span className="text-sm">
+                              {item.start_date?.substring(0,4)}.{item.start_date?.substring(4,6)}.{item.start_date?.substring(6,8)} ~ {item.end_date?.substring(0,4)}.{item.end_date?.substring(4,6)}.{item.end_date?.substring(6,8)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <MapPin className="w-4 h-4 text-blue-500" />
+                            <span className="text-sm">{item.gallery?.address || '-'}</span>
+                          </div>
+                          {item.price && (
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <DollarSign className="w-4 h-4 text-green-500" />
+                              <span className="text-sm font-semibold">₩{formatPrice(item.price)}</span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
         </div>
-        
-        {bookmarkedExhibitions.length > 0 && (
-          <div className="flex flex-col items-center my-2">
-            {hasMore && displayCount < bookmarkedExhibitions.length ? (
-              <FaPlusCircle 
-                className="text-gray-500 text-2xl font-bold hover:cursor-pointer" 
-                onClick={loadMoreExhibitions}
-              />
-            ) : displayCount > 0 && !hasMore && bookmarkedExhibitions.length > 5 ? (
-              <div className="text-center py-2 text-gray-500">더 이상 표시할 항목이 없습니다.</div>
-            ) : null}
+      ) : (
+        <div className="text-center py-16">
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Heart className="w-12 h-12 text-gray-400" />
           </div>
-        )}
-      </div>
-    </>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">즐겨찾기한 항목이 없습니다</h3>
+          <p className="text-gray-500">관심있는 전시회, 갤러리, 작품을 즐겨찾기에 추가해보세요</p>
+        </div>
+      )}
+      
+      {/* 더보기 버튼 */}
+      {bookmarkedExhibitions.length > 0 && (
+        <div className="flex justify-center mt-6">
+          {hasMore && displayCount < bookmarkedExhibitions.length ? (
+            <button
+              onClick={loadMoreExhibitions}
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              더 보기 ({bookmarkedExhibitions.length - displayCount}개)
+            </button>
+          ) : displayCount > 0 && !hasMore && bookmarkedExhibitions.length > 5 ? (
+            <p className="text-center py-4 text-gray-500">모든 즐겨찾기를 확인했습니다</p>
+          ) : null}
+        </div>
+      )}
+    </div>
   );
 }

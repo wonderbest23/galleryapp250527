@@ -144,6 +144,33 @@ function MyPageContent() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      const supabase = createClient();
+      
+      const redirectUrl = `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(returnUrl)}`;
+      console.log("구글 로그인 리다이렉션 URL:", redirectUrl);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectUrl,
+        },
+      });
+
+      if (error) {
+        console.error("구글 로그인 오류:", error);
+        throw error;
+      }
+    } catch (error) {
+      console.error("로그인 처리 중 오류가 발생했습니다:", error);
+      alert("로그인 중 오류가 발생했습니다. 다시 시도해주세요.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 카카오 로그인 버튼 클릭 시 최초 1회만 개인정보 처리방침 동의 팝업
   const handleKakaoLoginButton = () => {
     if (typeof window !== "undefined" && !localStorage.getItem("policyAgreed")) {
@@ -163,62 +190,90 @@ function MyPageContent() {
   };
 
   return (
-    <div className="w-full flex justify-center items-centerh-full">
-      <div className="w-full flex flex-col justify-center items-center h-[90vh] px-4">
-        <div className=" text-[24px] font-bold text-[#121212] text-start w-full">
-          새로운 미술플랫폼👋
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        
+        {/* 타이틀 */}
+        <div className="text-center mb-12">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">마이페이지</h1>
+          <p className="text-sm text-gray-500">개인정보 확인 및 포인트 관리를 위해 로그인해주세요</p>
         </div>
-        <div className=" text-[16px] text-[#A6A6A6] text-start w-full">
-          대한민국 전시회,갤러리 정보
-        </div>
-        <div className="text-[16px]  text-[#A6A6A6] w-full text-start mb-4">
-          아티스트 작품 직거래
-        </div>
-        <Button
-          className="w-full flex rounded-none items-center justify-center gap-2 bg-[#FEE500] text-black font-medium py-2 hover:bg-[#F6D33F] transition-colors"
-          onPress={handleKakaoLoginButton}
-          isDisabled={loading}
-        >
-          {loading ? (
-            <Spinner variant="wave" color="primary" />
-          ) : (
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 256 256"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M128 36C70.562 36 24 72.713 24 118.304C24 147.994 43.725 174.08 73.213 187.175C71.774 192.02 66.31 211.071 65.297 215.368C64.073 220.56 68.962 225.116 73.741 222.051C77.62 219.571 100.709 204.886 108.271 200.026C114.661 201.334 121.28 202 128 202C185.438 202 232 165.287 232 118.304C232 72.713 185.438 36 128 36Z"
-                fill="black"
-              />
-            </svg>
-          )}
-          {loading ? "로그인 중..." : "카카오톡 로그인"}
-        </Button>
 
-        {/* 가로선과 or 텍스트 추가 */}
-        <div className="w-full flex items-center justify-center my-4">
-          <div className="flex-grow h-px bg-gray-300"></div>
-          <div className="px-4 text-sm text-gray-500">or with </div>
-          <div className="flex-grow h-px bg-gray-300"></div>
+        {/* 로그인 버튼들 */}
+        <div className="space-y-3">
+          
+          {/* 구글 로그인 */}
+          <Button
+            className="w-full h-12 rounded-xl bg-white text-gray-700 font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 border border-gray-300"
+            onPress={handleGoogleLogin}
+            isDisabled={loading}
+          >
+            {loading ? (
+              <Spinner size="sm" color="default" />
+            ) : (
+              <>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5"
+                >
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>
+                Google로 로그인
+              </>
+            )}
+          </Button>
+
+          {/* 카카오 로그인 */}
+          <Button
+            className="w-full h-12 rounded-xl bg-[#FEE500] text-black font-semibold hover:bg-[#F6D33F] transition-colors flex items-center justify-center gap-2"
+            onPress={handleKakaoLoginButton}
+            isDisabled={loading}
+          >
+            {loading ? (
+              <Spinner size="sm" color="default" />
+            ) : (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="relative">
+                  {/* 외부 링 */}
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <span>카카오로 시작하기</span>
+              </div>
+            )}
+          </Button>
+
+          {/* (제거됨) 숨겨져있던 구글 시작하기 버튼 */}
         </div>
-        {/* 개인정보 처리방침 버튼 */}
-        <span
-          className="text-xs text-gray-500 underline cursor-pointer text-center mt-2"
-          onClick={() => {
-            setPolicyTitle("개인정보 처리방침");
+
+        {/* 안내 문구 */}
+        <p className="text-center text-xs text-gray-500 mt-6 leading-relaxed">
+          로그인 시 <button onClick={() => {
+            setPolicyTitle("이용약관");
             setPolicyContent(privacyPolicy);
             onOpen();
-          }}
-        >
-          개인정보 처리방침
-        </span>
-        <img
-          className="w-[50px] h-[50px]"
-          src="/login/loginlogo.png"
-          alt="google"
-        />
+          }} className="text-blue-500 underline">이용약관</button> 및 <button onClick={() => {
+            setPolicyTitle("개인정보처리방침");
+            setPolicyContent(privacyPolicy);
+            onOpen();
+          }} className="text-blue-500 underline">개인정보처리방침</button>에 동의한 것으로 간주<br />됩니다.
+        </p>
         {/* 개인정보 처리방침 모달 */}
         <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="sm">
           <ModalContent className="max-w-sm">

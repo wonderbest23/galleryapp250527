@@ -363,50 +363,62 @@ export default function EditProduct() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center mx-2">
-      <div className="bg-white flex items-center w-[90%] justify-between">
-        <Button
-          isIconOnly
-          variant="light"
-          className="mr-2"
-          onPress={() => router.push("/mypage/success")}
-        >
-          <FaArrowLeft className="text-xl" />
-        </Button>
-        <h2 className="text-lg font-bold text-center flex-grow">
-          작품 수정하기
-        </h2>
-        <div className="w-10"></div>
+    <div className="min-h-screen bg-gray-50">
+      {/* 헤더 */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push("/mypage/success")}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <FaArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">작품 수정하기</h1>
+              <p className="text-sm text-gray-500">작품 정보를 수정하고 관리하세요</p>
+            </div>
+          </div>
+        </div>
       </div>
       
-      <div className="w-[90%] space-y-6 mt-4 mb-24">
-        <div className="flex flex-col gap-y-2">
-          <label className="text-sm text-[#747474] font-medium">
-            작품 이미지 <span className="text-red-500">*</span>
-          </label>
-          <div className="flex flex-wrap gap-4">
+      {/* 메인 컨텐츠 */}
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {/* 작품 이미지 섹션 */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <CiImageOn className="w-4 h-4 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">작품 이미지</h3>
+            <span className="text-red-500 text-sm">*</span>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {productImages.map((image, index) => (
-              <div key={index} className="relative w-24 h-24">
-                <img
-                  src={image}
-                  alt={`작품 이미지 ${index + 1}`}
-                  className="w-full h-full object-cover rounded-lg"
-                />
+              <div key={index} className="relative group">
+                <div className="aspect-square rounded-lg overflow-hidden">
+                  <img
+                    src={image}
+                    alt={`작품 이미지 ${index + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                  />
+                </div>
                 <button
                   onClick={() => {
                     const newImages = [...productImages];
                     newImages.splice(index, 1);
                     setProductImages(newImages);
                   }}
-                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center"
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
                 >
-                  <IoMdCloseCircleOutline className="text-gray-400 text-2xl" />
+                  <IoMdCloseCircleOutline className="w-4 h-4" />
                 </button>
               </div>
             ))}
             
-            <div className="relative w-24 h-24">
-              <div className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 transition-colors">
+            <div className="relative">
+              <div className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200">
                 <input
                   type="file"
                   accept="image/*"
@@ -415,7 +427,7 @@ export default function EditProduct() {
                   onChange={handleImageUpload}
                 />
                 <CiImageOn className="text-2xl text-gray-400 mb-2" />
-                <span className="text-xs text-gray-400">이미지 추가</span>
+                <span className="text-xs text-gray-500 text-center">이미지<br/>추가</span>
               </div>
               {isUploading && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
@@ -424,117 +436,202 @@ export default function EditProduct() {
               )}
             </div>
           </div>
+          
+          <p className="text-sm text-gray-500 mt-3">
+            최대 10개까지 업로드 가능합니다. 첫 번째 이미지가 대표 이미지로 설정됩니다.
+          </p>
         </div>
 
-        <div className="flex flex-col gap-y-2">
-          <label className="text-sm text-[#747474] font-medium">
-            작품명 <span className="text-red-500">*</span>
-          </label>
-          <Input
-            type="text"
-            variant="bordered"
-            placeholder="작품명을 입력해주세요"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+        {/* 작품 기본 정보 */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">작품 기본 정보</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 작품명 */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                작품명 <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="text"
+                variant="bordered"
+                placeholder="작품명을 입력해주세요"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                classNames={{
+                  input: "text-base",
+                  inputWrapper: "border-gray-300 hover:border-gray-400 focus-within:border-blue-500"
+                }}
+              />
+            </div>
+
+            {/* 사이즈 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                사이즈 <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="text"
+                variant="bordered"
+                placeholder="예시) 121.9x156.8cm"
+                value={size}
+                onChange={(e) => setSize(e.target.value)}
+                classNames={{
+                  input: "text-base",
+                  inputWrapper: "border-gray-300 hover:border-gray-400 focus-within:border-blue-500"
+                }}
+              />
+            </div>
+
+            {/* 소재 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                소재 <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="text"
+                variant="bordered"
+                placeholder="예시) 유화/캔버스"
+                value={makeMaterial}
+                onChange={(e) => setMakeMaterial(e.target.value)}
+                classNames={{
+                  input: "text-base",
+                  inputWrapper: "border-gray-300 hover:border-gray-400 focus-within:border-blue-500"
+                }}
+              />
+            </div>
+
+            {/* 제작일 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                제작일 <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="text"
+                variant="bordered"
+                placeholder="20250201"
+                value={makeDate}
+                onChange={handleDateChange}
+                classNames={{
+                  input: "text-base",
+                  inputWrapper: "border-gray-300 hover:border-gray-400 focus-within:border-blue-500"
+                }}
+              />
+              <p className="text-xs text-gray-500 mt-1">YYYYMMDD 형식으로 입력해주세요</p>
+            </div>
+
+            {/* 작품금액 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                작품금액 <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="text"
+                variant="bordered"
+                placeholder="콤마없이 숫자만 입력해주세요"
+                value={price}
+                onChange={handlePriceChange}
+                classNames={{
+                  input: "text-base",
+                  inputWrapper: "border-gray-300 hover:border-gray-400 focus-within:border-blue-500"
+                }}
+              />
+              <p className="text-xs text-gray-500 mt-1">원 단위로 입력해주세요</p>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-y-2">
-          <label className="text-sm text-[#747474] font-medium">
-            사이즈 <span className="text-red-500">*</span>
-          </label>
-          <Input
-            type="text"
-            variant="bordered"
-            placeholder="예시) 121.9x156.8cm"
-            value={size}
-            onChange={(e) => setSize(e.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-col gap-y-2">
-          <label className="text-sm text-[#747474] font-medium">
-            소재 <span className="text-red-500">*</span>
-          </label>
-          <Input
-            type="text"
-            variant="bordered"
-            placeholder="예시) 유화/캔버스"
-            value={makeMaterial}
-            onChange={(e) => setMakeMaterial(e.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-col gap-y-2">
-          <label className="text-sm text-[#747474] font-medium">
-            제작일 <span className="text-red-500">*</span>
-          </label>
-          <Input
-            type="text"
-            variant="bordered"
-            placeholder="20250201"
-            value={makeDate}
-            onChange={handleDateChange}
-          />
-        </div>
-
-        <div className="flex flex-col gap-y-2">
-          <label className="text-sm text-[#747474] font-medium">
-            장르 <span className="text-red-500">*</span>
-          </label>
-          <div className="flex flex-wrap gap-2">
+        {/* 장르 선택 */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">장르</h3>
+            <span className="text-red-500 text-sm">*</span>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {genres.map((g) => (
-              <Button
+              <button
                 key={g.id}
-                size="sm"
-                variant={genre === g.name ? "solid" : "bordered"}
-                className={`${
+                onClick={() => setGenre(g.name)}
+                className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                   genre === g.name
-                    ? "bg-black text-white"
-                    : "border-gray-300 text-gray-600"
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
                 }`}
-                onPress={() => setGenre(g.name)}
               >
                 {g.name}
-              </Button>
+              </button>
             ))}
           </div>
         </div>
 
-        <div className="flex flex-col gap-y-2">
-          <label className="text-sm text-[#747474] font-medium">
-            작품금액 <span className="text-red-500">*</span>
-          </label>
-          <Input
-            type="text"
-            variant="bordered"
-            placeholder="콤마없이 숫자만 입력해주세요"
-            value={price}
-            onChange={handlePriceChange}
-          />
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <Button
-            color="primary"
-            className="w-full mt-6 bg-black text-white"
-            size="lg"
-            onPress={handleUpdate}
-            isLoading={isSubmitting}
-          >
-            상품 수정
-          </Button>
+        {/* 액션 버튼 */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button
+              color="primary"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4"
+              size="lg"
+              onPress={handleUpdate}
+              isLoading={isSubmitting}
+              startContent={
+                !isSubmitting && (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )
+              }
+            >
+              {isSubmitting ? "수정 중..." : "작품 수정"}
+            </Button>
+            
+            <Button
+              variant="bordered"
+              className="flex-1 border-red-300 text-red-600 hover:bg-red-50 font-semibold py-4"
+              size="lg"
+              onPress={handleDelete}
+              isLoading={isDeleting}
+              startContent={
+                !isDeleting && (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                )
+              }
+            >
+              {isDeleting ? "삭제 중..." : "작품 삭제"}
+            </Button>
+          </div>
           
-          <Button
-            variant="bordered"
-            className="w-full border-black text-black"
-            size="lg"
-            onPress={handleDelete}
-            isLoading={isDeleting}
-          >
-            상품 삭제
-          </Button>
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <h4 className="text-sm font-medium text-yellow-800">주의사항</h4>
+                <p className="text-sm text-yellow-700 mt-1">
+                  작품 삭제는 되돌릴 수 없습니다. 삭제하기 전에 신중히 고려해주세요.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
+        
+        {/* 하단 여백 */}
+        <div className="h-8"></div>
       </div>
     </div>
   );

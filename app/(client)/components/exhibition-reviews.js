@@ -4,6 +4,21 @@ import { Card, CardBody, Divider, Skeleton, Spinner, Avatar, Progress } from "@h
 import { FaRegStar, FaStar } from "react-icons/fa";
 import { FaPlusCircle } from "react-icons/fa";
 import { createClient } from "@/utils/supabase/client";
+import Image from "next/image";
+
+// 이름 마스킹 함수
+const maskName = (name) => {
+  if (!name || typeof name !== 'string') return "익명";
+  
+  // 이메일인 경우
+  if (name.includes('@')) {
+    const emailPart = name.split('@')[0];
+    return emailPart.length > 1 ? emailPart[0] + '**' : emailPart;
+  }
+  
+  // 일반 이름인 경우
+  return name.length > 1 ? name[0] + '**' : name;
+};
 
 export default function ExhibitionReviews({ exhibitionId }) {
   const [reviews, setReviews] = useState([]);
@@ -197,7 +212,7 @@ export default function ExhibitionReviews({ exhibitionId }) {
                   <div className="flex-1">
                     <div className="flex flex-col">
                       <div className="text-sm font-bold">
-                        {review.name?.email?.split('@')[0] || "익명 사용자"}
+                        {maskName(review.name?.email?.split('@')[0] || review.name || "익명 사용자")}
                       </div>
                       <div className="text-xs text-gray-500">
                         {formatDate(review.created_at)}
@@ -219,6 +234,18 @@ export default function ExhibitionReviews({ exhibitionId }) {
                     )}
                     
                     <p className="text-sm mt-2">{review.description}</p>
+                    
+                    {/* 증빙 사진 */}
+                    {review.proof_image && (
+                      <div className="mt-3 relative w-full h-40 bg-gray-100 rounded-lg overflow-hidden">
+                        <Image
+                          src={review.proof_image}
+                          alt="리뷰 증빙 사진"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardBody>

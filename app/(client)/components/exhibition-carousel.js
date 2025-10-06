@@ -1,209 +1,165 @@
 'use client'
-import React, { useState, useEffect } from "react";
-import { Card, CardBody, Skeleton } from "@heroui/react";
-import Link from "next/link";
+import React, { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export function ExhibitionCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
+  const timeoutRef = useRef(null);
   const supabase = createClient();
 
-  const getBanners = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.from("banner").select("*").order("id", { ascending: false });
-      if (error) {
-        console.log("Error fetching banners:", error);
-      }
-      setBanners(data || []);
-    } catch (error) {
-      console.log("Error fetching banners:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+  // Supabase에서 배너 데이터 가져오기
   useEffect(() => {
-    getBanners();
+    const fetchBanners = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("banner")
+          .select("*")
+          .order("id", { ascending: false })
+          .limit(5); // 최신 5개 배너
+        
+        if (error) {
+          console.log('배너 데이터 로딩 실패:', error);
+          // 실패 시 기본 배너 사용
+          setBanners([
+            {
+              id: 1,
+              name: '기본 배너',
+              url: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=1200&h=600&q=85',
+            }
+          ]);
+        } else {
+          setBanners(data || []);
+        }
+      } catch (error) {
+        console.log('배너 데이터 로딩 실패:', error);
+        // 실패 시 기본 배너 사용
+        setBanners([
+          {
+            id: 1,
+            name: '기본 배너',
+            url: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=1200&h=600&q=85',
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBanners();
   }, []);
 
-  // Slick 설정
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 4000,
-    pauseOnHover: true,
-    arrows: false,
-    dotsClass: "slick-dots custom-dots",
-    customPaging: (i) => (
-      <div className="dot-button" />
-    )
+  const resetTimeout = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  }
+
+  useEffect(() => {
+    if (banners.length === 0) return;
+    
+    resetTimeout();
+    timeoutRef.current = setTimeout(
+      () =>
+        setCurrentIndex((prevIndex) =>
+          prevIndex === banners.length - 1 ? 0 : prevIndex + 1
+        ),
+      4000 // 4초마다 자동 슬라이드
+    );
+
+    return () => {
+      resetTimeout();
+    };
+  }, [currentIndex, banners.length]);
+
+  const goToSlide = (slideIndex) => {
+    setCurrentIndex(slideIndex);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { 
-        duration: 0.5,
-        when: "beforeChildren",
-        staggerChildren: 0.1
-      }
-    }
+  const prevSlide = () => {
+    const isFirstSlide = currentIndex === 0;
+    const newIndex = isFirstSlide ? banners.length - 1 : currentIndex - 1;
+    setCurrentIndex(newIndex);
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 }
-    }
+  const nextSlide = () => {
+    const isLastSlide = currentIndex === banners.length - 1;
+    const newIndex = isLastSlide ? 0 : currentIndex + 1;
+    setCurrentIndex(newIndex);
   };
+
+  if (loading) {
+    return (
+      <div className="relative mx-4 mt-6 mb-1 h-48 group">
+        <div className="w-full h-full rounded-2xl overflow-hidden bg-gray-200 animate-pulse">
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-gray-500">배너 로딩 중...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (banners.length === 0) {
+    return (
+      <div className="relative mx-4 mt-6 mb-1 h-48 group">
+        <div className="w-full h-full rounded-2xl overflow-hidden bg-gray-200">
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-gray-500">배너가 없습니다</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <motion.div
-      className="relative py-5 w-full flex justify-center items-center"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      <Card className="w-full" shadow="none">
-        <CardBody className="p-0 w-full flex justify-center items-center">
-          {loading ? (
-            <div className="w-full space-y-5 p-4 flex justify-center items-center">
-              <Card className="w-[90%]" radius="lg" shadow="none" >
-                <Skeleton className="rounded-lg">
-                  <div className="h-[200px] rounded-lg bg-default-300" />
-                </Skeleton>
-                
-              </Card>
+    <div className="relative mx-4 mt-6 mb-1 h-48 group">
+      <div className="w-full h-full rounded-2xl overflow-hidden">
+        <div
+          className="whitespace-nowrap h-full transition-transform duration-700 ease-in-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {banners.map((banner, index) => (
+            <div className="inline-block w-full h-full" key={banner.id || index}>
+              <div className="w-full h-full relative">
+                <img
+                  src={
+                    banner?.thumbnail_url ||
+                    (banner?.url
+                      ? banner.url.replace(/\.(jpg|jpeg|png)$/i, ".webp")
+                      : "/noimage.jpg")
+                  }
+                  alt={banner?.name || banner?.title || `Slide ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
-          ) : (
-            <motion.div
-              className="w-[90%] relative scrollbar-hide"
-              variants={itemVariants}
-            >
-              <Slider {...settings}>
-                {banners.map((banner, index) => (
-                  <div key={index} className="outline-none">
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <Image
-                        src={
-                          banner?.thumbnail_url ||
-                          (banner?.url
-                            ? banner.url.replace(/\.(jpg|jpeg|png)$/i, ".webp")
-                            : "/noimage.jpg")
-                        }
-                        alt={banner?.title || `Slide ${index + 1}`}
-                        width={400}
-                        height={200}
-                        quality={70}
-                        priority={index === 0}
-                        style={{ objectFit: "cover", borderRadius: "16px", outline: 'none', WebkitTapHighlightColor: 'transparent' }}
-                        className="w-full h-[200px] rounded-2xl"
-                      />
-                    </motion.div>
-                  </div>
-                ))}
-              </Slider>
-            </motion.div>
-          )}
-        </CardBody>
-      </Card>
-      <style jsx global>{`
-        .custom-dots {
-          position: absolute;
-          bottom: 10px;
-          display: flex !important;
-          justify-content: center;
-          align-items: center;
-          width: 100%;
-          padding: 0;
-          margin: 0;
-          list-style: none;
-          text-align: center;
-          z-index: 10;
-        }
-        .custom-dots li {
-          position: relative;
-          display: inline-block;
-          width: 12px;
-          height: 12px;
-          margin: 0 3px;
-          padding: 0;
-          cursor: pointer;
-        }
-        .custom-dots li button {
-          font-size: 0;
-          line-height: 0;
-          display: block;
-          width: 12px;
-          height: 12px;
-          padding: 0;
-          cursor: pointer;
-          color: transparent;
-          border: 0;
-          outline: none;
-          background: transparent;
-        }
-        .custom-dots li .dot-button {
-          display: block;
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background-color: white;
-          transition: all 0.3s ease;
-        }
-        .custom-dots li.slick-active .dot-button {
-          background-color: #007AFF !important;
-          width: 10px;
-          height: 10px;
-        }
-        
-        /* 이미지 클릭 시 하이라이트 제거 */
-        img {
-          -webkit-tap-highlight-color: transparent;
-          outline: none;
-          user-select: none;
-        }
-        
-        /* 스크롤바 완전히 제거 */
-        ::-webkit-scrollbar {
-          display: none;
-        }
-        
-        /* Firefox 대응 */
-        * {
-          scrollbar-width: none;
-        }
-        
-        /* Slick 슬라이더 스크롤바 제거 */
-        .slick-slider {
-          overflow: hidden !important;
-        }
-        
-        /* 슬라이더 아이템 아웃라인 제거 */
-        .slick-slide, 
-        .slick-slide * {
-          outline: none !important;
-        }
-      `}</style>
-    </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* 좌우 화살표 (호버 시 표시) */}
+      <div className="hidden group-hover:block absolute top-1/2 -translate-y-1/2 left-2 p-1 bg-black/30 text-white rounded-full cursor-pointer transition-opacity">
+        <ChevronLeft onClick={prevSlide} size={20} />
+      </div>
+      <div className="hidden group-hover:block absolute top-1/2 -translate-y-1/2 right-2 p-1 bg-black/30 text-white rounded-full cursor-pointer transition-opacity">
+        <ChevronRight onClick={nextSlide} size={20} />
+      </div>
+
+      {/* 하단 인디케이터 점 */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-2">
+        {banners.map((_, slideIndex) => (
+          <div
+            key={slideIndex}
+            onClick={() => goToSlide(slideIndex)}
+            className={`h-1.5 w-1.5 rounded-full cursor-pointer transition-all duration-300 ${
+              currentIndex === slideIndex ? 'bg-white w-4' : 'bg-white/50'
+            }`}
+          ></div>
+        ))}
+      </div>
+    </div>
   );
 }

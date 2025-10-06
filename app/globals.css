@@ -4,13 +4,53 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 모바일 가로 스크롤 방지 */
+/* 모바일 가로 스크롤 방지 및 스크롤바 숨김 */
 html, body {
   width: 100%;
   max-width: 100%;
-  height: 100%;
+  min-height: 100vh;
   overflow-x: hidden;
   background: linear-gradient(180deg, #f5f6fa 0%, #e5e7eb 60%, #d1d5db 100%) !important;
+  /* 스크롤바 숨김 */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  /* 스크롤 위치 초기화 */
+  scroll-behavior: auto;
+}
+
+/* 페이지 로드 시 스크롤 위치 강제 초기화 */
+html {
+  scroll-padding-top: 0;
+  scroll-snap-type: none;
+}
+
+body {
+  scroll-padding-top: 0;
+  scroll-snap-type: none;
+}
+
+/* 페이지 전환 시 스크롤 위치 초기화 강화 */
+html, body {
+  scroll-behavior: auto !important;
+}
+
+/* 모든 페이지에서 최상단 시작 보장 */
+main, .mobile-fixed-width {
+  scroll-behavior: auto !important;
+}
+
+/* Chrome, Safari, Opera 스크롤바 숨김 */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* 모바일 스크롤 개선 */
+@media (max-width: 768px) {
+  html, body {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: scroll;
+  }
 }
 
 /* 모바일 앱 프레임을 위한 스타일 */

@@ -68,6 +68,9 @@ function GalleryListContent() {
 
   // 탭이 변경될 때 갤러리 데이터 초기화
   useEffect(() => {
+    // 페이지 진입 시 최상단으로 스크롤
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    
     if (initialized) {
       setCurrentPage(1);
       setTabLoading(true);
@@ -559,8 +562,14 @@ function GalleryListContent() {
 
 function LoadingComponent() {
   return (
-    <div className="w-full flex justify-center items-center h-[200px]">
-      <Spinner variant="wave" color="primary" />
+    <div className="w-full flex flex-col justify-center items-center h-[200px] space-y-4">
+      <div className="relative">
+        {/* 외부 링 */}
+        <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+        {/* 내부 링 */}
+        <div className="absolute top-1 left-1 w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+      </div>
+      <p className="text-gray-600 text-sm font-medium">로딩 중...</p>
     </div>
   );
 }

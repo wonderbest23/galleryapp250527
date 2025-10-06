@@ -100,17 +100,21 @@ const ExhibitionCard = ({ exhibition, index, isBookmarked, toggleBookmark }) => 
               
               {/* 상태 태그 */}
               <div className={`px-2 py-1 rounded-full text-xs font-medium ml-2 ${
-                diffDays && diffDays > 0 && diffDays <= 3 
-                  ? "bg-red-100 text-red-800" 
-                  : diffDays && diffDays > 0 
-                    ? "bg-green-100 text-green-800" 
-                    : "bg-blue-100 text-blue-800"
+                diffDays === null || diffDays < 0
+                  ? "bg-gray-100 text-gray-600" 
+                  : diffDays > 0 && diffDays <= 3 
+                    ? "bg-red-100 text-red-800" 
+                    : diffDays > 0 
+                      ? "bg-green-100 text-green-800" 
+                      : "bg-blue-100 text-blue-800"
               }`}>
-                {diffDays && diffDays > 0 && diffDays <= 3 
-                  ? "종료임박" 
-                  : diffDays && diffDays > 0 
-                    ? "진행중" 
-                    : "예정"
+                {diffDays === null || diffDays < 0
+                  ? "종료" 
+                  : diffDays > 0 && diffDays <= 3 
+                    ? "종료임박" 
+                    : diffDays > 0 
+                      ? "진행중" 
+                      : "예정"
                 }
               </div>
             </div>
@@ -264,8 +268,7 @@ export function ExhibitionCards({ exhibitionCategory, user }) {
         let query = supabase
           .from("exhibition")
           .select("*,gallery:naver_gallery_url(*),naver_gallery_url(*)", { count: "exact" })
-          .not("gallery", "is", null)
-          .gte("end_date", new Date().toISOString());
+          .gte("end_date", new Date().toISOString()); // 종료되지 않은 전시회만 표시
 
         // 정렬: 전체전시는 종료일이 임박한 순, 그 외 카테고리는 기존 로직 유지
         if (exhibitionCategory === "all") {

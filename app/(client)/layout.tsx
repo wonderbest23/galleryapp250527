@@ -14,6 +14,8 @@ import BottomNavigation from "@/app/(client)/components/BottomNavigationbar";
 import Providers from "@/app/(client)/components/providers";
 import Link from "next/link";
 import Navbar from "@/app/(client)/components/Navbar";
+import TopNavigation from "@/app/(client)/components/TopNavigation";
+import ScrollToTop from "@/app/(client)/components/ScrollToTop";
 import "@/app/mobile-fixed.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -61,8 +63,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Providers>
-            <div className="mobile-fixed-width">
-              <main className="w-full h-full pb-16">
+            <ScrollToTop />
+            <div className="mobile-fixed-width" style={{ scrollBehavior: 'auto' }}>
+              <TopNavigation />
+              <main className="w-full h-full pb-16" style={{ scrollBehavior: 'auto' }}>
                 {children}
               </main>
               <BottomNavigation />

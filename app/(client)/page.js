@@ -32,6 +32,7 @@ import { MagazineCards } from "./components/magazine-cards";
 import { LatestWorks } from "./components/latest-works";
 import { TopOfWeek } from "./components/top-of-week";
 import { CommunityHighlights } from "./components/community-highlights";
+import ReviewWritePopup from "./components/ReviewWritePopup";
 
 export default function Home() {
   const [exhibitionCategory, setExhibitionCategory] = useState("all");
@@ -48,6 +49,17 @@ export default function Home() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [search, setSearch] = useState("");
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showCustomReviewModal, setShowCustomReviewModal] = useState(false);
+  const [selectedExhibition, setSelectedExhibition] = useState(null);
+  const [customExhibitionData, setCustomExhibitionData] = useState({
+    title: '',
+    gallery: '',
+    visitDate: ''
+  });
+  const [reviewStep, setReviewStep] = useState(1);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewContent, setReviewContent] = useState("");
+  const [reviewProof, setReviewProof] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [exhibitions, setExhibitions] = useState([]);
   const [gallery, setGallery] = useState([]);
@@ -224,134 +236,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* 상단 네비게이션 바 */}
-      <div className="bg-white px-4 py-3 border-b border-gray-100">
-        <div className="flex items-center justify-between">
-          {/* 홈 아이콘 */}
-          <div className="flex items-center">
-            <Link href="/" className="cursor-pointer">
-              <FiHome className="w-6 h-6 text-gray-700 hover:text-blue-500 transition-colors" />
-            </Link>
-          </div>
-
-          {/* 검색바 */}
-          <div className="flex-1 mx-4 relative">
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="갤러리, 전시회를 검색해보세요"
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            {/* 검색 결과 배너 */}
-            {showSearchResults && search && (
-              <div className="absolute w-full bg-white shadow-md rounded-b-lg p-4 z-50 top-full left-0">
-                <div className="mb-3">
-                  <h3 className="text-sm font-semibold text-gray-600 mb-2">갤러리</h3>
-                  {gallery.length > 0 ? (
-                    <div className="space-y-2">
-                      {gallery.slice(0, 3).map((item) => (
-                        <Link
-                          href={`/galleries/${item.id}`}
-                          key={item.id}
-                          onClick={handleLinkClick}
-                        >
-                          <div className="flex items-center p-2 hover:bg-gray-50 rounded-lg transition">
-                            <div className="flex-shrink-0 mr-3">
-                              <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
-                                {item.thumbnail ? (
-                                  <img
-                                    src={item.thumbnail}
-                                    alt={item.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <FiHome className="text-gray-400 text-xl" />
-                                )}
-                              </div>
-                            </div>
-                            <span className="text-sm">{item.name}</span>
-                          </div>
-                        </Link>
-                      ))}
-                      {gallery.length > 3 && (
-                        <div className="text-xs text-right text-gray-500">
-                          외 {gallery.length - 3}개 결과
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-500 p-2">
-                      갤러리 검색 결과가 없습니다.
-                    </div>
-                  )}
-                </div>
-
-                <div className="border-t border-gray-200 my-2"></div>
-
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-600 mb-2">전시회</h3>
-                  {exhibitions.length > 0 ? (
-                    <div className="space-y-2">
-                      {exhibitions.slice(0, 3).map((item) => (
-                        <Link
-                          href={`/exhibition/${item.id}`}
-                          key={item.id}
-                          onClick={handleLinkClick}
-                        >
-                          <div className="flex items-center p-2 hover:bg-gray-50 rounded-lg transition">
-                            <div className="flex-shrink-0 mr-3">
-                              <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
-                                {item.photo ? (
-                                  <img
-                                    src={item.photo}
-                                    alt={item.title || item.contents}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <FiHome className="text-gray-400 text-xl" />
-                                )}
-                              </div>
-                            </div>
-                            <span className="text-sm">
-                              {item.title || item.contents}
-                            </span>
-                          </div>
-                        </Link>
-                      ))}
-                      {exhibitions.length > 3 && (
-                        <div className="text-xs text-right text-gray-500">
-                          외 {exhibitions.length - 3}개 결과
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-500 p-2">
-                      전시회 검색 결과가 없습니다.
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 알림 아이콘 */}
-          <div className="relative">
-            <button onClick={notificationDisclosure.onOpen} className="relative">
-              <FiBell className="w-6 h-6 text-gray-700" />
-              {unreadCount > 0 && (
-                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {unreadCount}
-                </div>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* 메인 콘텐츠 */}
       <div className="flex flex-col gap-3 justify-center items-center w-full">
@@ -500,8 +384,8 @@ export default function Home() {
       {/* 하단 네비게이션 */}
       <BottomNavigation />
       
-      {/* 디버깅용 스크롤 상태 표시 */}
-      <div className="fixed top-4 right-4 z-50 bg-black text-white px-2 py-1 rounded text-xs">
+      {/* 스크롤 상태 표시 */}
+      <div className="fixed top-0 left-0 z-50 bg-blue-500 text-white px-2 py-1 rounded-br-lg text-xs">
         스크롤: {isScrolled ? 'ON' : 'OFF'}
       </div>
 
@@ -527,7 +411,7 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
             <span className="font-medium">리뷰쓰기</span>
-            <span className="bg-yellow-400 text-black text-xs px-2 py-1 rounded-full font-bold">100P+</span>
+            <span className="bg-yellow-400 text-black text-xs px-2 py-1 rounded-full font-bold">500P+</span>
           </button>
         )}
       </div>
@@ -874,106 +758,130 @@ export default function Home() {
         </ModalContent>
       </Modal>
 
-      {/* 리뷰쓰기 모달 */}
-      <Modal
-        placement="center"
-        isOpen={showReviewModal}
-        onClose={() => setShowReviewModal(false)}
-        size="full"
-        scrollBehavior="inside"
-      >
-        <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            <div className="flex items-center">
-              <button
-                onClick={() => setShowReviewModal(false)}
-                className="mr-3 p-1 hover:bg-gray-100 rounded-full"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <h2 className="text-lg font-bold">전시회 검색</h2>
-            </div>
-          </ModalHeader>
-          <ModalBody>
-            <div className="space-y-4">
-              {/* 검색바 */}
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="전시회를 검색해보세요"
-                  className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
+      {/* 리뷰쓰기 팝업 */}
+      {showReviewModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowReviewModal(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-t-2xl shadow-xl">
+            <ReviewWritePopup
+              exhibition={null}
+              customExhibitionData={customExhibitionData}
+              onBack={() => setShowReviewModal(false)}
+              onClose={() => setShowReviewModal(false)}
+              onSuccess={() => {
+                setShowReviewModal(false);
+                setSelectedExhibition(null);
+                setCustomExhibitionData({ title: '', gallery: '', visitDate: '' });
+              }}
+              onCustomReview={() => {
+                setShowReviewModal(false);
+                setShowCustomReviewModal(true);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
-              {/* 전시회 목록 */}
-              <div className="space-y-3">
-                {[
-                  {
-                    id: 1,
-                    title: "PROTOTYPE - OKSEUNG CHEOL",
-                    venue: "롯데뮤지엄 오브 아트",
-                    dates: "2025-08-15 ~ 2025-10-28",
-                    image: "/images/noimage.jpg"
-                  },
-                  {
-                    id: 2,
-                    title: "모던 아트 컬렉션",
-                    venue: "국립현대미술관",
-                    dates: "2025-09-01 ~ 2025-11-30",
-                    image: "/images/noimage.jpg"
-                  },
-                  {
-                    id: 3,
-                    title: "디지털 아트 페스티벌",
-                    venue: "서울아트센터",
-                    dates: "2025-12-01 ~ 2025-12-31",
-                    image: "/images/noimage.jpg"
-                  },
-                  {
-                    id: 4,
-                    title: "Unfinished @ Studio Urban",
-                    venue: "Studio Urban",
-                    dates: "2025-10-15 ~ 2025-12-31",
-                    image: "/images/noimage.jpg"
-                  }
-                ].map((exhibition) => (
-                  <div key={exhibition.id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0">
-                      <Image
-                        src={exhibition.image}
-                        alt={exhibition.title}
-                        width={64}
-                        height={64}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 text-sm mb-1 line-clamp-1">
-                        {exhibition.title}
-                      </h3>
-                      <p className="text-xs text-gray-600 mb-1">{exhibition.venue}</p>
-                      <p className="text-xs text-gray-500">{exhibition.dates}</p>
+      {/* 새롭게 등록하기 팝업 */}
+      {showCustomReviewModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowCustomReviewModal(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-t-2xl shadow-xl">
+            <div className="h-full flex flex-col">
+              {/* 헤더 */}
+              <div className="sticky top-0 bg-white/95 backdrop-blur-md z-10 border-b border-gray-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setShowCustomReviewModal(false)}
+                      className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+                    >
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">새롭게 등록하기</h2>
+                      <p className="text-sm text-gray-500">직접 전시회 정보를 입력해주세요</p>
                     </div>
                   </div>
-                ))}
+                  <button
+                    onClick={() => setShowCustomReviewModal(false)}
+                    className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
-              {/* 빈 상태 메시지 */}
-              <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">방문한 전시가 없었나요?</p>
-                <button className="border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                  새롭게 등록하기
-                </button>
+              {/* 콘텐츠 */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="space-y-6">
+                  <div className="bg-white border border-gray-200 rounded-2xl p-8">
+                    <div className="text-center mb-8">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">전시회 정보 입력</h3>
+                      <p className="text-gray-500">리뷰를 작성할 전시회 정보를 입력해주세요</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">전시회 제목</label>
+                        <input
+                          type="text"
+                          value={customExhibitionData.title}
+                          onChange={(e) => setCustomExhibitionData(prev => ({ ...prev, title: e.target.value }))}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="전시회 제목을 입력해주세요"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">갤러리/장소</label>
+                        <input
+                          type="text"
+                          value={customExhibitionData.gallery}
+                          onChange={(e) => setCustomExhibitionData(prev => ({ ...prev, gallery: e.target.value }))}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="갤러리 또는 전시 장소를 입력해주세요"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">방문한 날짜</label>
+                        <input
+                          type="date"
+                          value={customExhibitionData.visitDate}
+                          onChange={(e) => setCustomExhibitionData(prev => ({ ...prev, visitDate: e.target.value }))}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="방문한 날짜를 선택해주세요"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-8">
+                      <button
+                        onClick={() => {
+                          if (!customExhibitionData.title || !customExhibitionData.gallery || !customExhibitionData.visitDate) {
+                            alert('모든 필드를 입력해주세요.');
+                            return;
+                          }
+                          setShowCustomReviewModal(false);
+                          setShowReviewModal(true);
+                        }}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 text-lg rounded-xl transition-colors"
+                      >
+                        리뷰 작성하기
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

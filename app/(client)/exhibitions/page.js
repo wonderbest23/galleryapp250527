@@ -89,6 +89,9 @@ function ExhibitionListContent() {
   const supabase = createClient();
 
   useEffect(() => {
+    // 페이지 진입 시 최상단으로 스크롤
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    
     // 북마크 필터 상태가 변경될 때마다 전시회 목록 초기화 및 다시 불러오기
     setPage(1);
     setExhibitions([]);
@@ -410,26 +413,41 @@ function ExhibitionListContent() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="bg-white flex items-center w-[90%] justify-between">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+      {/* 상단 네비게이션 바 */}
+      <motion.div 
+        className="w-full bg-white/95 backdrop-blur-sm flex items-center justify-between px-4 py-3 border-b border-gray-100 shadow-sm sticky top-0 z-10"
+        initial="hidden"
+        animate="visible"
+        variants={fadeInVariants}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
         <Button
           isIconOnly
           variant="light"
-          className="mr-2"
+          className="hover:bg-gray-100 transition-colors"
           onPress={() => router.push("/")}
           aria-label="홈으로 이동"
         >
-          <FaArrowLeft className="text-xl" />
+          <FaArrowLeft className="text-xl text-gray-700" />
         </Button>
-        <h2 className="text-lg font-bold text-center flex-grow">전시회</h2>
+        <h2 className="text-lg font-bold text-gray-800">전시회</h2>
         <div className="w-10"></div>
-      </div>
+      </motion.div>
 
       {/* 인기 전시회 캐러셀 */}
-      <div className="w-[90%] mt-4 mb-2">
-        <div className="flex justify-between items-center mb-1">
-          <h3 className="text-[18px] font-bold">인기 전시회</h3>
-        </div>
+      <motion.div 
+        className="w-[90%] mt-6 mb-6"
+        initial="hidden"
+        animate="visible"
+        variants={fadeInVariants}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-gray-800">인기 전시회</h3>
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          </div>
         {loadingPopular ? (
           <div className="flex overflow-x-auto gap-4 py-2 scrollbar-hide">
             {Array(3).fill(null).map((_, i) => (
@@ -453,265 +471,357 @@ function ExhibitionListContent() {
             />
           </motion.div>
         )}
-      </div>
-
-
-      {/* 커스텀 탭바 및 필터 영역 */}
-      <div className="w-[90%] flex flex-col mb-4">
-        {/* 커스텀 탭바 - 전체 폭의 2/3 크기로 중앙 정렬 */}
-        <div className="flex w-full border-t border-gray-200 mb-2">
-          <div className="w-1/6"></div>
-          <div className="flex w-2/3">
-            <button
-              className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "all" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-              onClick={() => setSelectedTab("all")}
-            >
-              전시회
-            </button>
-            <button
-              className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "free" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-              onClick={() => setSelectedTab("free")}
-            >
-              무료전시
-            </button>
-            <button
-              className={`text-[12px] flex-1 py-3 text-center font-medium ${selectedTab === "recommended" ? "border-t-4 border-black text-black" : "text-gray-500"}`}
-              onClick={() => setSelectedTab("recommended")}
-            >
-              추천전시
-            </button>
-          </div>
-          <div className="w-1/6"></div>
         </div>
+      </motion.div>
 
-        {/* 필터 영역 */}
-        <div className="flex justify-between items-center w-full bg-white mb-4">
-          <Select
-            aria-label="지역 선택"
-            selectedKeys={selectedRegion ? [selectedRegion] : []}
-            onChange={(e) => setSelectedRegion(e.target.value)}
-            className="w-1/4"
-            placeholder="지역"
-            size="sm"
-          >
-            <SelectItem key="서울" value="서울">
-              서울
-            </SelectItem>
-            <SelectItem key="인천" value="인천">
-              인천
-            </SelectItem>
-            <SelectItem key="경기" value="경기">
-              경기
-            </SelectItem>
-            <SelectItem key="대전" value="대전">
-              대전
-            </SelectItem>
-            <SelectItem key="충북" value="충북">
-              충북
-            </SelectItem>
-            <SelectItem key="충남" value="충남">
-              충남
-            </SelectItem>
-            <SelectItem key="대구" value="대구">
-              대구
-            </SelectItem>
-            <SelectItem key="경북" value="경북">
-              경북
-            </SelectItem>
-            <SelectItem key="경남" value="경남">
-              경남
-            </SelectItem>
-            <SelectItem key="부산" value="부산">
-              부산
-            </SelectItem>
-            <SelectItem key="울산" value="울산">
-              울산
-            </SelectItem>
-            <SelectItem key="광주" value="광주">
-              광주
-            </SelectItem>
-            <SelectItem key="전남" value="전남">
-              전남
-            </SelectItem>
-            <SelectItem key="전북" value="전북">
-              전북
-            </SelectItem>
-            <SelectItem key="강원" value="강원">
-              강원
-            </SelectItem>
-            <SelectItem key="제주" value="제주">
-              제주
-            </SelectItem>
-          </Select>
-
-          <Button
-            size="sm"
-            color="primary"
-            variant="flat"
-            onPress={() => {
-              if(!user){ router.push('/mypage'); return; }
-              setIsRequestOpen(true);
-            }}
-          >
-            전시회 등록 요청
-          </Button>
-        </div>
-
-        {/* 전시회 카드 */}
-        {tabLoading ? (
-          <div className="flex justify-center items-center w-full my-4">
-            <Spinner variant="wave" size="lg" color="primary" />
-          </div>
-        ) : (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInVariants}
-          >
-            <ExhibitionCards
-              exhibitions={exhibitions}
-              user={user}
-              bookmarks={bookmarks}
-              toggleBookmark={toggleBookmark}
-              isBookmarked={isBookmarked}
-            />
-          </motion.div>
-        )}
-
-        {/* 페이지네이션 */}
-        {!tabLoading && exhibitions.length > 0 && totalPages > 1 && (
-          <div className="flex justify-center items-center mt-6">
-            <Pagination
-              total={totalPages}
-              page={page}
-              onChange={handlePageChange}
-              showControls
-              color="primary"
-              size="sm"
-              className="gap-2"
-            />
-          </div>
-        )}
-        
-        {!tabLoading && exhibitions.length === 0 && (
-          <div className="flex justify-center items-center py-8">
-            <p className="text-gray-500">표시할 전시회가 없습니다</p>
-          </div>
-        )}
-
-
-      </div>
-
-      <Divider
-        orientation="horizontal"
-        className="w-[90%] my-4 bg-[#eee]"
-      />
-
-              {/* 아트앤브릿지 섹션 */}
-        <div className="w-[90%] flex flex-col justify-center items-center mb-24">
-          <div className="w-full flex justify-between items-center">
-            <h1 className="text-[18px] font-bold">아트앤브릿지</h1>
-        </div>
-
-        {loadingHighRating ? (
-          <div className="w-full grid grid-cols-3 gap-4 mt-6">
-            {Array(6).fill(null).map((_, i) => (
-              <div key={i}>
-                <Skeleton className="w-full h-[100px] rounded-lg" />
-                <Skeleton className="w-3/4 h-3 mt-2 rounded-lg" />
-                <Skeleton className="w-1/2 h-2 mt-1 rounded-lg" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainerVariants}
-            className="w-full grid grid-cols-3 gap-4 mt-6"
-          >
-            {highRatingExhibitions.map((exhibition) => (
-              <motion.div 
-                key={exhibition.id}
-                variants={fadeInVariants}
+      {/* 통합 탭바, 필터 및 전시회 카드 영역 */}
+      <motion.div 
+        className="w-[90%] flex flex-col mb-6"
+        initial="hidden"
+        animate="visible"
+        variants={fadeInVariants}
+        transition={{ duration: 0.4, delay: 0.3 }}
+      >
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          {/* 탭바 */}
+          <div className="mb-6">
+            <div className="flex">
+              <button
+                className={`relative flex-1 py-3 px-4 text-center text-sm font-semibold transition-all rounded-xl ${
+                  selectedTab === "all" 
+                    ? "text-blue-600 bg-blue-50 shadow-sm" 
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setSelectedTab("all")}
               >
-                <Link href={`/exhibition/${exhibition.id}`}>
-                  <div className="relative w-full h-[100px]">
-                    <Image
-                      src={exhibition.photo}
-                      alt={exhibition.name}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover rounded-lg"
-                      priority
-                    />
-                  </div>
-                  <div className="text-[14px] font-bold line-clamp-1">
-                    {exhibition.contents || "없음"}
-                  </div>
-                  <div className="text-[13px] text-gray-500 flex items-center justify-start gap-1">
-                    <span className="text-yellow-500">
-                      <FaStar className="text-[#007AFF]" />
-                    </span>
-                    <span>
-                      {exhibition.review_average || "1.0"} ({exhibition.review_count || 0})
-                    </span>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </div>
+                전시회
+              </button>
+              <button
+                className={`relative flex-1 py-3 px-4 text-center text-sm font-semibold transition-all rounded-xl ${
+                  selectedTab === "free" 
+                    ? "text-blue-600 bg-blue-50 shadow-sm" 
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setSelectedTab("free")}
+              >
+                무료전시
+              </button>
+              <button
+                className={`relative flex-1 py-3 px-4 text-center text-sm font-semibold transition-all rounded-xl ${
+                  selectedTab === "recommended" 
+                    ? "text-blue-600 bg-blue-50 shadow-sm" 
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setSelectedTab("recommended")}
+              >
+                추천전시
+              </button>
+            </div>
+          </div>
 
-      {/* 전시회 등록 요청 모달 */}
-      <Modal isOpen={isRequestOpen} onOpenChange={setIsRequestOpen} placement="center">
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">전시회 등록 요청</ModalHeader>
-              <ModalBody>
-                <Input
-                  label="전시회명"
-                  value={requestTitle}
-                  onChange={e=>setRequestTitle(e.target.value)}
-                  isRequired
-                />
-                <Textarea
-                  label="요청 내용(선택)"
-                  value={requestContent}
-                  onChange={e=>setRequestContent(e.target.value)}
-                />
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>취소</Button>
-                <Button color="primary" onPress={async()=>{
-                  if(!requestTitle.trim()){ alert('전시회명을 입력해주세요'); return; }
-                  const supabase = createClient();
-                  const todayStart = new Date();
-                  todayStart.setHours(0,0,0,0);
-                  const { count, error:cntErr } = await supabase
-                    .from('exhibition_request')
-                    .select('id', { count:'exact', head:true })
-                    .eq('user_id', user?.id)
-                    .gte('created_at', todayStart.toISOString());
-                  if(cntErr){ console.log(cntErr); alert('요청 확인 중 오류'); return; }
-                  if((count||0)>=10){ alert('하루 최대 10건까지 요청할 수 있습니다. 내일 다시 시도해주세요.'); return; }
-                  await supabase.from('exhibition_request').insert({
-                    user_id:user?.id,
-                    title: requestTitle.trim(),
-                    content: requestContent.trim(),
-                  });
-                  setRequestTitle(''); setRequestContent(''); onClose();
-                  alert('등록 요청이 접수되었습니다!');
-                }}>
-                  제출
-                </Button>
-              </ModalFooter>
-            </>
+          {/* 필터 영역 */}
+          <div className="flex justify-between items-center w-full mb-6">
+            <Select
+              aria-label="지역 선택"
+              selectedKeys={selectedRegion ? [selectedRegion] : []}
+              onChange={(e) => setSelectedRegion(e.target.value)}
+              className="w-1/4"
+              placeholder="지역"
+              size="sm"
+              variant="bordered"
+            >
+              <SelectItem key="서울" value="서울">서울</SelectItem>
+              <SelectItem key="인천" value="인천">인천</SelectItem>
+              <SelectItem key="경기" value="경기">경기</SelectItem>
+              <SelectItem key="대전" value="대전">대전</SelectItem>
+              <SelectItem key="충북" value="충북">충북</SelectItem>
+              <SelectItem key="충남" value="충남">충남</SelectItem>
+              <SelectItem key="대구" value="대구">대구</SelectItem>
+              <SelectItem key="경북" value="경북">경북</SelectItem>
+              <SelectItem key="경남" value="경남">경남</SelectItem>
+              <SelectItem key="부산" value="부산">부산</SelectItem>
+              <SelectItem key="울산" value="울산">울산</SelectItem>
+              <SelectItem key="광주" value="광주">광주</SelectItem>
+              <SelectItem key="전남" value="전남">전남</SelectItem>
+              <SelectItem key="전북" value="전북">전북</SelectItem>
+              <SelectItem key="강원" value="강원">강원</SelectItem>
+              <SelectItem key="제주" value="제주">제주</SelectItem>
+            </Select>
+
+            <Button
+              size="sm"
+              color="primary"
+              variant="solid"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg"
+              onPress={() => {
+                if(!user){ router.push('/mypage'); return; }
+                setIsRequestOpen(true);
+              }}
+            >
+              전시회 등록 요청
+            </Button>
+          </div>
+
+          {/* 전시회 카드 */}
+          {tabLoading ? (
+            <div className="flex justify-center items-center w-full py-8">
+              <Spinner variant="wave" size="lg" color="primary" />
+            </div>
+          ) : (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={fadeInVariants}
+            >
+              <ExhibitionCards
+                exhibitions={exhibitions}
+                user={user}
+                bookmarks={bookmarks}
+                toggleBookmark={toggleBookmark}
+                isBookmarked={isBookmarked}
+              />
+            </motion.div>
           )}
-        </ModalContent>
-      </Modal>
+
+          {/* 페이지네이션 */}
+          {!tabLoading && exhibitions.length > 0 && totalPages > 1 && (
+            <div className="flex justify-center items-center mt-6">
+              <Pagination
+                total={totalPages}
+                page={page}
+                onChange={handlePageChange}
+                showControls
+                color="primary"
+                size="sm"
+                className="gap-2"
+              />
+            </div>
+          )}
+          
+          {!tabLoading && exhibitions.length === 0 && (
+            <div className="flex justify-center items-center py-8">
+              <p className="text-gray-500 text-lg">표시할 전시회가 없습니다</p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* 아트앤브릿지 섹션 */}
+      <motion.div 
+        className="w-[90%] flex flex-col justify-center items-center mb-24"
+        initial="hidden"
+        animate="visible"
+        variants={fadeInVariants}
+        transition={{ duration: 0.4, delay: 0.4 }}
+      >
+        <div className="w-full bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="w-full flex justify-between items-center mb-4">
+            <h1 className="text-xl font-bold text-gray-800">아트앤브릿지</h1>
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          </div>
+
+          {loadingHighRating ? (
+            <div className="w-full grid grid-cols-3 gap-4">
+              {Array(6).fill(null).map((_, i) => (
+                <div key={i}>
+                  <Skeleton className="w-full h-[100px] rounded-lg" />
+                  <Skeleton className="w-3/4 h-3 mt-2 rounded-lg" />
+                  <Skeleton className="w-1/2 h-2 mt-1 rounded-lg" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={staggerContainerVariants}
+              className="w-full grid grid-cols-3 gap-4"
+            >
+              {highRatingExhibitions.map((exhibition) => (
+                <motion.div 
+                  key={exhibition.id}
+                  variants={fadeInVariants}
+                  className="group"
+                >
+                  <Link href={`/exhibition/${exhibition.id}`}>
+                    <div className="relative w-full h-[100px] overflow-hidden rounded-lg group-hover:scale-105 transition-transform duration-300">
+                      <Image
+                        src={exhibition.photo}
+                        alt={exhibition.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover"
+                        priority
+                      />
+                    </div>
+                    <div className="text-sm font-bold line-clamp-1 mt-2 text-gray-800">
+                      {exhibition.contents || "없음"}
+                    </div>
+                    <div className="text-xs text-gray-500 flex items-center justify-start gap-1">
+                      <span className="text-yellow-500">
+                        <FaStar className="text-blue-500" />
+                      </span>
+                      <span>
+                        {exhibition.review_average || "1.0"} ({exhibition.review_count || 0})
+                      </span>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* 전시회 등록 요청 하단 팝업 - 마이페이지 스타일 */}
+      {isRequestOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+          {/* 배경 오버레이 */}
+          <div className="absolute inset-0 bg-black/20" onClick={() => setIsRequestOpen(false)}></div>
+          
+          {/* 팝업 컨텐츠 */}
+          <div className="relative w-full max-w-2xl mx-4 mb-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl" style={{ maxHeight: 'calc(100vh - 3rem)' }}>
+              {/* 헤더 */}
+              <div className="flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-10 border-b border-gray-200 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">전시회 등록 요청</h2>
+                    <p className="text-sm text-gray-600 leading-relaxed">새로운 전시회 정보를 등록해주세요</p>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => setIsRequestOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              {/* 컨텐츠 - 스크롤 가능 영역 */}
+              <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 16rem)' }}>
+                <div className="p-6 pb-4">
+                  <div className="space-y-6">
+                    {/* 안내 메시지 */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-semibold text-blue-800 mb-1">등록 요청 안내</h3>
+                          <p className="text-xs text-blue-700 leading-relaxed">
+                            등록을 원하는 전시회 정보를 입력해주세요. 검토 후 빠른 시일 내에 반영하겠습니다.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 폼 영역 */}
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          전시회명 <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          placeholder="등록을 원하는 전시회명을 입력하세요"
+                          value={requestTitle}
+                          onChange={e=>setRequestTitle(e.target.value)}
+                          variant="bordered"
+                          className="w-full"
+                          size="lg"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          요청 내용 (선택)
+                        </label>
+                        <Textarea
+                          placeholder="추가로 전달하고 싶은 내용이 있다면 입력하세요&#10;예: 전시 기간, 장소, 연락처 등"
+                          value={requestContent}
+                          onChange={e=>setRequestContent(e.target.value)}
+                          variant="bordered"
+                          className="w-full"
+                          minRows={4}
+                        />
+                      </div>
+                    </div>
+
+                    {/* 제한사항 안내 */}
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <svg className="w-3 h-3 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-1">제한사항</h4>
+                          <ul className="text-xs text-gray-600 space-y-1">
+                            <li>• 하루 최대 10건까지 요청 가능합니다</li>
+                            <li>• 중복 요청은 제외됩니다</li>
+                            <li>• 검토 후 승인 시 알림을 드립니다</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 푸터 버튼 - 항상 하단에 고정 */}
+              <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-6">
+                <div className="flex gap-3">
+                  <Button 
+                    variant="light" 
+                    onPress={() => setIsRequestOpen(false)}
+                    className="flex-1 h-12 rounded-xl border border-gray-300"
+                  >
+                    취소
+                  </Button>
+                  <Button 
+                    color="primary" 
+                    className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg rounded-xl"
+                    onPress={async()=>{
+                      if(!requestTitle.trim()){ alert('전시회명을 입력해주세요'); return; }
+                      const supabase = createClient();
+                      const todayStart = new Date();
+                      todayStart.setHours(0,0,0,0);
+                      const { count, error:cntErr } = await supabase
+                        .from('exhibition_request')
+                        .select('id', { count:'exact', head:true })
+                        .eq('user_id', user?.id)
+                        .gte('created_at', todayStart.toISOString());
+                      if(cntErr){ console.log(cntErr); alert('요청 확인 중 오류'); return; }
+                      if((count||0)>=10){ alert('하루 최대 10건까지 요청할 수 있습니다. 내일 다시 시도해주세요.'); return; }
+                      await supabase.from('exhibition_request').insert({
+                        user_id:user?.id,
+                        title: requestTitle.trim(),
+                        content: requestContent.trim(),
+                      });
+                      setRequestTitle(''); setRequestContent(''); setIsRequestOpen(false);
+                      alert('등록 요청이 접수되었습니다!');
+                    }}
+                  >
+                    요청 제출
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

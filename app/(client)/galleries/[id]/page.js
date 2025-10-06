@@ -28,6 +28,20 @@ import Image from "next/image";
 import { cn } from "@/utils/cn";
 import { motion } from "framer-motion";
 
+// 이름 마스킹 함수
+const maskName = (name) => {
+  if (!name || typeof name !== 'string') return "익명";
+  
+  // 이메일인 경우
+  if (name.includes('@')) {
+    const emailPart = name.split('@')[0];
+    return emailPart.length > 1 ? emailPart[0] + '**' : emailPart;
+  }
+  
+  // 일반 이름인 경우
+  return name.length > 1 ? name[0] + '**' : name;
+};
+
 // 페이드인 애니메이션 변수
 const fadeIn = {
   hidden: { opacity: 0 },
@@ -57,7 +71,7 @@ const Review = React.forwardRef(
           <div className="flex flex-col w-full ml-4">
             <p className="text-[13px] font-bold">{gallery?.name}</p>
             <p className="text-[12px] text-default-400">
-              {review.name || "익명"}님의 실제 방문 리뷰
+              {maskName(review.name || "익명")}님의 실제 방문 리뷰
             </p>
             <p className="text-[12px] text-default-400 text-end">
               {new Date(createdAt)
