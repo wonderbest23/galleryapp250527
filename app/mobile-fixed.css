@@ -13,6 +13,8 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* 제거: 강제 스케일은 실제 기기에서 UI 왜곡을 유발할 수 있어 사용하지 않음 */
+
 /* 바깥 여백(페이지 전체 배경)을 어두운 그라데이션으로 하고 싶다면, body나 html에 아래 스타일을 추가하세요:
 body {
   background: linear-gradient(180deg, #111 0%, #333 100%) !important;

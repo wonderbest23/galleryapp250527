@@ -15,7 +15,7 @@ export default function BottomNavigation() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 select-none">
       <div className="flex items-center justify-between px-2 py-2">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -29,12 +29,12 @@ export default function BottomNavigation() {
               className="flex flex-col items-center justify-center flex-1 py-2 px-1 transition-colors min-w-0"
             >
               <Icon 
-                className={`w-5 h-5 mb-1 ${
+                className={`w-6 h-6 mb-0.5 shrink-0 ${
                   isActive ? "text-blue-500" : "text-gray-400"
                 }`} 
               />
               <span 
-                className={`text-xs text-center ${
+                className={`text-[11px] leading-[1] text-center ${
                   isActive ? "text-blue-500" : "text-gray-400"
                 }`}
               >
