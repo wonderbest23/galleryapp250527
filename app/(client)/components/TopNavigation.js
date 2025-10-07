@@ -156,89 +156,63 @@ export default function TopNavigation({ search, setSearch, exhibitions, setExhib
           }
         }
 
+        // 읽음 상태 맵 한 번에 로드
+        const { data: readRows } = await supabase
+          .from('user_notifications')
+          .select('type, related_id, is_read')
+          .eq('user_id', currentUser.id)
+          .in('type', ['like_read','comment_read','reward_purchase_read']);
+        const readMap = new Map((readRows || []).map(r => [r.related_id, !!r.is_read]));
+
         // 커뮤니티 좋아요 알림 추가 (읽음 상태는 user_notifications: like_read)
         if (communityLikesResult.data) {
           communityLikesResult.data.forEach(like => {
+            const id = `like_${like.id}`;
+            const isRead = readMap.get(id) || false;
+            if (!isRead) unreadCount++;
             allNotifications.push({
-              id: `like_${like.id}`,
+              id,
               type: "like",
               title: "새로운 좋아요",
               message: `누군가 게시글에 좋아요를 눌렀습니다.`,
               created_at: like.created_at,
-              is_read: false
+              is_read: isRead
             });
           });
-          // 읽음 동기화
-          for (const like of communityLikesResult.data) {
-            const { data: readStatus } = await supabase
-              .from('user_notifications')
-              .select('is_read')
-              .eq('user_id', currentUser.id)
-              .eq('type', 'like_read')
-              .eq('related_id', `like_${like.id}`)
-              .single();
-            const idx = allNotifications.findIndex(n=>n.id===`like_${like.id}`);
-            if (idx>-1) {
-              allNotifications[idx].is_read = !!readStatus?.is_read;
-              if (!allNotifications[idx].is_read) unreadCount++;
-            }
-          }
         }
 
         // 커뮤니티 댓글 알림 추가 (읽음 상태는 user_notifications: comment_read)
         if (communityCommentsResult.data) {
           communityCommentsResult.data.forEach(comment => {
+            const id = `comment_${comment.id}`;
+            const isRead = readMap.get(id) || false;
+            if (!isRead) unreadCount++;
             allNotifications.push({
-              id: `comment_${comment.id}`,
+              id,
               type: "comment",
               title: "새로운 댓글",
               message: `누군가 게시글에 댓글을 남겼습니다.`,
               created_at: comment.created_at,
-              is_read: false
+              is_read: isRead
             });
           });
-          for (const comment of communityCommentsResult.data) {
-            const { data: readStatus } = await supabase
-              .from('user_notifications')
-              .select('is_read')
-              .eq('user_id', currentUser.id)
-              .eq('type', 'comment_read')
-              .eq('related_id', `comment_${comment.id}`)
-              .single();
-            const idx = allNotifications.findIndex(n=>n.id===`comment_${comment.id}`);
-            if (idx>-1) {
-              allNotifications[idx].is_read = !!readStatus?.is_read;
-              if (!allNotifications[idx].is_read) unreadCount++;
-            }
-          }
         }
 
         // 리워드샵 구매 알림 추가 (읽음 상태는 user_notifications: reward_purchase_read)
         if (rewardPurchasesResult.data) {
           rewardPurchasesResult.data.forEach(purchase => {
+            const id = `reward_${purchase.id}`;
+            const isRead = readMap.get(id) || false;
+            if (!isRead) unreadCount++;
             allNotifications.push({
-              id: `reward_${purchase.id}`,
+              id,
               type: "reward_purchase",
               title: "리워드 구매 완료",
               message: `리워드 구매가 완료되었습니다.`,
               created_at: purchase.created_at,
-              is_read: false
+              is_read: isRead
             });
           });
-          for (const purchase of rewardPurchasesResult.data) {
-            const { data: readStatus } = await supabase
-              .from('user_notifications')
-              .select('is_read')
-              .eq('user_id', currentUser.id)
-              .eq('type', 'reward_purchase_read')
-              .eq('related_id', `reward_${purchase.id}`)
-              .single();
-            const idx = allNotifications.findIndex(n=>n.id===`reward_${purchase.id}`);
-            if (idx>-1) {
-              allNotifications[idx].is_read = !!readStatus?.is_read;
-              if (!allNotifications[idx].is_read) unreadCount++;
-            }
-          }
         }
 
         // 작가 승인 알림 추가

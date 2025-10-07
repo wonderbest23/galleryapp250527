@@ -198,6 +198,14 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
           .limit(20)
       ]);
 
+      // 읽음 상태 맵 한 번에 조회(좋아요/댓글/리워드)
+      const { data: readRows } = await supabase
+        .from('user_notifications')
+        .select('type, related_id, is_read')
+        .eq('user_id', user.id)
+        .in('type', ['like_read','comment_read','reward_purchase_read','announcement_read','artist_approved','journalist_approved','point_earned']);
+      const readMap = new Map((readRows || []).map(r => [r.related_id, !!r.is_read]));
+
       // 모든 알림을 통합하여 하나의 배열로 만들기
       const allNotifications = [];
 
@@ -205,13 +213,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       if (announcementsResult.data) {
         for (const announcement of announcementsResult.data) {
           // 공지사항 읽음 상태 확인
-          const { data: readStatus } = await supabase
-            .from('user_notifications')
-            .select('is_read')
-            .eq('user_id', user.id)
-            .eq('type', 'announcement_read')
-            .eq('related_id', `announcement_${announcement.id}`)
-            .single();
+          const isRead = readMap.get(`announcement_${announcement.id}`) || false;
 
           allNotifications.push({
             id: `announcement_${announcement.id}`,
@@ -219,7 +221,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             title: announcement.title,
             message: announcement.description,
             created_at: announcement.created_at,
-            is_read: readStatus?.is_read || false,
+            is_read: isRead,
             link_url: announcement.url,
             gallery: announcement.gallery,
             image: announcement.image
@@ -231,13 +233,14 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       if (communityLikesResult.data) {
         communityLikesResult.data.forEach(like => {
           if (like.post && like.liker) {
+            const isRead = readMap.get(`like_${like.id}`) || false;
             allNotifications.push({
               id: `like_${like.id}`,
               type: "like",
               title: "새로운 좋아요",
               message: `${like.liker.artist_name || like.liker.full_name}님이 "${like.post.title}" 게시글에 좋아요를 눌렀습니다.`,
               created_at: like.created_at,
-              is_read: like.is_read || false,
+              is_read: isRead,
               link_url: `/community/${like.post.id}`
             });
           }
@@ -248,13 +251,14 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       if (communityCommentsResult.data) {
         communityCommentsResult.data.forEach(comment => {
           if (comment.post && comment.commenter) {
+            const isRead = readMap.get(`comment_${comment.id}`) || false;
             allNotifications.push({
               id: `comment_${comment.id}`,
               type: "comment",
               title: "새로운 댓글",
               message: `${comment.commenter.artist_name || comment.commenter.full_name}님이 "${comment.post.title}" 게시글에 댓글을 남겼습니다.`,
               created_at: comment.created_at,
-              is_read: comment.is_read || false,
+              is_read: isRead,
               link_url: `/community/${comment.post.id}`
             });
           }
@@ -265,13 +269,14 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       if (rewardPurchasesResult.data) {
         rewardPurchasesResult.data.forEach(purchase => {
           if (purchase.item) {
+            const isRead = readMap.get(`reward_${purchase.id}`) || false;
             allNotifications.push({
               id: `reward_${purchase.id}`,
               type: "reward_purchase",
               title: "리워드 구매 완료",
               message: `${purchase.item.name} 구매가 완료되었습니다.`,
               created_at: purchase.created_at,
-              is_read: purchase.is_read || false,
+              is_read: isRead,
               link_url: "/mypage/success"
             });
           }
@@ -642,9 +647,9 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       {/* 팝업 컨텐츠 */}
       <div className="relative w-full max-w-5xl mx-4 mb-4">
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 50 }}
+          initial={typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { opacity: 0, y: 50 }}
+          animate={typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { opacity: 1, y: 0 }}
+          exit={typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { opacity: 0, y: 50 }}
           transition={{ duration: 0.3 }}
           className="bg-white/80 backdrop-blur-sm rounded-2xl max-h-[85vh] sm:max-h-[75vh] overflow-y-auto shadow-2xl"
         >
