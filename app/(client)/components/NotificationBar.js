@@ -372,7 +372,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       setNotifications(allNotifications);
       setFilteredNotifications(allNotifications);
     } catch (error) {
-      console.error("알림을 가져오는 중 오류 발생:", error);
+      console.log("알림을 가져오는 중 오류 발생:", error);
     } finally {
       setLoading(false);
     }
@@ -505,7 +505,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       // 상위에서 뱃지/상태 갱신 필요 시 콜백
       if (typeof onRead === 'function') onRead(notification);
     } catch (error) {
-      console.error('알림 읽음 처리 오류:', error);
+      console.log('알림 읽음 처리 오류:', error);
     }
   };
 
@@ -531,30 +531,48 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
         break;
         
       case "like":
-        // 좋아요 알림 읽음 처리
-        const likeId = notification.id.replace('like_', '');
+        // 좋아요 알림 읽음 처리 - user_notifications에 upsert
         await supabase
-          .from('community_likes')
-          .update({ is_read: true })
-          .eq('id', likeId);
+          .from('user_notifications')
+          .upsert({
+            user_id: user.id,
+            type: 'like_read',
+            title: notification.title,
+            message: notification.message,
+            is_read: true,
+            related_id: notification.id,
+            created_at: new Date().toISOString()
+          });
         break;
         
       case "comment":
-        // 댓글 알림 읽음 처리
-        const commentId = notification.id.replace('comment_', '');
+        // 댓글 알림 읽음 처리 - user_notifications에 upsert
         await supabase
-          .from('community_comments')
-          .update({ is_read: true })
-          .eq('id', commentId);
+          .from('user_notifications')
+          .upsert({
+            user_id: user.id,
+            type: 'comment_read',
+            title: notification.title,
+            message: notification.message,
+            is_read: true,
+            related_id: notification.id,
+            created_at: new Date().toISOString()
+          });
         break;
         
       case "reward_purchase":
-        // 리워드 구매 알림 읽음 처리
-        const rewardId = notification.id.replace('reward_', '');
+        // 리워드 구매 알림 읽음 처리 - user_notifications에 upsert
         await supabase
-          .from('reward_purchases')
-          .update({ is_read: true })
-          .eq('id', rewardId);
+          .from('user_notifications')
+          .upsert({
+            user_id: user.id,
+            type: 'reward_purchase_read',
+            title: notification.title,
+            message: notification.message,
+            is_read: true,
+            related_id: notification.id,
+            created_at: new Date().toISOString()
+          });
         break;
         
       case "artist_approved":
