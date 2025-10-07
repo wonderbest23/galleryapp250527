@@ -17,6 +17,9 @@ export default function CommunityPostDetail({ params }) {
   const [commentText, setCommentText] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
   const [relatedPosts, setRelatedPosts] = useState([]);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [comments, setComments] = useState([]);
 
   // 카테고리 한글 라벨 매핑 및 뱃지 색상
   const CATEGORY_LABELS = {
@@ -111,23 +114,70 @@ export default function CommunityPostDetail({ params }) {
     }
   }, [params.id]);
 
+  // 좋아요/댓글 상태 로드
+  useEffect(() => {
+    const loadMeta = async () => {
+      if (!post) return;
+      try {
+        const { count: likesCnt } = await supabase
+          .from('community_likes')
+          .select('id', { count: 'exact', head: true })
+          .eq('post_id', post.id);
+        setLikeCount(likesCnt || 0);
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: myLike } = await supabase
+            .from('community_likes')
+            .select('id')
+            .eq('post_id', post.id)
+            .eq('user_id', user.id)
+            .maybeSingle();
+          setLiked(!!myLike);
+        }
+
+        const { data: cmts } = await supabase
+          .from('community_comments')
+          .select('*')
+          .eq('post_id', post.id)
+          .order('created_at', { ascending: true });
+        setComments(cmts || []);
+      } catch (e) {
+        console.log('meta load error', e);
+      }
+    };
+    loadMeta();
+  }, [post]);
+
   const handleLike = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('로그인이 필요합니다.');
-        return;
+      if (!user) { alert('로그인이 필요합니다.'); return; }
+      // 낙관적 업데이트
+      setLiked(prev => !prev);
+      setLikeCount(prev => (liked ? Math.max(0, prev - 1) : prev + 1));
+
+      if (!liked) {
+        // 좋아요 추가 (중복 무시)
+        const { error } = await supabase
+          .from('community_likes')
+          .upsert({ post_id: post.id, user_id: user.id }, { onConflict: 'post_id,user_id' });
+        if (error) throw error;
+      } else {
+        // 좋아요 취소
+        const { error } = await supabase
+          .from('community_likes')
+          .delete()
+          .eq('post_id', post.id)
+          .eq('user_id', user.id);
+        if (error) throw error;
       }
-      const { error } = await supabase.rpc('like_post_once', { p_post_id: post.id, p_user_id: user.id });
-      if (error) {
-        console.log('like error', error);
-        return;
-      }
-      // 새로고침
-      const { data: refreshed } = await supabase.from('community_post').select('*').eq('id', post.id).single();
-      if (refreshed) setPost(prev => ({ ...prev, likes: refreshed.likes }));
     } catch (e) {
-      console.log('like exception', e);
+      console.log('like error', e);
+      // 롤백
+      setLiked(prev => !prev);
+      setLikeCount(prev => (liked ? prev + 1 : Math.max(0, prev - 1)));
+      alert('좋아요 처리 중 오류가 발생했습니다.');
     }
   };
 
@@ -153,16 +203,18 @@ export default function CommunityPostDetail({ params }) {
         return;
       }
       setSubmittingComment(true);
-      const { error } = await supabase.from('community_comments').insert({
+      const payload = {
         post_id: post.id,
         user_id: user.id,
         content: commentText.trim()
-      });
-      if (!error) {
-        setCommentText("");
-      }
+      };
+      const { data, error } = await supabase.from('community_comments').insert(payload).select().single();
+      if (error) throw error;
+      setComments(prev => [...prev, data]);
+      setCommentText("");
     } catch (e) {
       console.log('comment error', e);
+      alert('댓글 작성 중 오류가 발생했습니다.');
     } finally {
       setSubmittingComment(false);
     }
@@ -340,13 +392,13 @@ export default function CommunityPostDetail({ params }) {
             <div className="mt-6 pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-6">
-                  <button onClick={handleLike} className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors">
+                  <button onClick={handleLike} className={`flex items-center space-x-2 transition-colors ${liked ? 'text-red-600' : 'text-gray-600 hover:text-red-600'}`}>
                     <FiHeart className="w-5 h-5" />
-                    <span>{post.likes || 0}</span>
+                    <span>{likeCount}</span>
                   </button>
                   <button className="flex items-center space-x-2 text-gray-600">
                     <FiMessageCircle className="w-5 h-5" />
-                    <span>댓글</span>
+                    <span>댓글 {comments.length}</span>
                   </button>
                   <button onClick={handleShare} className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors">
                     <FiShare2 className="w-5 h-5" />
@@ -376,6 +428,19 @@ export default function CommunityPostDetail({ params }) {
                   </button>
                 </div>
               </div>
+
+            {/* 댓글 목록 */}
+            <div className="mt-6 space-y-4">
+              {comments.map((c) => (
+                <div key={c.id} className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-600">U</div>
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-800 whitespace-pre-wrap">{c.content}</div>
+                    <div className="text-xs text-gray-500 mt-1">{new Date(c.created_at).toLocaleString('ko-KR')}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
             </div>
           </div>
 

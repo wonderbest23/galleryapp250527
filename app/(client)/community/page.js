@@ -147,9 +147,9 @@ function ReviewFeedCards() {
           {/* 액션바 */}
           <div className="p-4 border-t border-gray-100">
             <div className="flex items-center space-x-6 text-gray-600">
-              <button className="flex items-center space-x-1 hover:text-red-600 transition-colors"><Heart className="w-5 h-5"/><span className="text-sm">0</span></button>
-              <button className="flex items-center space-x-1 hover:text-blue-600 transition-colors"><MessageCircle className="w-5 h-5"/><span className="text-sm">0</span></button>
-              <button className="flex items-center space-x-1 hover:text-green-600 transition-colors"><Share className="w-5 h-5"/></button>
+              <button className="flex items-center space-x-1 hover:text-red-600 transition-colors" onClick={()=>window.location.href=`/community/${rv.id}`}><Heart className="w-5 h-5"/><span className="text-sm">{rv.likes || 0}</span></button>
+              <button className="flex items-center space-x-1 hover:text-blue-600 transition-colors" onClick={()=>window.location.href=`/community/${rv.id}`}><MessageCircle className="w-5 h-5"/><span className="text-sm">댓글</span></button>
+              <button className="flex items-center space-x-1 hover:text-green-600 transition-colors" onClick={()=>navigator.share?navigator.share({title:rv.title||'커뮤니티',url:`/community/${rv.id}`}):navigator.clipboard.writeText(`/community/${rv.id}`)}><Share className="w-5 h-5"/></button>
             </div>
           </div>
         </div>

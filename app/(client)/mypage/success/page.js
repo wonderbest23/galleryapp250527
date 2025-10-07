@@ -907,13 +907,13 @@ const Success = () => {
         {/* ==================== 설정 및 도움말 ==================== */}
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
           <h3 className="text-lg font-bold text-gray-900 mb-4">설정 및 도움말</h3>
-          <div className="space-y-3">
+          <div className="space-y-3 -ml-2">
             
             {/* 작가 등록/재등록 (작가 미등록 또는 재등록 필요 시) */}
             {(!isArtist || profile?.is_artist_rejected) && (
               <button
                 onClick={() => profile?.is_artist_rejected ? openReject() : router.push("/register")}
-                className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-orange-50 hover:border-orange-200 border border-transparent transition-all duration-200"
+                className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-orange-50 hover:border-orange-200 border border-transparent transition-all duration-200"
               >
                 <div className={`w-10 h-10 bg-gradient-to-br ${profile?.is_artist_rejected ? 'from-orange-400 to-red-500' : 'from-blue-400 to-indigo-500'} rounded-xl flex items-center justify-center shadow-lg`}>
                   <PenTool className="w-5 h-5 text-white" />
@@ -934,7 +934,7 @@ const Success = () => {
             {isArtist && profile?.isArtistApproval && (
               <button
                 onClick={() => router.push('/register')}
-                className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-all duration-200"
+                className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-all duration-200"
               >
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
                   <User className="w-5 h-5 text-white" />
@@ -952,7 +952,7 @@ const Success = () => {
               href="http://pf.kakao.com/_sBnXn" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-green-50 hover:border-green-200 border border-transparent transition-all duration-200"
+              className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-green-50 hover:border-green-200 border border-transparent transition-all duration-200"
             >
               <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
                 <HelpCircle className="w-5 h-5 text-white" />
@@ -967,7 +967,7 @@ const Success = () => {
             {/* 공지사항 */}
             <button 
               onClick={() => setIsAnnouncementsOpen(true)}
-              className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-yellow-50 hover:border-yellow-200 border border-transparent transition-all duration-200"
+              className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-yellow-50 hover:border-yellow-200 border border-transparent transition-all duration-200"
             >
               <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
                 <Bell className="w-5 h-5 text-white" />
