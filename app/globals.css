@@ -10,7 +10,7 @@ html, body {
   max-width: 100%;
   min-height: 100vh;
   overflow-x: hidden;
-  background: linear-gradient(180deg, #f5f6fa 0%, #e5e7eb 60%, #d1d5db 100%) !important;
+  background: #ffffff !important;
   /* 스크롤바 숨김 */
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */

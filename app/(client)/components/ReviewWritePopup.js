@@ -412,7 +412,10 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
   const stepInfo = getStepInfo();
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl max-h-[85vh] sm:max-h-[75vh] overflow-y-auto shadow-2xl">
+    <div
+      className="bg-white/80 backdrop-blur-sm rounded-2xl h-[85dvh] sm:h-[75dvh] overflow-y-auto overscroll-contain shadow-2xl"
+      style={{ WebkitOverflowScrolling: 'touch', touchAction: 'manipulation' }}
+    >
       {/* 헤더 */}
       <div className="bg-white border-b sticky top-0 z-10">
         <div className="px-5 py-4 flex items-center justify-between">

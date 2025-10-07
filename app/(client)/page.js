@@ -365,11 +365,11 @@ export default function Home() {
           <CommunityHighlights />
         </div>
         
-        {/* 매거진과 푸터 사이 넉넉한 흰색 여백 */}
-        <div style={{ height: '48px', background: '#fff', width: '100%' }} />
+        {/* 매거진과 푸터 사이 여백 축소 */}
+        <div style={{ height: '8px', background: '#fff', width: '100%' }} />
         
         {/* 푸터 */}
-        <div className="flex flex-row gap-4 pt-4 pb-[32px] bg-[hsl(0,0%,93%)] w-full justify-center items-center">
+        <div className="flex flex-row gap-4 pt-3 pb-3 bg-white w-full justify-center items-center">
           <div className="w-[30%] h-full flex justify-center items-center ">
             <Image
               src="/logo/artandbridge-logo.svg"
@@ -407,8 +407,8 @@ export default function Home() {
           </div>
         </div>
         
-        {/* 푸터와 하단 네비게이션 사이 넉넉한 여백(흰색) */}
-        <div style={{ height: '32px', background: '#fff', width: '100%' }} />
+        {/* 하단 여백 제거 */}
+        <div style={{ height: '0px', background: 'transparent', width: '100%' }} />
       </div>
 
       {/* 하단 네비게이션 */}
