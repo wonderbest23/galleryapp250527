@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-export default function SafeImage({ src, alt, width = 200, height = 200, priority, ...props }) {
+export default function SafeImage({ src, alt, width = 200, height = 200, priority, sizes = "(max-width: 1024px) 100vw, 1024px", ...props }) {
   const allowList = [
     'teaelrzxuigiocnukwha.supabase.co',
     'picsum.photos',
@@ -13,8 +13,9 @@ export default function SafeImage({ src, alt, width = 200, height = 200, priorit
         <Image
           src={src}
           alt={alt}
-          width={width}
-          height={height}
+          width={Math.min(width, 1024)}
+          height={Math.min(height, 1024)}
+          sizes={sizes}
           priority={priority ? true : undefined}
           {...props}
         />

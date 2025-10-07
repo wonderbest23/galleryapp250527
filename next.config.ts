@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
+    // 모바일/태블릿 중심으로 리사이즈 타겟 축소 (최대 1024px)
+    deviceSizes: [360, 414, 640, 768, 1024],
+    imageSizes: [16, 24, 32, 48, 64, 96, 128, 256],
+    formats: ["image/avif", "image/webp"],
     domains: [
       "img1.kakaocdn.net", 
       "t1.kakaocdn.net",
