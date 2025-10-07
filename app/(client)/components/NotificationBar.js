@@ -500,6 +500,8 @@ export default function NotificationBar({ isOpen, onClose }) {
       if (notification.link_url) {
         window.location.href = notification.link_url;
       }
+      // 클릭(확인) 시 알림바 닫기
+      if (typeof onClose === 'function') onClose();
     } catch (error) {
       console.error('알림 읽음 처리 오류:', error);
     }
