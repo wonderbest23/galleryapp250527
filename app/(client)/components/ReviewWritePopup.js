@@ -5,7 +5,6 @@ import { createClient } from "@/utils/supabase/client";
 import { useUserStore } from "@/stores/userStore";
 import { 
   Button,
-  Textarea,
   Spinner,
 } from "@heroui/react";
 import Image from "next/image";
@@ -14,6 +13,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
   const user = useUserStore((state) => state.user);
   const [submitting, setSubmitting] = useState(false);
   const supabase = createClient();
+  const [authChecked, setAuthChecked] = useState(false);
 
   // 단계 관리
   const [currentStep, setCurrentStep] = useState(exhibition ? 1 : 0); // 0: 전시회선택, 1: 별점, 2: 리뷰내용, 3: 증빙사진
@@ -69,6 +69,29 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
 
   // 컴포넌트 마운트 시 전시회 목록 가져오기 및 리뷰 초안 복원
   useEffect(() => {
+    // 로그인 필수 진입 가드: 비로그인 시 즉시 마이페이지로 유도 (임시 초안 저장은 선택)
+    if (!user || !user.id) {
+      try {
+        // 필요한 최소 정보만 저장해 복귀 시 팝업 자동 오픈 가능
+        const draft = {
+          exhibition_id: exhibition?.id || "",
+          rating: 0,
+          content: "",
+          proof_image: "",
+          selectedExhibition: exhibition || null,
+          currentStep: 0,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem('reviewDraft', JSON.stringify(draft));
+      } catch {}
+      if (typeof window !== 'undefined') {
+        window.location.href = '/mypage?redirect_to=' + encodeURIComponent(window.location.pathname);
+      }
+      return; // 렌더 차단
+    } else {
+      setAuthChecked(true);
+    }
+
     if (!exhibition) {
       fetchExhibitions();
     }
@@ -92,6 +115,17 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
           setCurrentStep(draft.currentStep || 0);
           if (draft.imagePreview) {
             setImagePreview(draft.imagePreview);
+            // 데이터URL을 Blob으로 변환해 File처럼 복구 (브라우저 보안상 완전한 원본은 아님)
+            (async () => {
+              try {
+                const res = await fetch(draft.imagePreview);
+                const blob = await res.blob();
+                const restoredFile = new File([blob], `restored_${Date.now()}.png`, { type: blob.type || 'image/png' });
+                setImageFile(restoredFile);
+              } catch (e) {
+                console.log('이미지 복구 실패, 사용자가 다시 선택 필요:', e);
+              }
+            })();
           }
           console.log('리뷰 초안 복원 완료:', draft);
           alert('이전에 작성하던 리뷰를 복원했습니다.');
@@ -381,7 +415,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl max-h-[85vh] sm:max-h-[75vh] overflow-y-auto shadow-2xl">
       {/* 헤더 */}
       <div className="bg-white border-b sticky top-0 z-10">
-        <div className="px-6 py-6 flex items-center justify-between">
+        <div className="px-5 py-4 flex items-center justify-between">
           {/* 왼쪽: 아이콘 + 제목 */}
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
@@ -416,7 +450,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
       </div>
 
       {/* 진행 단계 표시 */}
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <div className="px-5 py-3 bg-gray-50 border-b border-gray-200">
         <div className="flex items-center justify-center space-x-4">
           {[0, 1, 2, 3].map((step) => (
             <div key={step} className="flex items-center">
@@ -440,8 +474,8 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
       </div>
 
       {/* 콘텐츠 */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="space-y-6">
+      <div className="flex-1 overflow-y-auto p-5">
+        <div className="space-y-5">
           {/* 전시회 정보 */}
           {selectedExhibition && (
             <div className="bg-white border border-gray-200 rounded-2xl p-4">
@@ -472,11 +506,11 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
           )}
 
           {/* 단계별 콘텐츠 */}
-          <div className="bg-white/90 backdrop-blur-md rounded-2xl p-8 border border-gray-200/50 shadow-sm">
-            <div className="text-center mb-8">
+            <div className="bg-white/90 backdrop-blur-md rounded-2xl p-5 border border-gray-200/50 shadow-sm">
+            <div className="text-center mb-4">
               {currentStep !== 0 && (
                 <>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{stepInfo.subtitle}</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">{stepInfo.subtitle}</h3>
                   <p className="text-gray-500">{stepInfo.description}</p>
                 </>
               )}
@@ -588,7 +622,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
             {/* 1단계: 별점 */}
             {currentStep === 1 && (
               <div className="text-center">
-                <div className="flex items-center justify-center space-x-3 mb-8">
+                <div className="flex items-center justify-center space-x-3 mb-6">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
@@ -625,17 +659,14 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
             {/* 2단계: 리뷰 내용 */}
             {currentStep === 2 && (
               <div>
-                <Textarea
+                <textarea
                   value={formData.content}
                   onChange={(e) => {
                     setFormData({ ...formData, content: e.target.value });
-                    // 리뷰 내용 입력 시 자동 저장 (1초 후)
                     setTimeout(() => saveReviewDraft(), 1000);
                   }}
                   placeholder="전시회에 대한 솔직한 후기를 작성해주세요..."
-                  variant="bordered"
-                  className="w-full"
-                  minRows={6}
+                  className="w-full min-h-[140px] rounded-2xl border border-gray-300 bg-white p-4 text-base leading-6 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
                 />
                 <div className="flex justify-between items-center mt-4">
                   <p className="text-sm text-gray-500">
@@ -647,7 +678,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
                 </div>
                 
                 {/* 2단계 버튼 */}
-                <div className="mt-6">
+                <div className="mt-4">
                   <Button
                     onClick={goToNextStep}
                     disabled={!canProceed}
@@ -703,7 +734,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
                 )}
                 
                 {/* 3단계 버튼 */}
-                <div className="mt-4">
+                <div className="mt-3">
                   <Button
                     onClick={handleSubmit}
                     disabled={submitting || !canProceed}
@@ -728,7 +759,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
           </div>
 
           {/* 하단 여백 (3단계에서 더 많은 여백) */}
-          <div className={currentStep === 3 ? "h-16" : "h-8"}></div>
+          <div className={currentStep === 3 ? "h-10" : "h-4"}></div>
         </div>
       </div>
 

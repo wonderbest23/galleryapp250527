@@ -424,7 +424,17 @@ export default function Home() {
         {isScrolled ? (
           // 스크롤 시 + 모양 (작은 원형)
           <button
-            onClick={() => setShowReviewModal(true)}
+            onClick={() => {
+              if (!user || !user?.id) {
+                try {
+                  const draft = { timestamp: Date.now() };
+                  localStorage.setItem('reviewDraft', JSON.stringify(draft));
+                } catch {}
+                window.location.href = '/mypage?redirect_to=' + encodeURIComponent(window.location.pathname);
+                return;
+              }
+              setShowReviewModal(true);
+            }}
             className="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -434,7 +444,17 @@ export default function Home() {
         ) : (
           // 기본 상태 (큰 직사각형)
           <button
-            onClick={() => setShowReviewModal(true)}
+            onClick={() => {
+              if (!user || !user?.id) {
+                try {
+                  const draft = { timestamp: Date.now() };
+                  localStorage.setItem('reviewDraft', JSON.stringify(draft));
+                } catch {}
+                window.location.href = '/mypage?redirect_to=' + encodeURIComponent(window.location.pathname);
+                return;
+              }
+              setShowReviewModal(true);
+            }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-full shadow-lg flex items-center space-x-2 transition-all duration-300"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
