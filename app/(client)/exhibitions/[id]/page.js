@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { FiCalendar, FiMapPin, FiClock, FiTicket, FiHeart, FiShare2 } from "react-icons/fi";
+import { FiCalendar, FiMapPin, FiClock, FiHeart, FiShare2 } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
@@ -177,7 +177,7 @@ export default function ExhibitionDetailPage({ params }) {
               </div>
               
               <div className="flex items-center space-x-3">
-                <FiTicket className="w-5 h-5 text-blue-600" />
+                <FiCalendar className="w-5 h-5 text-blue-600" />
                 <div>
                   <p className="text-sm text-gray-500">입장료</p>
                   <p className="font-medium">{exhibition.price || '문의'}</p>
@@ -250,7 +250,7 @@ export default function ExhibitionDetailPage({ params }) {
 
                   <div className="flex space-x-4">
                     <button className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                      <FiTicket className="w-5 h-5" />
+                      <FiCalendar className="w-5 h-5" />
                       <span>티켓 구매</span>
                     </button>
                     <button className="flex items-center space-x-2 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors">

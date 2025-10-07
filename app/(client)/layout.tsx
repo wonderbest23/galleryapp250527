@@ -18,6 +18,9 @@ import TopNavigation from "@/app/(client)/components/TopNavigation";
 import ScrollToTop from "@/app/(client)/components/ScrollToTop";
 import "@/app/mobile-fixed.css";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "http://localhost:3000";

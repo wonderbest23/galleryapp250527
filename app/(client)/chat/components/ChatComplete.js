@@ -5,7 +5,7 @@ import { init, SearchIndex } from "emoji-mart";
 import data from "@emoji-mart/data";
 import Picker from '@emoji-mart/react';
 import Link from "next/link";
-import { Spinner } from '@heroui/spinner';
+import { Spinner } from '@heroui/react';
 import { useRouter } from "next/navigation";
 
 import {
@@ -31,10 +31,8 @@ import ChatHeader from "./ChatHeader";
 // 초기화
 init({ data });
 
-// GetStream 연결 정보
-// 실제 프로젝트에서는 환경 변수나 안전한 방법으로 관리해야 합니다
-const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY || "YOUR_API_KEY"; // 실제 키로 교체 필요
-console.log("apiKey:", apiKey);
+// GetStream 연결 정보 (키가 없으면 채팅을 비활성화)
+const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY || "";
 
 export default function Home({hostId, userId, productId, chatData}) {
   const router = useRouter();
@@ -43,6 +41,18 @@ export default function Home({hostId, userId, productId, chatData}) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isChannelDeleted, setIsChannelDeleted] = useState(false);
+
+  // API 키가 없으면 컴포넌트 자체를 안전하게 비활성화
+  if (!apiKey) {
+    return (
+      <div className="w-full flex items-center justify-center h-[60vh]">
+        <div className="text-center text-gray-500">
+          <p>채팅 기능이 비활성화되었습니다.</p>
+          <p className="text-sm mt-1">환경 변수 NEXT_PUBLIC_STREAM_API_KEY 설정 후 이용해 주세요.</p>
+        </div>
+      </div>
+    );
+  }
   
   // Supabase 채팅 데이터 확인
   useEffect(() => {
