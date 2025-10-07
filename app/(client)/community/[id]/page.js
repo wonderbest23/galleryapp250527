@@ -209,7 +209,12 @@ export default function CommunityPostDetail({ params }) {
         content: commentText.trim()
       };
       const { data, error } = await supabase.from('community_comments').insert(payload).select().single();
-      if (error) throw error;
+      if (error) {
+        console.log('댓글 저장 실패:', error);
+        alert('댓글 등록에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+        setSubmittingComment(false);
+        return;
+      }
       setComments(prev => [...prev, data]);
       setCommentText("");
     } catch (e) {

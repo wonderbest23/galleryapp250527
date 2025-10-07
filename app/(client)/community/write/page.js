@@ -170,6 +170,11 @@ export default function WritePostPage() {
             .from("community-images")
             .getPublicUrl(filePath);
           imageUrl = publicUrl;
+        } else {
+          console.log("이미지 업로드 오류:", uploadError);
+          alert("이미지 업로드에 실패했습니다.");
+          setIsSubmitting(false);
+          return;
         }
       }
 
@@ -199,7 +204,8 @@ export default function WritePostPage() {
 
       if (error) {
         console.log("Error creating post:", error);
-        alert("게시글 등록에 실패했습니다. 다시 시도해주세요.");
+        alert("게시글 등록에 실패했습니다. 권한 또는 네트워크 문제일 수 있습니다.");
+        setIsSubmitting(false);
         return;
       }
 
