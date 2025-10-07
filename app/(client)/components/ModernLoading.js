@@ -2,18 +2,7 @@
 import React from "react";
 
 // 모던한 로딩 컴포넌트: 브라우저 기본 요소 기반으로 경량화
-export function ModernLoading({ size = "md", text = "로딩 중...", showText = true }) {
-  const widthClass = size === 'sm' ? 'w-24' : size === 'lg' ? 'w-56' : size === 'xl' ? 'w-64' : 'w-40';
-  const textSize = size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-lg' : size === 'xl' ? 'text-xl' : 'text-base';
-  return (
-    <div className="flex flex-col items-center justify-center space-y-3">
-      <progress className={`${widthClass}`} />
-      {showText && (
-        <p className={`${textSize} text-gray-600`}>{text}</p>
-      )}
-    </div>
-  );
-}
+export function ModernLoading() { return null; }
 
 // 스켈레톤 로딩 컴포넌트
 export function SkeletonLoading({ lines = 3, showImage = true }) {
@@ -37,29 +26,10 @@ export function SkeletonLoading({ lines = 3, showImage = true }) {
 }
 
 // 파티클 로딩 애니메이션
-export function ParticleLoading({ size = "md" }) {
-  // 기본 progress로 통일
-  return (
-    <div className="flex flex-col items-center justify-center">
-      <progress />
-    </div>
-  );
-}
+export function ParticleLoading() { return null; }
 
 // 웨이브 로딩 애니메이션
-export function WaveLoading({ size = "md" }) {
-  return (
-    <div className="flex items-center justify-center">
-      <progress />
-    </div>
-  );
-}
+export function WaveLoading() { return null; }
 
 // 도트 로딩 애니메이션 (기존 스타일 개선)
-export function DotLoading() {
-  return (
-    <div className="flex items-center justify-center">
-      <progress />
-    </div>
-  );
-}
+export function DotLoading() { return null; }

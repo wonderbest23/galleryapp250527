@@ -122,11 +122,11 @@ export default function AdminDashboardPage() {
             
             console.log('Points 검토 대기 (승인 제외):', { 
               전체리뷰: recentReviews?.length, 
-              승인된리뷰: approvedReviewIds.size,
+              처리된리뷰: processedReviewIds.size,
               대기리뷰: pendingReviews.length,
               사용자수: pendingUsersCount, 
               총포인트: totalPendingPoints, 
-              'Error': pointsError 
+              Error: pointsError 
             });
 
             // 3. 작가 승인 대기

@@ -494,13 +494,21 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       // DB에 읽음 상태 저장
       await markNotificationAsRead(notification);
       
-      // 로컬 상태에서 읽음 처리 (제거하지 않고 is_read를 true로 변경)
-      setNotifications(prev => prev.map(n => 
-        n.id === notification.id ? { ...n, is_read: true } : n
-      ));
-      setFilteredNotifications(prev => prev.map(n => 
-        n.id === notification.id ? { ...n, is_read: true } : n
-      ));
+      // 로컬 상태 갱신: 읽음으로 전환
+      setNotifications(prev => {
+        const next = prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n);
+        if (filterType === 'unread') {
+          return next.filter(n => !n.is_read);
+        }
+        return next;
+      });
+      setFilteredNotifications(prev => {
+        const next = prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n);
+        if (filterType === 'unread') {
+          return next.filter(n => !n.is_read);
+        }
+        return next;
+      });
       
       if (notification.link_url) {
         window.location.href = notification.link_url;
@@ -511,6 +519,22 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       if (typeof onRead === 'function') onRead(notification);
     } catch (error) {
       console.log('알림 읽음 처리 오류:', error);
+    }
+  };
+
+  // 전체 확인(읽지 않음 모두 읽음 처리 후 비우기)
+  const handleMarkAllRead = async () => {
+    try {
+      const unread = notifications.filter(n => !n.is_read);
+      await Promise.all(unread.map(n => markNotificationAsRead(n)));
+      const allRead = notifications.map(n => ({ ...n, is_read: true }));
+      setNotifications(filterType === 'unread' ? [] : allRead);
+      setFilteredNotifications(filterType === 'unread' ? [] : allRead);
+      if (typeof onRead === 'function') {
+        onRead({ id: '__all__', type: 'all_read' });
+      }
+    } catch (e) {
+      console.log('전체 확인 처리 오류:', e);
     }
   };
 
@@ -665,9 +689,12 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
               </div>
             </div>
             
-            <div className="text-right">
-              <div className="text-2xl font-bold text-gray-900">{notifications.length}</div>
-              <div className="text-xs text-gray-500">전체 알림</div>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <div className="text-2xl font-bold text-gray-900">{notifications.length}</div>
+                <div className="text-xs text-gray-500">전체 알림</div>
+              </div>
+              <button onClick={handleMarkAllRead} className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">전체 확인</button>
             </div>
           </div>
 

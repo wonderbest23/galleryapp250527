@@ -169,8 +169,6 @@ export function MagazineCards() {
                 </div>
                 <div className="flex items-center text-white text-sm">
                   <span>{featuredMagazine.subtitle}</span>
-                  <span className="mx-2">•</span>
-                  <span>🕒 {Math.floor(Math.random() * 10) + 1}분</span>
                 </div>
               </div>
             </div>
