@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { FiCalendar, FiMapPin, FiClock, FiHeart, FiShare2 } from "react-icons/fi";
+import SafeImage from "@/components/SafeImage";
 import Link from "next/link";
-import Image from "next/image";
+// 이미지 최적화: SafeImage 또는 기본 img 사용
 import Head from "next/head";
 import { generateSEOMeta, generateStructuredData } from "@/utils/seo";
 
@@ -131,12 +132,13 @@ export default function ExhibitionDetailPage({ params }) {
         {/* 메인 이미지 */}
         {exhibition.image_url && (
           <div className="relative h-96 bg-gray-200">
-            <Image
+            <SafeImage
               src={exhibition.image_url}
               alt={exhibition.name}
-              fill
-              className="object-cover"
-              priority
+              width={1920}
+              height={540}
+              className="object-cover w-full h-full"
+              loading="lazy"
             />
             <div className="absolute inset-0 bg-black bg-opacity-30" />
             <div className="absolute bottom-6 left-6 text-white">

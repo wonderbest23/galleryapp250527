@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
-import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 
 // 이름 마스킹 함수
 const maskName = (name) => {
@@ -244,20 +244,22 @@ export function ReviewCards() {
             <div className="flex flex-col items-center justify-center">
               <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden mb-2">
                 {review.proof_image ? (
-                  <Image
+                  <SafeImage
                     src={review.proof_image}
                     alt="리뷰 증빙 사진"
                     width={80}
                     height={80}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 ) : review.exhibition?.photo ? (
-                  <Image
+                  <SafeImage
                     src={review.exhibition.photo}
                     alt={review.exhibition.contents || "전시회 이미지"}
                     width={80}
                     height={80}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
