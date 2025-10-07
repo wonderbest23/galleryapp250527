@@ -527,7 +527,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             is_read: true,
             related_id: notification.id,
             created_at: new Date().toISOString()
-          });
+          }, { onConflict: 'user_id,type,related_id' });
         break;
         
       case "like":
@@ -542,7 +542,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             is_read: true,
             related_id: notification.id,
             created_at: new Date().toISOString()
-          });
+          }, { onConflict: 'user_id,type,related_id' });
         break;
         
       case "comment":
@@ -557,7 +557,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             is_read: true,
             related_id: notification.id,
             created_at: new Date().toISOString()
-          });
+          }, { onConflict: 'user_id,type,related_id' });
         break;
         
       case "reward_purchase":
@@ -572,7 +572,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             is_read: true,
             related_id: notification.id,
             created_at: new Date().toISOString()
-          });
+          }, { onConflict: 'user_id,type,related_id' });
         break;
         
       case "artist_approved":
@@ -587,7 +587,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             is_read: true,
             related_id: notification.id,
             created_at: new Date().toISOString()
-          });
+          }, { onConflict: 'user_id,type,related_id' });
         break;
         
       case "journalist_approved":
@@ -602,7 +602,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             is_read: true,
             related_id: notification.id,
             created_at: new Date().toISOString()
-          });
+          }, { onConflict: 'user_id,type,related_id' });
         break;
         
       case "point_earned":
@@ -617,7 +617,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             is_read: true,
             related_id: notification.id,
             created_at: new Date().toISOString()
-          });
+          }, { onConflict: 'user_id,type,related_id' });
         break;
         
       default:
