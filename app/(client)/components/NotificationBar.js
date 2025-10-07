@@ -18,7 +18,7 @@ import {
   AlertCircle
 } from "lucide-react";
 
-export default function NotificationBar({ isOpen, onClose }) {
+export default function NotificationBar({ isOpen, onClose, onRead }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -502,6 +502,8 @@ export default function NotificationBar({ isOpen, onClose }) {
       }
       // 클릭(확인) 시 알림바 닫기
       if (typeof onClose === 'function') onClose();
+      // 상위에서 뱃지/상태 갱신 필요 시 콜백
+      if (typeof onRead === 'function') onRead(notification);
     } catch (error) {
       console.error('알림 읽음 처리 오류:', error);
     }

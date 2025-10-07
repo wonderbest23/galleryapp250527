@@ -581,9 +581,14 @@ export default function TopNavigation({ search, setSearch, exhibitions, setExhib
       </div>
 
       {/* 새로운 알림바 */}
-      <NotificationBar 
+  <NotificationBar 
         isOpen={notificationBarOpen} 
         onClose={() => setNotificationBarOpen(false)} 
+        onRead={(n)=>{
+          // 읽음 처리 후 배지/상태 갱신
+          setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, is_read: true } : x));
+          setUnreadCount(prev => Math.max(0, prev - (n.is_read ? 0 : 1)));
+        }}
       />
     </>
   );
