@@ -222,6 +222,59 @@ const Success = () => {
           if (data.success) {
             setPointStatus(data.data);
             setUserPoints(data.data.available_points || 0);
+            
+            // 등급 자동 업데이트 로직 (DB에 grade 컬럼 추가됨)
+            const totalPoints = data.data.available_points + data.data.locked_points;
+            const reviewCount = Math.floor(totalPoints / 500);
+            
+            // 등급 기준에 따른 자동 등급 업데이트
+            let newGrade = data.data.grade;
+            if (reviewCount >= 25) {
+              newGrade = 'platinum';
+            } else if (reviewCount >= 10) {
+              newGrade = 'gold';
+            } else if (reviewCount >= 3) {
+              newGrade = 'silver';
+            } else {
+              newGrade = 'bronze';
+            }
+            
+            // 등급이 변경된 경우 프로필 업데이트
+            if (newGrade !== data.data.grade) {
+              console.log(`등급 업데이트 필요: ${data.data.grade} → ${newGrade} (리뷰 ${reviewCount}개)`);
+              
+              try {
+                const supabase = createClient();
+                const { error } = await supabase
+                  .from('profiles')
+                  .update({ grade: newGrade })
+                  .eq('id', user.id);
+                
+                if (error) {
+                  console.error('등급 업데이트 오류:', error);
+                } else {
+                  // 상태 업데이트
+                  setPointStatus(prev => ({ ...prev, grade: newGrade }));
+                  console.log(`등급 업데이트 완료: ${data.data.grade} → ${newGrade}`);
+                  
+                  // 사용자에게 알림
+                  alert(`축하합니다! ${newGrade === 'silver' ? '실버' : newGrade === 'gold' ? '골드' : newGrade === 'platinum' ? '플래티넘' : '브론즈'} 등급으로 승급되었습니다!`);
+                  
+                  // 페이지 새로고침으로 등급 변경사항 반영
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 2000);
+                }
+              } catch (error) {
+                console.error('등급 업데이트 중 오류:', error);
+              }
+            }
+            
+            console.log('포인트 상태 로드 완료:', {
+              grade: data.data.grade,
+              totalPoints: data.data.available_points + data.data.locked_points,
+              reviewCount: Math.floor((data.data.available_points + data.data.locked_points) / 500)
+            });
           }
         }
       } catch (error) {
@@ -410,48 +463,103 @@ const Success = () => {
   }
 
 
-  // 등급 정보 계산
+  // 등급 정보 계산 (실제 리뷰 수 기반)
   const getGradeInfo = () => {
     const grade = pointStatus.grade;
-    const availablePoints = pointStatus.available_points;
+    const totalPoints = pointStatus.available_points + pointStatus.locked_points;
+    const reviewCount = Math.floor(totalPoints / 500); // 리뷰당 500P
+    
+    // 등급별 기준 리뷰 수
+    const gradeRequirements = {
+      bronze: 0,
+      silver: 3,
+      gold: 10,
+      platinum: 25
+    };
+    
+    // 현재 등급의 기준 리뷰 수
+    const currentGradeRequirement = gradeRequirements[grade] || 0;
+    
+    // 다음 등급까지 필요한 리뷰 수
+    const getNextGradeRequirement = (currentGrade) => {
+      switch (currentGrade) {
+        case 'bronze': return gradeRequirements.silver;
+        case 'silver': return gradeRequirements.gold;
+        case 'gold': return gradeRequirements.platinum;
+        default: return gradeRequirements.platinum;
+      }
+    };
+    
+    const nextGradeRequirement = getNextGradeRequirement(grade);
+    const remainingReviews = Math.max(0, nextGradeRequirement - reviewCount);
+    
+    // 진행률 계산 (현재 등급 내에서의 진행률)
+    let progress = 0;
+    let nextGoal = '';
     
     switch (grade) {
       case 'platinum':
-        return { 
-          label: '플래티넘', 
-          color: 'text-blue-300', 
-          progress: 100, 
-          nextGoal: '최고 등급입니다',
-          exchangePoints: 1200
-        };
+        progress = 100;
+        nextGoal = '최고 등급입니다';
+        break;
       case 'gold':
-        return { 
-          label: '골드', 
-          color: 'text-yellow-400', 
-          progress: 75, 
-          nextGoal: '플래티넘 등급까지 더 많은 리뷰가 필요합니다',
-          exchangePoints: 1300
-        };
+        // 골드 등급에서 플래티넘까지의 진행률 (10~25개 리뷰)
+        const goldProgress = Math.min(100, Math.round((reviewCount - gradeRequirements.gold) / (gradeRequirements.platinum - gradeRequirements.gold) * 100));
+        progress = Math.max(0, goldProgress);
+        nextGoal = `플래티넘 등급까지 ${remainingReviews}개 이상의 리뷰가 필요합니다`;
+        break;
       case 'silver':
-        return { 
-          label: '실버', 
-          color: 'text-gray-400', 
-          progress: 50, 
-          nextGoal: '골드 등급까지 더 많은 리뷰가 필요합니다',
-          exchangePoints: 1400
-        };
-      default:
-        return { 
-          label: '브론즈', 
-          color: 'text-yellow-600', 
-          progress: 25, 
-          nextGoal: '실버 등급까지 3개 이상의 리뷰가 필요합니다',
-          exchangePoints: 1500
-        };
+        // 실버 등급에서 골드까지의 진행률 (3~10개 리뷰)
+        const silverProgress = Math.min(100, Math.round((reviewCount - gradeRequirements.silver) / (gradeRequirements.gold - gradeRequirements.silver) * 100));
+        progress = Math.max(0, silverProgress);
+        nextGoal = `골드 등급까지 ${remainingReviews}개 이상의 리뷰가 필요합니다`;
+        break;
+      default: // bronze
+        // 브론즈 등급에서 실버까지의 진행률 (0~3개 리뷰)
+        const bronzeProgress = Math.min(100, Math.round(reviewCount / gradeRequirements.silver * 100));
+        progress = Math.max(0, bronzeProgress);
+        nextGoal = `실버 등급까지 ${remainingReviews}개 이상의 리뷰가 필요합니다`;
+        break;
     }
+    
+    // 등급별 색상 및 교환 포인트
+    const gradeConfig = {
+      platinum: { color: 'text-blue-300', exchangePoints: 1200 },
+      gold: { color: 'text-yellow-400', exchangePoints: 1300 },
+      silver: { color: 'text-gray-400', exchangePoints: 1400 },
+      bronze: { color: 'text-yellow-600', exchangePoints: 1500 }
+    };
+    
+    const config = gradeConfig[grade] || gradeConfig.bronze;
+    
+    return {
+      label: grade === 'bronze' ? '브론즈' : grade === 'silver' ? '실버' : grade === 'gold' ? '골드' : '플래티넘',
+      color: config.color,
+      progress: Math.max(0, progress),
+      nextGoal,
+      exchangePoints: config.exchangePoints,
+      reviewCount,
+      remainingReviews
+    };
   };
   
   const gradeInfo = getGradeInfo();
+  
+  // 디버깅용 로그
+  console.log('등급 정보 디버깅:', {
+    grade: pointStatus.grade,
+    totalPoints: pointStatus.available_points + pointStatus.locked_points,
+    reviewCount: gradeInfo.reviewCount,
+    progress: gradeInfo.progress,
+    nextGoal: gradeInfo.nextGoal,
+    remainingReviews: gradeInfo.remainingReviews,
+    gradeRequirements: {
+      bronze: 0,
+      silver: 3,
+      gold: 10,
+      platinum: 25
+    }
+  });
 
   return (
     <div className="bg-gray-100 min-h-screen pb-20">
@@ -514,13 +622,21 @@ const Success = () => {
             
             {/* 이름 + 배지 */}
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {user?.user_metadata?.full_name || user?.email || "사용자"}
-                </h2>
+              <div className="flex items-center mb-2 gap-3 overflow-hidden">
+                {(() => {
+                  const displayName = user?.user_metadata?.full_name || user?.email || "사용자";
+                  const len = (displayName || '').length;
+                  // 길이에 따른 폰트 크기 스케일 조정 (더 공격적으로 축소)
+                  const sizeClass = len > 32 ? 'text-base' : len > 24 ? 'text-lg' : len > 16 ? 'text-xl' : 'text-2xl';
+                  return (
+                    <div className="min-w-0 max-w-[50%] sm:max-w-[60%]">
+                      <h2 className={`${sizeClass} font-bold text-gray-900 truncate`}>{displayName}</h2>
+                    </div>
+                  );
+                })()}
                 
                 {/* 배지들 */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {/* 작가 배지 */}
                   {isArtist && profile?.isArtistApproval && (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
@@ -539,7 +655,7 @@ const Success = () => {
                   
                   {/* 승인 대기중 배지 */}
                   {isArtist && !profile?.isArtistApproval && !profile?.is_artist_rejected && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 border border-yellow-200">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 border border-yellow-200 whitespace-nowrap">
                       <Clock className="w-3 h-3 mr-1" />
                       승인 대기중
                     </span>
@@ -624,6 +740,9 @@ const Success = () => {
             <p className="text-xs text-gray-600 mt-2 text-center">
               {gradeInfo.nextGoal}
             </p>
+            <div className="text-xs text-gray-500 mt-1 text-center">
+              현재 리뷰 수: {gradeInfo.reviewCount}개
+            </div>
           </div>
           
           {/* 다음 해제 시간 */}

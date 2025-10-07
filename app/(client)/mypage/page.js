@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useUserStore } from "@/stores/userStore";
 import { ModernLoading } from "../components/ModernLoading";
+import DevLoginButton from "../components/DevLoginButton";
 // import { useScrollToTop } from "../components/ScrollToTop";
 
 // SearchParams를 사용하는 컴포넌트를 별도로 분리
@@ -17,12 +18,52 @@ function MyPageContent() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // 개발자용 세션 확인 (시뮬레이션)
+  useEffect(() => {
+    const checkDevSession = async () => {
+      setDevLoading(true);
+      try {
+        // 로컬 스토리지에서 개발자용 세션 확인
+        const devUser = localStorage.getItem('dev-user');
+        if (devUser) {
+          const userData = JSON.parse(devUser);
+          setDevSession({
+            user: userData,
+            points: 5000,
+            grade: 'gold',
+            isArtist: true,
+            isJournalist: true,
+            profile: {
+              points: 5000,
+              grade: 'gold',
+              isArtist: true,
+              is_journalist_approved: true,
+              name: '개발자',
+              email: 'dev@test.com'
+            }
+          });
+          console.log('개발자용 세션 확인:', devSession);
+        }
+      } catch (error) {
+        console.error('개발자용 세션 확인 오류:', error);
+      } finally {
+        setDevLoading(false);
+      }
+    };
+
+    checkDevSession();
+  }, []);
   
   const [loading, setLoading] = useState(false);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [policyTitle, setPolicyTitle] = useState("");
   const [policyContent, setPolicyContent] = useState("");
   const [showPolicy, setShowPolicy] = useState(false);
+  
+  // 개발자용 세션 상태
+  const [devSession, setDevSession] = useState(null);
+  const [devLoading, setDevLoading] = useState(false);
   // 개인정보 처리방침 내용 예시 (실제 내용으로 교체)
   const privacyPolicy = `
     <h3>■ 제1조 (개인정보 수집 항목 및 수집 방법)</h3>
@@ -196,6 +237,86 @@ function MyPageContent() {
     handleKakaoLogin();
   };
 
+  // 개발자용 세션이 있을 때 표시할 UI
+  if (devSession) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-md mx-auto bg-white min-h-screen">
+          {/* 헤더 */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+            <h1 className="text-2xl font-bold">마이페이지</h1>
+            <p className="text-blue-100">개발자용 계정</p>
+          </div>
+
+          {/* 사용자 정보 */}
+          <div className="p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">개</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">{devSession.profile.name}</h2>
+                  <p className="text-sm text-gray-500">{devSession.profile.email}</p>
+                </div>
+              </div>
+              
+              {/* 포인트 정보 */}
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-4 mb-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">보유 포인트</span>
+                  <span className="text-2xl font-bold text-orange-600">{devSession.points.toLocaleString()}P</span>
+                </div>
+              </div>
+
+              {/* 등급 정보 */}
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 mb-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">현재 등급</span>
+                  <span className="text-lg font-bold text-purple-600 capitalize">{devSession.grade}</span>
+                </div>
+              </div>
+
+              {/* 승인 상태 */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">작가 승인</span>
+                  <span className="text-green-600 font-medium">✅ 승인됨</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">기자단 승인</span>
+                  <span className="text-green-600 font-medium">✅ 승인됨</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 메뉴 버튼들 */}
+            <div className="space-y-3">
+              <button className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-medium">
+                포인트 내역
+              </button>
+              <button className="w-full bg-purple-600 text-white py-3 px-4 rounded-xl font-medium">
+                작가 정보 수정
+              </button>
+              <button className="w-full bg-green-600 text-white py-3 px-4 rounded-xl font-medium">
+                기자단 정보 수정
+              </button>
+              <button 
+                onClick={() => {
+                  localStorage.removeItem('dev-user');
+                  window.location.reload();
+                }}
+                className="w-full bg-red-600 text-white py-3 px-4 rounded-xl font-medium"
+              >
+                개발자용 로그아웃
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -305,6 +426,9 @@ function MyPageContent() {
           </ModalContent>
         </Modal>
       </div>
+
+      {/* 개발용 로그인 버튼 */}
+      <DevLoginButton />
     </div>
   );
 }

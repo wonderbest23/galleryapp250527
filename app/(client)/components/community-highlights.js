@@ -14,23 +14,23 @@ export function CommunityHighlights() {
     const fetchCommunityPosts = async () => {
       setLoading(true);
       try {
-        // 커뮤니티 포스트 데이터를 가져오는 쿼리
+        // 최신 글 10개 가져온 뒤, 영상/숏폼 제외를 클라이언트에서 필터링
         const { data, error } = await supabase
           .from("community_post")
           .select("*")
           .order("created_at", { ascending: false })
-          .limit(3);
+          .limit(10);
 
         if (error) {
           console.log("Error fetching community posts:", error);
           console.log("Using sample data due to error");
-          // 에러 시 샘플 데이터 사용
           setPosts([
             {
               id: 1,
               title: "현대미술 vs 고전미술, 어리분은 어느 쪽을 더 선호하시나요?",
               content: "최근에 루브르 박물관과 유명 롤 기웃는데 확실히 다른 매력이 있더라구요.. 고전 미술은 완성도와 기법이 압도적이고, 현대미술은 창의성과 실험성의 끌리는 것 같아요. 루브르의 허황된 작품들!!",
               author: "아트취향조사단",
+              authorAvatar: "",
               created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
               likes: 145,
               comments: 67,
@@ -42,6 +42,7 @@ export function CommunityHighlights() {
               title: "오늘 MZ세대는 왜 클래식한 작품보다 미디어아트를 좋아할까요?",
               content: "최근에 팀파티나 디지털의 갑은 곳이 인가가 많았어요. 저희 부모님은 '그게 무슨 예술이야'라고 하시는데, 전 오히려 새롭고 재미있더라구요. 인터랙티브하고 SNS에 올리기도 좋고... 전통 미술과 디지털 아트, 어떤 게 더 가치 있다고 생각하세요?",
               author: "MZ미술관러",
+              authorAvatar: "",
               created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
               likes: 128,
               comments: 45,
@@ -50,29 +51,65 @@ export function CommunityHighlights() {
             }
           ]);
         } else {
-          if (data && data.length > 0) {
-            console.log("Using real community posts");
-            const mappedData = data.map((post) => ({
+          const safeData = Array.isArray(data) ? data : [];
+          // 영상 제외 규칙: category === 'short_video' 또는 video_url 존재 시 제외
+          const filtered = safeData.filter((p) => {
+            const category = p.category || p.type || "";
+            const hasVideo = typeof p.video_url === "string" && p.video_url.trim().length > 0;
+            return category !== "short_video" && !hasVideo;
+          });
+
+          // 관련 프로필 조회 (user_id 수집)
+          const userIds = Array.from(new Set(filtered.map(p => p.user_id).filter(Boolean)));
+          let profileMap = {};
+          if (userIds.length > 0) {
+            const { data: profiles, error: pErr } = await supabase
+              .from("profiles")
+              .select("id, full_name, name, nickname, avatar_url")
+              .in("id", userIds);
+            if (pErr) {
+              console.log("profiles fetch error", pErr);
+            } else if (Array.isArray(profiles)) {
+              profileMap = profiles.reduce((acc, cur) => {
+                acc[cur.id] = cur;
+                return acc;
+              }, {});
+            }
+          }
+
+          // 매핑 후 상위 3개만 노출
+          const mappedData = filtered.slice(0, 3).map((post) => {
+            const prof = post.user_id ? profileMap[post.user_id] : null;
+            const authorName = prof?.full_name || prof?.name || prof?.nickname || post.author || post.nickname || "익명 사용자";
+            const avatar = prof?.avatar_url || '';
+            return {
               id: post.id,
               title: post.title || "제목 없음",
-              content: post.content || "내용 없음",
-              author: post.author || "사용자",
+              content: post.content || post.description || "내용 없음",
+              // 커뮤니티와 동일하게 profiles 사용
+              profiles: prof ? { full_name: prof.full_name || prof.name || prof.nickname || authorName, avatar_url: avatar } : null,
               created_at: post.created_at,
-              likes: post.likes || 0,
-              comments: post.comments || 0,
-              image_url: post.image_url,
+              likes: post.likes || post.likes_count || 0,
+              comments: post.comments || post.comments_count || 0,
+              image_url: post.image_url || null,
+              category: post.category || post.type || 'free',
+              video_url: post.video_url || null,
               type: post.type || "text"
-            }));
+            };
+          });
+
+          if (mappedData.length > 0) {
+            console.log("Using real community posts (synced)");
             setPosts(mappedData);
           } else {
-            console.log("No real community posts found, using sample data");
-            // 실제 데이터가 없으면 샘플 데이터 사용
+            console.log("No eligible posts (after filter). Using sample data");
             setPosts([
               {
                 id: 1,
                 title: "현대미술 vs 고전미술, 어리분은 어느 쪽을 더 선호하시나요?",
                 content: "최근에 루브르 박물관과 유명 롤 기웃는데 확실히 다른 매력이 있더라구요.. 고전 미술은 완성도와 기법이 압도적이고, 현대미술은 창의성과 실험성의 끌리는 것 같아요. 루브르의 허황된 작품들!!",
                 author: "아트취향조사단",
+                authorAvatar: "",
                 created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
                 likes: 145,
                 comments: 67,
@@ -84,6 +121,7 @@ export function CommunityHighlights() {
                 title: "오늘 MZ세대는 왜 클래식한 작품보다 미디어아트를 좋아할까요?",
                 content: "최근에 팀파티나 디지털의 갑은 곳이 인가가 많았어요. 저희 부모님은 '그게 무슨 예술이야'라고 하시는데, 전 오히려 새롭고 재미있더라구요. 인터랙티브하고 SNS에 올리기도 좋고... 전통 미술과 디지털 아트, 어떤 게 더 가치 있다고 생각하세요?",
                 author: "MZ미술관러",
+                authorAvatar: "",
                 created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
                 likes: 128,
                 comments: 45,
@@ -96,13 +134,13 @@ export function CommunityHighlights() {
       } catch (error) {
         console.log("Error:", error);
         console.log("Using sample data due to catch error");
-        // 에러 시 샘플 데이터 사용
         setPosts([
           {
             id: 1,
             title: "현대미술 vs 고전미술, 어리분은 어느 쪽을 더 선호하시나요?",
             content: "최근에 루브르 박물관과 유명 롤 기웃는데 확실히 다른 매력이 있더라구요.. 고전 미술은 완성도와 기법이 압도적이고, 현대미술은 창의성과 실험성의 끌리는 것 같아요. 루브르의 허황된 작품들!!",
             author: "아트취향조사단",
+            authorAvatar: "",
             created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
             likes: 145,
             comments: 67,
@@ -114,6 +152,7 @@ export function CommunityHighlights() {
             title: "오늘 MZ세대는 왜 클래식한 작품보다 미디어아트를 좋아할까요?",
             content: "최근에 팀파티나 디지털의 갑은 곳이 인가가 많았어요. 저희 부모님은 '그게 무슨 예술이야'라고 하시는데, 전 오히려 새롭고 재미있더라구요. 인터랙티브하고 SNS에 올리기도 좋고... 전통 미술과 디지털 아트, 어떤 게 더 가치 있다고 생각하세요?",
             author: "MZ미술관러",
+            authorAvatar: "",
             created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
             likes: 128,
             comments: 45,
@@ -127,6 +166,27 @@ export function CommunityHighlights() {
     };
 
     fetchCommunityPosts();
+
+    // 실시간 동기화: community_post 테이블 변경 시 재조회
+    const channel = supabase
+      .channel("community_highlights_sync")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "community_post" },
+        () => {
+          // 영상 제외 규칙 유지한 재조회
+          fetchCommunityPosts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      try {
+        supabase.removeChannel(channel);
+      } catch (e) {
+        console.log("unsubscribe error", e);
+      }
+    };
   }, []);
 
   const getTimeAgo = (createdAt) => {
@@ -182,94 +242,121 @@ export function CommunityHighlights() {
     );
   }
 
+  const CATEGORY_LABELS = {
+    all: '전체',
+    free: '자유',
+    exhibition: '전시회',
+    short_video: '숏폼',
+    discussion: '토론',
+    review: '리뷰',
+    journalist: '기자단'
+  };
+  const getCategoryBadgeClass = (category) => {
+    const key = CATEGORY_LABELS[category] ? category : (category || '');
+    switch (key) {
+      case 'discussion':
+      case '토론':
+        return 'bg-green-100 text-green-700';
+      case 'exhibition':
+        return 'bg-blue-100 text-blue-700';
+      case 'review':
+        return 'bg-amber-100 text-amber-700';
+      case 'short_video':
+        return 'bg-purple-100 text-purple-700';
+      case 'journalist':
+        return 'bg-slate-100 text-slate-700';
+      case 'free':
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
   return (
     <div className="bg-white w-full">
-      <div className="space-y-0 pt-4">
+      <div className="space-y-4 pt-2">
         {posts.map((post) => {
           const isExpanded = expandedPosts[post.id];
-          // 글자 수로 더보기 버튼 필요 여부 판단 (약 150자 = 3줄)
           const needsExpand = post.content && post.content.length > 150;
+          const category = post.category || post.type || 'free';
           
           return (
-            <div key={post.id} className="border-b-8 border-gray-100">
-              {/* 작성자 헤더 */}
-              <div className="flex items-center gap-3 p-4">
-                {/* 프로필 이미지 */}
-                <img 
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(post.author)}&background=random`}
-                  alt={post.author}
-                  className="w-10 h-10 rounded-full object-cover" 
-                />
-                
-                {/* 작성자 정보 */}
-                <div className="flex-1">
-                  <p className="font-medium text-sm text-gray-900">{post.author}</p>
-                  <p className="text-xs text-gray-500">{getTimeAgo(post.created_at)}</p>
-                </div>
-                
-                {/* 더보기 메뉴 */}
-                <button className="text-gray-400 p-1 hover:bg-gray-100 rounded-full transition-colors">
-                  <MoreHorizontal className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* 게시글 본문 */}
-              <div className="px-4 pb-3">
-                {/* 제목 (클릭 시 상세 페이지로 이동) */}
-                <Link href={`/community/${post.id}`}>
-                  <h3 className="font-semibold text-lg mb-2 text-gray-900 hover:text-blue-600 transition-colors">
-                    {post.title}
-                  </h3>
-                </Link>
-                
-                {/* 본문 내용 */}
-                <div className="text-gray-800 text-sm leading-relaxed">
-                  <div className={isExpanded || !needsExpand ? "" : "line-clamp-3"}>
-                    {post.content}
+            <div key={post.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+              {/* 게시글 헤더 - 인스타그램 스타일 (커뮤니티와 동일) */}
+              <div className="p-4 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {post.profiles?.avatar_url ? (
+                      <img
+                        src={post.profiles.avatar_url}
+                        alt={post.profiles.full_name || '사용자'}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-500 text-white">
+                        <span className="text-base font-semibold">{(post.profiles?.full_name || '사용자').charAt(0)}</span>
+                      </div>
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-gray-900">{post.profiles?.full_name || '익명 사용자'}</h3>
+                        <span className={`px-2 py-0.5 text-xs rounded-full ${getCategoryBadgeClass(category)}`}>
+                          {CATEGORY_LABELS[category] || category}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500">{getTimeAgo(post.created_at)}</p>
+                    </div>
                   </div>
-                  {needsExpand && (
-                    <button 
-                      onClick={() => toggleExpand(post.id)}
-                      className="text-blue-500 text-sm font-medium mt-2 hover:text-blue-600 transition-colors"
-                    >
-                      {isExpanded ? "접기" : "더보기..."}
+                  <div className="flex items-center space-x-2">
+                    <button className="text-gray-400 hover:text-gray-600">
+                      <MoreHorizontal className="w-5 h-5" />
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
 
-              {/* 이미지/영상 (선택적) */}
-              {post.image_url && (
+              {/* 게시글 내용 */}
+              <div className="p-4">
+                <Link href={`/community/${post.id}`}>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2">{post.title}</h2>
+                </Link>
+                <p className="text-gray-700 leading-relaxed">
+                  {isExpanded || !needsExpand ? post.content : post.content?.slice(0, 150)}
+                </p>
+                {needsExpand && (
+                  <button onClick={() => toggleExpand(post.id)} className="text-blue-500 text-sm font-medium mt-2 hover:text-blue-600 transition-colors">
+                    {isExpanded ? '접기' : '더보기...'}
+                  </button>
+                )}
+              </div>
+
+              {/* 이미지 (영상 제외 정책 유지) */}
+              {post.image_url && !post.video_url && (
                 <div className="bg-gray-100">
                   <img 
                     src={post.image_url}
                     alt={post.title}
-                    className="w-full max-h-[500px] object-contain" 
+                    className="w-full h-auto max-h-96 object-cover"
                   />
                 </div>
               )}
 
-              {/* 액션 버튼 영역 */}
-              <div className="flex items-center justify-between px-4 py-3">
-                {/* 좌측: 좋아요 + 댓글 */}
-                <div className="flex items-center gap-6 text-gray-600">
-                  {/* 좋아요 버튼 */}
-                  <button className="flex items-center gap-2 transition-colors hover:text-red-500">
-                    <Heart className="w-5 h-5" />
-                    <span className="text-sm font-medium">{post.likes}</span>
-                  </button>
-                  
-                  {/* 댓글 버튼 */}
-                  <button className="flex items-center gap-2 transition-colors hover:text-blue-500">
-                    <MessageCircle className="w-5 h-5" />
-                    <span className="text-sm font-medium">{post.comments}</span>
-                  </button>
+              {/* 액션 버튼들 - 인스타그램 스타일 (커뮤니티와 동일) */}
+              <div className="p-4 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-6">
+                    <button className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors">
+                      <Heart className="w-5 h-5" />
+                      <span className="text-sm font-medium">{post.likes || 0}</span>
+                    </button>
+                    <button className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors">
+                      <MessageCircle className="w-5 h-5" />
+                      <span className="text-sm font-medium">{post.comments || 0}</span>
+                    </button>
+                    <button className="flex items-center space-x-1 text-gray-600 hover:text-green-600 transition-colors">
+                      <Share className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-                
-                {/* 우측: 공유 버튼 */}
-                <button className="text-gray-600 hover:text-green-500 transition-colors">
-                  <Share className="w-5 h-5" />
-                </button>
               </div>
             </div>
           );

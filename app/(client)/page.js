@@ -34,6 +34,7 @@ import { LatestWorks } from "./components/latest-works";
 import { TopOfWeek } from "./components/top-of-week";
 import { CommunityHighlights } from "./components/community-highlights";
 import ReviewWritePopup from "./components/ReviewWritePopup";
+import DevLoginButton from "./components/DevLoginButton";
 
 export default function Home() {
   const [exhibitionCategory, setExhibitionCategory] = useState("all");
@@ -772,11 +773,16 @@ export default function Home() {
             <ReviewWritePopup
               exhibition={null}
               customExhibitionData={customExhibitionData}
-              onBack={() => setShowReviewModal(false)}
-              onClose={() => setShowReviewModal(false)}
+              onBack={() => {
+                setShowReviewModal(false);
+                setCustomExhibitionData({ title: '', gallery: '', visitDate: '' });
+              }}
+              onClose={() => {
+                setShowReviewModal(false);
+                setCustomExhibitionData({ title: '', gallery: '', visitDate: '' });
+              }}
               onSuccess={() => {
                 setShowReviewModal(false);
-                setSelectedExhibition(null);
                 setCustomExhibitionData({ title: '', gallery: '', visitDate: '' });
               }}
               onCustomReview={() => {
@@ -873,6 +879,7 @@ export default function Home() {
                             alert('모든 필드를 입력해주세요.');
                             return;
                           }
+                          console.log('새롭게 등록하기 데이터:', customExhibitionData);
                           setShowCustomReviewModal(false);
                           setShowReviewModal(true);
                         }}
@@ -888,6 +895,9 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* 개발용 로그인 버튼 */}
+      <DevLoginButton />
     </div>
   );
 }

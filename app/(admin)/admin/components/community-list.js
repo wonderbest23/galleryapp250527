@@ -19,6 +19,7 @@ export function CommunityList({
   selectedKeys,
   onSelectionChange,
   refreshToggle = 0,
+  onBulkDelete,
 }) {
   const supabase = createClient();
   const [posts, setPosts] = useState([]);
@@ -26,6 +27,7 @@ export function CommunityList({
   const itemsPerPage = 10;
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(1);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchPosts();
@@ -62,22 +64,73 @@ export function CommunityList({
     }
   };
 
+  // 대량 삭제 기능
+  const handleBulkDelete = async () => {
+    const selectedIds = Array.from(selectedKeys);
+    if (selectedIds.length === 0) {
+      addToast({ title: "선택 오류", description: "삭제할 게시글을 선택해주세요.", color: "warning" });
+      return;
+    }
+
+    if (!confirm(`선택된 ${selectedIds.length}개의 게시글을 정말로 삭제하시겠습니까?`)) return;
+
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("community_post")
+        .delete()
+        .in("id", selectedIds);
+
+      if (error) {
+        console.error("대량 삭제 오류:", error);
+        addToast({ title: "삭제 실패", description: error.message, color: "danger" });
+      } else {
+        addToast({ title: "삭제 완료", description: `${selectedIds.length}개의 게시글이 삭제되었습니다.`, color: "success" });
+        onSelectionChange(new Set([])); // 선택 해제
+        onBulkDelete?.(); // 새로고침 콜백
+      }
+    } catch (error) {
+      console.error("대량 삭제 중 오류:", error);
+      addToast({ title: "삭제 실패", description: "대량 삭제 중 오류가 발생했습니다.", color: "danger" });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="w-full bg-white rounded-lg shadow p-4">
-      <div className="flex justify-between items-center mb-2">
-        <Input
-          size="sm"
-          placeholder="제목 검색"
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          className="max-w-xs"
-        />
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-4">
+          <Input
+            size="sm"
+            placeholder="제목 검색"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            className="max-w-xs"
+          />
+          {selectedKeys.size > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600">
+                {selectedKeys.size}개 게시글 선택됨
+              </span>
+              <Button
+                size="sm"
+                color="danger"
+                variant="flat"
+                onPress={handleBulkDelete}
+                isLoading={deleting}
+              >
+                선택 삭제
+              </Button>
+            </div>
+          )}
+        </div>
         <span className="text-sm text-gray-600">총 {total} 페이지</span>
       </div>
 
       <Table
         aria-label="community posts table"
-        selectionMode="single"
+        selectionMode="multiple"
         selectedKeys={selectedKeys}
         onSelectionChange={handleSelectionChange}
       >
@@ -89,11 +142,11 @@ export function CommunityList({
         </TableHeader>
         <TableBody emptyContent="데이터가 없습니다." items={posts}>
           {(item) => (
-            <TableRow key={item.id} onClick={() => handleSelectionChange(new Set([String(item.id)]))} className="cursor-pointer hover:bg-gray-50">
-              <TableCell>{item.id}</TableCell>
+            <TableRow key={String(item.id)} className="cursor-pointer hover:bg-gray-50">
+              <TableCell>{String(item.id).slice(0,8)}...</TableCell>
               <TableCell className="truncate max-w-[250px]">{item.title}</TableCell>
-              <TableCell>{item.likes}</TableCell>
-              <TableCell>{new Date(item.created_at).toLocaleDateString()}</TableCell>
+              <TableCell>{item.likes || 0}</TableCell>
+              <TableCell>{new Date(item.created_at).toLocaleDateString('ko-KR')}</TableCell>
             </TableRow>
           )}
         </TableBody>

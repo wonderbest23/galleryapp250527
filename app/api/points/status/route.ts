@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     // 실제 포인트와 예상 포인트 중 더 큰 값 사용
     const finalTotalPoints = Math.max(totalPoints, expectedPoints);
     
-    // 검토 필요 포인트는 최근 48시간 내 작성된 리뷰 기준으로 계산
+    // 검토 필요 포인트는 최근 48시간 내 작성된 리뷰 중 아직 승인되지 않은 것만
     const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
     
     const { data: recentReviewData } = await supabase
@@ -40,20 +40,55 @@ export async function GET(request: Request) {
       .eq('user_id', user.id)
       .gte('created_at', fortyEightHoursAgo);
 
-    const recentReviewCount = recentReviewData?.length || 0;
-    const lockedPoints = recentReviewCount * 500;
+    // 이미 처리된 (승인 또는 거부) 리뷰 ID들 조회
+    const { data: processedTransactions } = await supabase
+      .from('point_transactions')
+      .select('reference_id, status')
+      .eq('user_id', user.id)
+      .eq('reference_type', 'exhibition_review')
+      .in('status', ['completed', 'rejected']);
+
+    const processedReviewIds = new Set((processedTransactions || []).map(t => t.reference_id));
+    
+    // 아직 처리되지 않은 리뷰만 필터링 (검토 대기)
+    const pendingReviews = (recentReviewData || []).filter(review => !processedReviewIds.has(review.id));
+    const pendingReviewCount = pendingReviews.length;
+    
+    const lockedPoints = pendingReviewCount * 500;
     const availablePoints = Math.max(0, finalTotalPoints - lockedPoints);
 
-    // 사용자 등급 정보 조회
-    const { data: gradeInfo } = await supabase
-      .from('user_grades')
-      .select('*')
-      .eq('user_id', user.id)
+    // 사용자 등급 정보 조회 (profiles 테이블에서 grade 컬럼 사용)
+    const { data: profileGradeData } = await supabase
+      .from('profiles')
+      .select('grade')
+      .eq('id', user.id)
       .single();
+    
+    // 등급 동적 계산 (리뷰 수 기반)
+    const totalReviewCount = reviewCount;
+    let calculatedGrade = 'bronze';
+    if (totalReviewCount >= 25) {
+      calculatedGrade = 'platinum';
+    } else if (totalReviewCount >= 10) {
+      calculatedGrade = 'gold';
+    } else if (totalReviewCount >= 3) {
+      calculatedGrade = 'silver';
+    } else {
+      calculatedGrade = 'bronze';
+    }
+    
+    // DB의 등급과 계산된 등급이 다르면 DB 업데이트
+    if (profileGradeData?.grade !== calculatedGrade) {
+      await supabase
+        .from('profiles')
+        .update({ grade: calculatedGrade })
+        .eq('id', user.id);
+      console.log(`등급 자동 업데이트: ${profileGradeData?.grade} → ${calculatedGrade} (리뷰 ${totalReviewCount}개)`);
+    }
 
     // 잠금 해제 예정 시간 계산 (최근 리뷰 작성 시간 + 48시간)
     let nextUnlock = null;
-    if (recentReviewCount > 0) {
+    if (pendingReviewCount > 0) {
       const { data: latestReview } = await supabase
         .from('exhibition_review')
         .select('created_at')
@@ -88,7 +123,7 @@ export async function GET(request: Request) {
       }
     };
 
-    const currentGrade = gradeInfo?.grade || 'bronze';
+    const currentGrade = calculatedGrade; // 동적으로 계산된 등급 사용
     const exchangePoints = getExchangePoints(currentGrade);
 
     return NextResponse.json({ 

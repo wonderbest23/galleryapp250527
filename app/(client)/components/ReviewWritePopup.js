@@ -310,40 +310,38 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl max-h-[85vh] sm:max-h-[75vh] overflow-y-auto shadow-2xl">
       {/* 헤더 */}
-      <div className="flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-10 border-b border-gray-200 p-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
-          </div>
-          <div>
+      <div className="bg-white border-b sticky top-0 z-10">
+        <div className="px-6 py-6 flex items-center justify-between">
+          {/* 왼쪽: 아이콘 + 제목 */}
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+            </div>
+            <div>
             <h2 className="text-xl font-bold text-gray-900">전시회 리뷰 작성</h2>
-            <p className="text-sm text-gray-600 leading-relaxed">{selectedExhibition?.contents || stepInfo.subtitle}</p>
+            {selectedExhibition?.contents && (
+              <p className="text-sm text-gray-600 leading-relaxed">{selectedExhibition.contents}</p>
+            )}
+            </div>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
+
+          {/* 오른쪽: 포인트 + 닫기 */}
+          <div className="flex items-center gap-4">
             <div className="text-right">
               <div className="text-2xl font-bold text-blue-600">500P+</div>
               <div className="text-xs text-gray-500">리뷰 작성</div>
             </div>
-            <div className="w-px h-8 bg-gray-300"></div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-emerald-600">{currentStep + 1}</div>
-              <div className="text-xs text-gray-500">단계</div>
-            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
         </div>
       </div>
 
@@ -367,14 +365,8 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
             </div>
           ))}
         </div>
-        <div className="flex justify-center mt-2">
-          <p className="text-xs text-gray-500">
-            {currentStep === 0 && "전시회 선택"}
-            {currentStep === 1 && "별점 선택"}
-            {currentStep === 2 && "리뷰 작성"}
-            {currentStep === 3 && "증빙 사진"}
-          </p>
-        </div>
+        {/* 추가적인 세로 1단계 텍스트 제거 (요청사항) */}
+        <div className="h-2" />
       </div>
 
       {/* 콘텐츠 */}
@@ -412,8 +404,15 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
           {/* 단계별 콘텐츠 */}
           <div className="bg-white/90 backdrop-blur-md rounded-2xl p-8 border border-gray-200/50 shadow-sm">
             <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{stepInfo.subtitle}</h3>
-              <p className="text-gray-500">{stepInfo.description}</p>
+              {currentStep !== 0 && (
+                <>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{stepInfo.subtitle}</h3>
+                  <p className="text-gray-500">{stepInfo.description}</p>
+                </>
+              )}
+              {currentStep === 0 && (
+                <p className="text-gray-500">진행중인 전시회 중에서 선택해주세요</p>
+              )}
             </div>
 
             {/* 0단계: 전시회 선택 */}
