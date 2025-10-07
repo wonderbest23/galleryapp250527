@@ -15,7 +15,7 @@ export default function BottomNavigation() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 select-none">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 select-none pointer-events-auto">
       <div className="flex items-center justify-between px-2 py-2">
         {navItems.map((item) => {
           const Icon = item.icon;

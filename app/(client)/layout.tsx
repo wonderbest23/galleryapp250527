@@ -69,7 +69,7 @@ export default function RootLayout({
             <ScrollToTop />
             <div className="mobile-fixed-width" style={{ scrollBehavior: 'auto' }}>
               <TopNavigation />
-              <main className="w-full h-full pb-16" style={{ scrollBehavior: 'auto' }}>
+              <main className="w-full h-full pb-4" style={{ scrollBehavior: 'auto' }}>
                 {children}
               </main>
               <BottomNavigation />
