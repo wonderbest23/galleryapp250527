@@ -67,10 +67,23 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
     }
   };
 
-  // 컴포넌트 마운트 시 전시회 목록 가져오기
+  // 컴포넌트 마운트 시 전시회 목록 가져오기 및 리뷰 초안 복원
   useEffect(() => {
     if (!exhibition) {
       fetchExhibitions();
+    }
+    
+    // URL 파라미터에서 리뷰 복원 요청 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const restoreReview = urlParams.get('restoreReview');
+    
+    if (restoreReview === 'true') {
+      const restored = loadReviewDraft();
+      if (restored) {
+        alert("이전에 작성하던 리뷰를 복원했습니다.");
+        // URL에서 파라미터 제거
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
     }
   }, [exhibition]);
 
@@ -102,6 +115,9 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
         setFormData({ ...formData, exhibition_id: selectedExhibition.id });
       }
       setCurrentStep(currentStep + 1);
+      
+      // 단계 진행 시 리뷰 초안 저장
+      saveReviewDraft();
     }
   };
 
@@ -118,6 +134,8 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
     // 1단계에서 별점 선택 시 자동으로 다음 단계로 이동
     setTimeout(() => {
       setCurrentStep(2);
+      // 별점 선택 후 리뷰 초안 저장
+      saveReviewDraft();
     }, 500); // 0.5초 후 자동 이동
   };
 
@@ -144,6 +162,8 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result);
+      // 이미지 업로드 후 자동 저장
+      setTimeout(() => saveReviewDraft(), 500);
     };
     reader.readAsDataURL(file);
   };
@@ -157,10 +177,55 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
     }
   };
 
+  // 리뷰 데이터를 로컬 스토리지에 저장
+  const saveReviewDraft = () => {
+    const reviewDraft = {
+      exhibition_id: formData.exhibition_id,
+      rating: formData.rating,
+      content: formData.content,
+      proof_image: imagePreview,
+      selectedExhibition: selectedExhibition,
+      currentStep: currentStep,
+      customExhibitionData: customExhibitionData,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('reviewDraft', JSON.stringify(reviewDraft));
+  };
+
+  // 로컬 스토리지에서 리뷰 데이터 복원
+  const loadReviewDraft = () => {
+    const savedDraft = localStorage.getItem('reviewDraft');
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        // 24시간 이내의 데이터만 복원
+        if (Date.now() - draft.timestamp < 24 * 60 * 60 * 1000) {
+          setFormData(prev => ({
+            ...prev,
+            exhibition_id: draft.exhibition_id,
+            rating: draft.rating,
+            content: draft.content,
+            proof_image: draft.proof_image
+          }));
+          setSelectedExhibition(draft.selectedExhibition);
+          setCurrentStep(draft.currentStep);
+          setImagePreview(draft.proof_image);
+          return true;
+        }
+      } catch (error) {
+        console.error('리뷰 초안 복원 오류:', error);
+      }
+    }
+    return false;
+  };
+
   // 리뷰 제출
   const handleSubmit = async () => {
     if (!user || !user.id) {
-      alert("로그인이 필요합니다.");
+      // 로그인이 필요한 경우 리뷰 데이터를 저장하고 로그인 페이지로 이동
+      saveReviewDraft();
+      alert("로그인이 필요합니다. 로그인 후 작성하던 리뷰를 이어서 작성할 수 있습니다.");
+      window.location.href = '/login?redirect=/&restoreReview=true';
       return;
     }
 
@@ -256,6 +321,9 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
       // 성공 처리
       setShowSuccessModal(true);
       console.log('리뷰 작성 완료:', submitResult.data.message);
+      
+      // 리뷰 초안 데이터 삭제
+      localStorage.removeItem('reviewDraft');
 
       // 2초 후 성공 콜백 호출 및 팝업 닫기
       setTimeout(() => {
@@ -557,7 +625,11 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
               <div>
                 <Textarea
                   value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, content: e.target.value });
+                    // 리뷰 내용 입력 시 자동 저장
+                    setTimeout(() => saveReviewDraft(), 1000);
+                  }}
                   placeholder="전시회에 대한 솔직한 후기를 작성해주세요..."
                   variant="bordered"
                   className="w-full"
