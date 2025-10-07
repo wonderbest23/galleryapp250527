@@ -135,8 +135,8 @@ export async function GET(request: Request) {
         grade: currentGrade,
         exchange_points: exchangePoints,
         next_unlock: nextUnlock,
-        monthly_exchanges_used: gradeInfo?.monthly_exchanges_used || 0,
-        monthly_exchanges_reset_at: gradeInfo?.monthly_exchanges_reset_at,
+        monthly_exchanges_used: 0,
+        monthly_exchanges_reset_at: null,
         recent_transactions: recentTransactions || []
       }
     });

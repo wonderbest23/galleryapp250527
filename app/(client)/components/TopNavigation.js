@@ -7,7 +7,7 @@ import { useDisclosure } from "@heroui/react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import NotificationBar from "./NotificationBar";
 
-export default function TopNavigation({ search, setSearch, exhibitions, setExhibitions, gallery, setGallery, showSearchResults, setShowSearchResults }) {
+export default function TopNavigation({ search, setSearch, exhibitions, setExhibitions, gallery, setGallery, showSearchResults, setShowSearchResults } = {}) {
   const supabase = createClient();
   const [notificationBarOpen, setNotificationBarOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);

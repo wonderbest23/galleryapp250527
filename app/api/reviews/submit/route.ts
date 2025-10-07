@@ -141,7 +141,7 @@ export async function POST(request: Request) {
         : '익명';
 
     // 5. 리뷰 데이터 준비 (기본 필드만)
-    const reviewData = {
+    const reviewData: any = {
       rating: rating,
       description: description,
       name: maskedName,
