@@ -674,9 +674,9 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
           {/* 콘텐츠 영역 */}
           <div className="p-6">
             {loading ? (
-              <div className="flex justify-center items-center py-16">
-                <div className="text-center">
-                  <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="flex justify-center items-center py-12">
+                <div className="text-center space-y-3">
+                  <progress />
                   <p className="text-gray-600">알림을 불러오는 중...</p>
                 </div>
               </div>
