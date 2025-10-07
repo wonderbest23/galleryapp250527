@@ -23,7 +23,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredNotifications, setFilteredNotifications] = useState([]);
-  const [filterType, setFilterType] = useState("all"); // all, unread, announcements, community, rewards, approvals
+  const [filterType, setFilterType] = useState("unread"); // all, unread, announcements, community, rewards, approvals
   const supabase = createClient();
 
   useEffect(() => {
