@@ -10,7 +10,7 @@ import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
 import { LuWallet } from "react-icons/lu";
 import { FaTag } from "react-icons/fa6";
-import { Spinner } from "@heroui/spinner";
+import { Spinner } from "@heroui/react";
 import { FaMoneyBillWaveAlt } from "react-icons/fa";
 import { FaCalendar } from "react-icons/fa6";
 import { IoMdPin } from "react-icons/io";

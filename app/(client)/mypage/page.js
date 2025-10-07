@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useUserStore } from "@/stores/userStore";
 import { ModernLoading } from "../components/ModernLoading";
-import DevLoginButton from "../components/DevLoginButton";
 // import { useScrollToTop } from "../components/ScrollToTop";
 
 // SearchParams를 사용하는 컴포넌트를 별도로 분리
@@ -426,9 +425,6 @@ function MyPageContent() {
           </ModalContent>
         </Modal>
       </div>
-
-      {/* 개발용 로그인 버튼 */}
-      <DevLoginButton />
     </div>
   );
 }

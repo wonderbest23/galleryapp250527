@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback } from 'react';
-import { addToast } from '@heroui/toast';
 
 interface ToastOptions {
   title?: string;
@@ -15,15 +14,13 @@ interface ToastOptions {
 
 export function useToast() {
   const showToast = useCallback((options: ToastOptions) => {
-    addToast({
-      title: options.title,
-      description: options.description,
-      color: options.color || 'primary',
-      variant: options.variant || 'flat',
-      timeout: options.timeout || 5000,
-      hideCloseButton: options.hideCloseButton || false,
-      icon: options.icon,
-    });
+    const message = options.description 
+      ? `${options.title}\n${options.description}` 
+      : options.title || '';
+    
+    if (typeof window !== 'undefined') {
+      alert(message);
+    }
   }, []);
 
   const success = useCallback((title: string, description?: string) => {

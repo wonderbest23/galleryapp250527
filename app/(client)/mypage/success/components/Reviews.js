@@ -7,7 +7,7 @@ import { FaRegStar } from "react-icons/fa";
 import { FaPlusCircle } from "react-icons/fa";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
-import { Spinner } from "@heroui/spinner";
+import { Spinner } from "@heroui/react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Star, Calendar, MapPin, Plus, MessageCircle } from "lucide-react";

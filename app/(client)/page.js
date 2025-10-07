@@ -34,7 +34,6 @@ import { LatestWorks } from "./components/latest-works";
 import { TopOfWeek } from "./components/top-of-week";
 import { CommunityHighlights } from "./components/community-highlights";
 import ReviewWritePopup from "./components/ReviewWritePopup";
-import DevLoginButton from "./components/DevLoginButton";
 
 export default function Home() {
   const [exhibitionCategory, setExhibitionCategory] = useState("all");
@@ -68,36 +67,34 @@ export default function Home() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const supabase = createClient();
 
-  // 페이지 진입 시 최상단으로 스크롤 및 완료된 리뷰 자동 제출 처리
+  // 페이지 진입 시 최상단으로 스크롤
   useEffect(() => {
     window.scrollTo(0, 0);
-    
-    // URL 파라미터에서 자동 제출 요청 확인
-    const urlParams = new URLSearchParams(window.location.search);
-    const autoSubmitReview = urlParams.get('autoSubmitReview');
-    
-    if (autoSubmitReview === 'true') {
-      const completedReview = localStorage.getItem('completedReview');
-      if (completedReview) {
+  }, []);
+
+  // 로그인 후 리뷰 초안 복원
+  useEffect(() => {
+    const checkReviewDraft = () => {
+      const savedDraft = localStorage.getItem('reviewDraft');
+      if (savedDraft && user) {
         try {
-          const reviewData = JSON.parse(completedReview);
-          // 24시간 이내의 데이터만 처리
-          if (Date.now() - reviewData.timestamp < 24 * 60 * 60 * 1000) {
-            alert("로그인 완료! 리뷰를 자동으로 제출합니다.");
-            // 리뷰 모달 열기
+          const draft = JSON.parse(savedDraft);
+          // 24시간 이내의 데이터만 복원
+          if (Date.now() - draft.timestamp < 24 * 60 * 60 * 1000) {
+            // 리뷰 팝업 자동 열기
             setShowReviewModal(true);
-            // URL에서 파라미터 제거
-            window.history.replaceState({}, document.title, window.location.pathname);
+            console.log('로그인 후 리뷰 초안 자동 복원');
           } else {
-            localStorage.removeItem('completedReview');
+            localStorage.removeItem('reviewDraft');
           }
         } catch (error) {
-          console.error('완료된 리뷰 자동 제출 오류:', error);
-          localStorage.removeItem('completedReview');
+          console.error('리뷰 초안 확인 오류:', error);
         }
       }
-    }
-  }, []);
+    };
+
+    checkReviewDraft();
+  }, [user]);
 
   // 티켓 수량 증가
   const increaseTicket = () => {
@@ -921,9 +918,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      {/* 개발용 로그인 버튼 */}
-      <DevLoginButton />
     </div>
   );
 }

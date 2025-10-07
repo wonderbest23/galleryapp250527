@@ -5,7 +5,7 @@ import { Icon } from "@iconify/react";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import { useToast } from "@/utils/toast";
-import { addToast } from "@heroui/toast";
+// Toast removed - not available in @heroui/react
 
 export function PaymentTicketDetail({
   ticket,

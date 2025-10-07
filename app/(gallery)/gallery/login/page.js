@@ -2,7 +2,7 @@
 import React,{use,useEffect} from "react";
 import {Form, Input, Button} from "@heroui/react";
 import { gallerySignInAction } from "@/app/actions";
-import {addToast} from "@heroui/toast"
+// Toast removed - not available in @heroui/react
 export default function App({searchParams}) {
   const [errors, setErrors] = React.useState({});
   const error=use(searchParams)?.error

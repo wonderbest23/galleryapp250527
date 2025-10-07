@@ -73,39 +73,37 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
       fetchExhibitions();
     }
     
-    // URL 파라미터에서 리뷰 복원 요청 확인
-    const urlParams = new URLSearchParams(window.location.search);
-    const restoreReview = urlParams.get('restoreReview');
-    const autoSubmitReview = urlParams.get('autoSubmitReview');
-    
-    if (restoreReview === 'true') {
-      const restored = loadReviewDraft();
-      if (restored) {
-        alert("이전에 작성하던 리뷰를 복원했습니다.");
-        // URL에서 파라미터 제거
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-    
-    // 완료된 리뷰 자동 제출 처리
-    if (autoSubmitReview === 'true') {
-      const completedReview = localStorage.getItem('completedReview');
-      if (completedReview) {
-        try {
-          const reviewData = JSON.parse(completedReview);
-          // 24시간 이내의 데이터만 처리
-          if (Date.now() - reviewData.timestamp < 24 * 60 * 60 * 1000) {
-            alert("로그인 완료! 리뷰를 자동으로 제출합니다.");
-            autoSubmitCompletedReview(reviewData);
-            // URL에서 파라미터 제거
-            window.history.replaceState({}, document.title, window.location.pathname);
-          } else {
-            localStorage.removeItem('completedReview');
+    // 저장된 리뷰 초안 복원
+    const savedDraft = localStorage.getItem('reviewDraft');
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        // 24시간 이내의 데이터만 복원
+        if (Date.now() - draft.timestamp < 24 * 60 * 60 * 1000) {
+          setFormData({
+            exhibition_id: draft.exhibition_id,
+            rating: draft.rating,
+            content: draft.content,
+            proof_image: draft.proof_image
+          });
+          if (draft.selectedExhibition) {
+            setSelectedExhibition(draft.selectedExhibition);
           }
-        } catch (error) {
-          console.error('완료된 리뷰 자동 제출 오류:', error);
-          localStorage.removeItem('completedReview');
+          setCurrentStep(draft.currentStep || 0);
+          if (draft.imagePreview) {
+            setImagePreview(draft.imagePreview);
+          }
+          console.log('리뷰 초안 복원 완료:', draft);
+          alert('이전에 작성하던 리뷰를 복원했습니다.');
+          // 복원 후 초안 삭제
+          localStorage.removeItem('reviewDraft');
+        } else {
+          // 오래된 초안 삭제
+          localStorage.removeItem('reviewDraft');
         }
+      } catch (error) {
+        console.error('리뷰 초안 복원 오류:', error);
+        localStorage.removeItem('reviewDraft');
       }
     }
   }, [exhibition]);
@@ -139,8 +137,8 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
       }
       setCurrentStep(currentStep + 1);
       
-      // 단계 진행 시 리뷰 초안 저장
-      saveReviewDraft();
+      // 단계 진행 시 리뷰 초안 자동 저장
+      setTimeout(() => saveReviewDraft(), 500);
     }
   };
 
@@ -154,11 +152,11 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
   // 별점 클릭 (자동으로 다음 단계로 이동)
   const handleRatingClick = (rating) => {
     setFormData({ ...formData, rating });
+    // 별점 선택 후 자동 저장
+    setTimeout(() => saveReviewDraft(), 100);
     // 1단계에서 별점 선택 시 자동으로 다음 단계로 이동
     setTimeout(() => {
       setCurrentStep(2);
-      // 별점 선택 후 리뷰 초안 저장
-      saveReviewDraft();
     }, 500); // 0.5초 후 자동 이동
   };
 
@@ -200,167 +198,36 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
     }
   };
 
-  // 리뷰 데이터를 로컬 스토리지에 저장
+  // 리뷰 초안 저장 함수
   const saveReviewDraft = () => {
-    const reviewDraft = {
-      exhibition_id: formData.exhibition_id,
-      rating: formData.rating,
-      content: formData.content,
-      proof_image: imagePreview,
-      selectedExhibition: selectedExhibition,
-      currentStep: currentStep,
-      customExhibitionData: customExhibitionData,
-      timestamp: Date.now()
-    };
-    localStorage.setItem('reviewDraft', JSON.stringify(reviewDraft));
-  };
-
-  // 완료된 리뷰 데이터를 로컬 스토리지에 저장 (자동 제출용)
-  const saveCompletedReview = () => {
-    const completedReview = {
-      exhibition_id: formData.exhibition_id,
-      rating: formData.rating,
-      content: formData.content,
-      proof_image: imagePreview,
-      selectedExhibition: selectedExhibition,
-      customExhibitionData: customExhibitionData,
-      imageFile: imageFile,
-      isCompleted: true, // 완료된 리뷰임을 표시
-      timestamp: Date.now()
-    };
-    localStorage.setItem('completedReview', JSON.stringify(completedReview));
-  };
-
-  // 로컬 스토리지에서 리뷰 데이터 복원
-  const loadReviewDraft = () => {
-    const savedDraft = localStorage.getItem('reviewDraft');
-    if (savedDraft) {
-      try {
-        const draft = JSON.parse(savedDraft);
-        // 24시간 이내의 데이터만 복원
-        if (Date.now() - draft.timestamp < 24 * 60 * 60 * 1000) {
-          setFormData(prev => ({
-            ...prev,
-            exhibition_id: draft.exhibition_id,
-            rating: draft.rating,
-            content: draft.content,
-            proof_image: draft.proof_image
-          }));
-          setSelectedExhibition(draft.selectedExhibition);
-          setCurrentStep(draft.currentStep);
-          setImagePreview(draft.proof_image);
-          return true;
-        }
-      } catch (error) {
-        console.error('리뷰 초안 복원 오류:', error);
-      }
-    }
-    return false;
-  };
-
-  // 완료된 리뷰 자동 제출
-  const autoSubmitCompletedReview = async (completedReviewData) => {
-    setSubmitting(true);
-    
     try {
-      // 1. 리뷰 작성 전 유효성 검사
-      const validationResponse = await fetch('/api/reviews/validate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          exhibition_id: completedReviewData.exhibition_id
-        }),
-      });
-
-      const validationResult = await validationResponse.json();
-      if (!validationResult.success) {
-        alert(validationResult.error);
-        setSubmitting(false);
-        return false;
-      }
-
-      // 2. 이미지 업로드 처리
-      const fileExt = completedReviewData.imageFile.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `reviews/${fileName}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("reviews")
-        .upload(filePath, completedReviewData.imageFile);
-
-      if (uploadError) {
-        console.error("이미지 업로드 오류:", uploadError);
-        alert("이미지 업로드에 실패했습니다. 다시 시도해주세요.");
-        setSubmitting(false);
-        return false;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("reviews")
-        .getPublicUrl(filePath);
-
-      // 3. 리뷰 데이터 저장
-      const submitResponse = await fetch('/api/reviews/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          exhibition_id: completedReviewData.exhibition_id,
-          rating: completedReviewData.rating,
-          description: completedReviewData.content,
-          proof_image: publicUrl,
-          category: [],
-          is_custom_review: !!completedReviewData.customExhibitionData,
-          custom_exhibition_data: completedReviewData.customExhibitionData ? {
-            title: completedReviewData.customExhibitionData.title,
-            gallery: completedReviewData.customExhibitionData.gallery,
-            visit_date: completedReviewData.customExhibitionData.visitDate
-          } : null
-        }),
-      });
-
-      const submitResult = await submitResponse.json();
-      if (!submitResult.success) {
-        alert(submitResult.error);
-        setSubmitting(false);
-        return false;
-      }
-
-      // 성공 처리
-      setShowSuccessModal(true);
-      console.log('리뷰 자동 제출 완료:', submitResult.data.message);
-      
-      // 완료된 리뷰 데이터 삭제
-      localStorage.removeItem('completedReview');
-
-      // 2초 후 성공 콜백 호출 및 팝업 닫기
-      setTimeout(() => {
-        if (onSuccess) {
-          onSuccess();
-        }
-        onClose();
-      }, 2000);
-
-      return true;
-
+      const reviewDraft = {
+        exhibition_id: formData.exhibition_id,
+        rating: formData.rating,
+        content: formData.content,
+        proof_image: formData.proof_image,
+        selectedExhibition: selectedExhibition,
+        currentStep: currentStep,
+        customExhibitionData: customExhibitionData,
+        imagePreview: imagePreview,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('reviewDraft', JSON.stringify(reviewDraft));
+      console.log('리뷰 초안 저장 완료');
     } catch (error) {
-      console.error("리뷰 자동 제출 오류:", error);
-      alert("리뷰 자동 제출 중 오류가 발생했습니다.");
-      setSubmitting(false);
-      return false;
+      console.error('리뷰 초안 저장 오류:', error);
     }
   };
 
   // 리뷰 제출
   const handleSubmit = async () => {
     if (!user || !user.id) {
-      // 로그인이 필요한 경우 완료된 리뷰 데이터를 저장하고 로그인 페이지로 이동
-      saveCompletedReview();
-      alert("로그인이 필요합니다. 로그인 후 리뷰가 자동으로 제출됩니다.");
-      window.location.href = '/login?redirect=/&autoSubmitReview=true';
+      // 로그인이 필요한 경우 리뷰 초안 저장
+      saveReviewDraft();
+      alert("로그인이 필요합니다. 로그인 후 작성하던 리뷰를 이어서 작성할 수 있습니다.");
+      
+      // 로그인 페이지로 이동 (리다이렉트 URL 포함)
+      window.location.href = '/mypage?redirect_to=' + encodeURIComponent(window.location.pathname);
       return;
     }
 
@@ -457,7 +324,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
       setShowSuccessModal(true);
       console.log('리뷰 작성 완료:', submitResult.data.message);
       
-      // 리뷰 초안 데이터 삭제
+      // 리뷰 초안 삭제
       localStorage.removeItem('reviewDraft');
 
       // 2초 후 성공 콜백 호출 및 팝업 닫기
@@ -762,7 +629,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
                   value={formData.content}
                   onChange={(e) => {
                     setFormData({ ...formData, content: e.target.value });
-                    // 리뷰 내용 입력 시 자동 저장
+                    // 리뷰 내용 입력 시 자동 저장 (1초 후)
                     setTimeout(() => saveReviewDraft(), 1000);
                   }}
                   placeholder="전시회에 대한 솔직한 후기를 작성해주세요..."
