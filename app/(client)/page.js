@@ -72,29 +72,7 @@ export default function Home() {
     window.scrollTo(0, 0);
   }, []);
 
-  // 로그인 후 리뷰 초안 복원
-  useEffect(() => {
-    const checkReviewDraft = () => {
-      const savedDraft = localStorage.getItem('reviewDraft');
-      if (savedDraft && user) {
-        try {
-          const draft = JSON.parse(savedDraft);
-          // 24시간 이내의 데이터만 복원
-          if (Date.now() - draft.timestamp < 24 * 60 * 60 * 1000) {
-            // 리뷰 팝업 자동 열기
-            setShowReviewModal(true);
-            console.log('로그인 후 리뷰 초안 자동 복원');
-          } else {
-            localStorage.removeItem('reviewDraft');
-          }
-        } catch (error) {
-          console.error('리뷰 초안 확인 오류:', error);
-        }
-      }
-    };
-
-    checkReviewDraft();
-  }, [user]);
+  // 초안 복원 로직 제거
 
   // 티켓 수량 증가
   const increaseTicket = () => {

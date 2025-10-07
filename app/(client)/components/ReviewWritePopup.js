@@ -67,25 +67,12 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
     }
   };
 
-  // 컴포넌트 마운트 시 전시회 목록 가져오기 및 리뷰 초안 복원
+  // 컴포넌트 마운트 시 전시회 목록 가져오기 (초안 관련 기능 제거)
   useEffect(() => {
-    // 로그인 필수 진입 가드: 비로그인 시 즉시 마이페이지로 유도 (임시 초안 저장은 선택)
+    // 로그인 필수 진입 가드: 비로그인 시 즉시 마이페이지로 유도
     if (!user || !user.id) {
-      try {
-        // 필요한 최소 정보만 저장해 복귀 시 팝업 자동 오픈 가능
-        const draft = {
-          exhibition_id: exhibition?.id || "",
-          rating: 0,
-          content: "",
-          proof_image: "",
-          selectedExhibition: exhibition || null,
-          currentStep: 0,
-          timestamp: Date.now(),
-        };
-        localStorage.setItem('reviewDraft', JSON.stringify(draft));
-      } catch {}
       if (typeof window !== 'undefined') {
-        window.location.href = '/mypage?redirect_to=' + encodeURIComponent(window.location.pathname);
+        window.location.href = '/mypage';
       }
       return; // 렌더 차단
     } else {
@@ -94,51 +81,6 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
 
     if (!exhibition) {
       fetchExhibitions();
-    }
-    
-    // 저장된 리뷰 초안 복원
-    const savedDraft = localStorage.getItem('reviewDraft');
-    if (savedDraft) {
-      try {
-        const draft = JSON.parse(savedDraft);
-        // 24시간 이내의 데이터만 복원
-        if (Date.now() - draft.timestamp < 24 * 60 * 60 * 1000) {
-          setFormData({
-            exhibition_id: draft.exhibition_id,
-            rating: draft.rating,
-            content: draft.content,
-            proof_image: draft.proof_image
-          });
-          if (draft.selectedExhibition) {
-            setSelectedExhibition(draft.selectedExhibition);
-          }
-          setCurrentStep(draft.currentStep || 0);
-          if (draft.imagePreview) {
-            setImagePreview(draft.imagePreview);
-            // 데이터URL을 Blob으로 변환해 File처럼 복구 (브라우저 보안상 완전한 원본은 아님)
-            (async () => {
-              try {
-                const res = await fetch(draft.imagePreview);
-                const blob = await res.blob();
-                const restoredFile = new File([blob], `restored_${Date.now()}.png`, { type: blob.type || 'image/png' });
-                setImageFile(restoredFile);
-              } catch (e) {
-                console.log('이미지 복구 실패, 사용자가 다시 선택 필요:', e);
-              }
-            })();
-          }
-          console.log('리뷰 초안 복원 완료:', draft);
-          alert('이전에 작성하던 리뷰를 복원했습니다.');
-          // 복원 후 초안 삭제
-          localStorage.removeItem('reviewDraft');
-        } else {
-          // 오래된 초안 삭제
-          localStorage.removeItem('reviewDraft');
-        }
-      } catch (error) {
-        console.error('리뷰 초안 복원 오류:', error);
-        localStorage.removeItem('reviewDraft');
-      }
     }
   }, [exhibition]);
 
@@ -170,9 +112,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
         setFormData({ ...formData, exhibition_id: selectedExhibition.id });
       }
       setCurrentStep(currentStep + 1);
-      
-      // 단계 진행 시 리뷰 초안 자동 저장
-      setTimeout(() => saveReviewDraft(), 500);
+
     }
   };
 
@@ -186,8 +126,6 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
   // 별점 클릭 (자동으로 다음 단계로 이동)
   const handleRatingClick = (rating) => {
     setFormData({ ...formData, rating });
-    // 별점 선택 후 자동 저장
-    setTimeout(() => saveReviewDraft(), 100);
     // 1단계에서 별점 선택 시 자동으로 다음 단계로 이동
     setTimeout(() => {
       setCurrentStep(2);
@@ -217,8 +155,6 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result);
-      // 이미지 업로드 후 자동 저장
-      setTimeout(() => saveReviewDraft(), 500);
     };
     reader.readAsDataURL(file);
   };
@@ -232,26 +168,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
     }
   };
 
-  // 리뷰 초안 저장 함수
-  const saveReviewDraft = () => {
-    try {
-      const reviewDraft = {
-        exhibition_id: formData.exhibition_id,
-        rating: formData.rating,
-        content: formData.content,
-        proof_image: formData.proof_image,
-        selectedExhibition: selectedExhibition,
-        currentStep: currentStep,
-        customExhibitionData: customExhibitionData,
-        imagePreview: imagePreview,
-        timestamp: Date.now()
-      };
-      localStorage.setItem('reviewDraft', JSON.stringify(reviewDraft));
-      console.log('리뷰 초안 저장 완료');
-    } catch (error) {
-      console.error('리뷰 초안 저장 오류:', error);
-    }
-  };
+  // 초안 저장 기능 제거
 
   // 리뷰 제출
   const handleSubmit = async () => {
@@ -593,7 +510,28 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
                       </button>
                     ))}
                     
-                    {/* 새롭게 등록하기 UI 제거 (요청에 따라 숨김) */}
+                    {/* 새롭게 등록하기 버튼 - 전시회가 있어도 항상 표시 */}
+                    {onCustomReview && (
+                      <div className="pt-4 border-t border-gray-200">
+                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-4 border border-blue-200">
+                          <div className="text-center">
+                            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                            </div>
+                            <h4 className="text-base font-bold text-gray-900 mb-1">전시회가 목록에 없나요?</h4>
+                            <p className="text-xs text-gray-600 mb-3">직접 전시회 정보를 입력하여 리뷰를 작성할 수 있습니다</p>
+                            <button
+                              onClick={onCustomReview}
+                              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow"
+                            >
+                              + 새롭게 등록하기
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 

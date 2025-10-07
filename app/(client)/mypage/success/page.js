@@ -779,7 +779,7 @@ const Success = () => {
               onClick={() => setIsFavoriteOpen(true)}
               className="flex items-center gap-4 p-4 rounded-xl hover:bg-red-50 hover:border-red-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="icon-48 w-12 h-12 bg-gradient-to-br from-red-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
                 <Heart className="w-7 h-7 text-white" />
               </div>
               <div className="text-left">
@@ -793,7 +793,7 @@ const Success = () => {
               onClick={() => setIsOrderOpen(true)}
               className="flex items-center gap-4 p-4 rounded-xl hover:bg-orange-50 hover:border-orange-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="icon-48 w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
                 <Ticket className="w-7 h-7 text-white" />
               </div>
               <div className="text-left">
@@ -807,7 +807,7 @@ const Success = () => {
               onClick={() => setIsReviewOpen(true)}
               className="flex items-center gap-4 p-4 rounded-xl hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="icon-48 w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
                 <MessageCircle className="w-7 h-7 text-white" />
               </div>
               <div className="text-left">
@@ -821,7 +821,7 @@ const Success = () => {
               onClick={() => setIsMessageOpen(true)}
               className="flex items-center gap-4 p-4 rounded-xl hover:bg-green-50 hover:border-green-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="icon-48 w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
                 <MessageCircle className="w-7 h-7 text-white" />
               </div>
               <div className="text-left">
@@ -842,7 +842,7 @@ const Success = () => {
               onClick={() => setIsRewardShopOpen(true)}
               className="flex items-center gap-4 p-4 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="icon-48 w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
                 <ShoppingCart className="w-7 h-7 text-white" />
               </div>
               <div className="text-left">
@@ -856,7 +856,7 @@ const Success = () => {
               onClick={() => setIsRewardBenefitsOpen(true)}
               className="flex items-center gap-4 p-4 rounded-xl hover:bg-yellow-50 hover:border-yellow-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg" style={{minWidth: '48px', minHeight: '48px', maxWidth: '48px', maxHeight: '48px'}}>
+              <div className="icon-48 w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
                 <Gift className="w-7 h-7 text-white" />
               </div>
               <div className="text-left">
@@ -877,7 +877,7 @@ const Success = () => {
               onClick={() => setIsJournalistOpen(true)}
               className="flex items-center gap-4 p-4 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg" style={{minWidth: '48px', minHeight: '48px', maxWidth: '48px', maxHeight: '48px'}}>
+              <div className="icon-48 w-12 h-12 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg">
                 <PenTool className="w-7 h-7 text-white" />
               </div>
               <div className="text-left">
@@ -892,7 +892,7 @@ const Success = () => {
                 onClick={() => setIsMyArtOpen(true)}
                 className="flex items-center gap-4 p-4 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
               >
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg" style={{minWidth: '48px', minHeight: '48px', maxWidth: '48px', maxHeight: '48px'}}>
+                <div className="icon-48 w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
                   <Palette className="w-7 h-7 text-white" />
                 </div>
                 <div className="text-left">
