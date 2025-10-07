@@ -16,7 +16,7 @@ import { FaRegBookmark, FaBookmark } from "react-icons/fa6";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import useBookmarkStore from "./bookmarkStore";
-import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import { useRouter } from "next/navigation";
 import { FaCalendar } from "react-icons/fa6";
 import { FaMoneyBillWaveAlt } from "react-icons/fa";
@@ -59,12 +59,13 @@ const ExhibitionCard = ({ exhibition, index, isBookmarked, toggleBookmark }) => 
         <div className="flex items-center space-x-3">
           {/* 전시회 이미지 */}
           <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-            <Image
+            <SafeImage
               src={exhibition.photo || "/images/noimage.jpg"}
               alt={exhibition.name}
               width={64}
               height={64}
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           </div>
 
