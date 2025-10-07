@@ -24,6 +24,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
   const [exhibitions, setExhibitions] = useState([]);
   const [selectedExhibition, setSelectedExhibition] = useState(exhibition);
   const [loadingExhibitions, setLoadingExhibitions] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // 폼 상태
   const [formData, setFormData] = useState({
@@ -69,6 +70,12 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
 
   // 컴포넌트 마운트 시 전시회 목록 가져오기 (초안 관련 기능 제거)
   useEffect(() => {
+    // 바디 스크롤 잠금 (iOS Safari 포함)
+    const prevOverflow = document.body.style.overflow;
+    const prevHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overscrollBehavior = 'contain';
+    
     // 로그인 필수 진입 가드: 비로그인 시 즉시 마이페이지로 유도
     if (!user || !user.id) {
       if (typeof window !== 'undefined') {
@@ -82,6 +89,11 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
     if (!exhibition) {
       fetchExhibitions();
     }
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.documentElement.style.overscrollBehavior = prevHtmlOverscroll;
+    };
   }, [exhibition]);
 
   // 단계별 진행 가능 여부 체크
@@ -353,10 +365,6 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
 
           {/* 오른쪽: 포인트 + 닫기 */}
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <div className="text-2xl font-bold text-blue-600">500P+</div>
-              <div className="text-xs text-gray-500">리뷰 작성</div>
-            </div>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700"
@@ -442,6 +450,16 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
             {/* 0단계: 전시회 선택 */}
             {currentStep === 0 && (
               <div>
+                {/* 전시회 검색창 */}
+                <div className="mb-3 sticky top-0 bg-white/90 backdrop-blur z-10 border-b border-gray-100 pb-3">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="전시회 이름 또는 갤러리로 검색"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  />
+                </div>
                 {loadingExhibitions ? (
                   <div className="text-center py-8">
                     <Spinner size="lg" />
@@ -461,7 +479,16 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {exhibitions.map((exh) => (
+                    {exhibitions
+                      .filter((exh) => {
+                        if (!searchTerm.trim()) return true;
+                        const q = searchTerm.toLowerCase();
+                        return (
+                          (exh.contents || "").toLowerCase().includes(q) ||
+                          (exh.gallery?.name || exh.naver_gallery_url?.name || "").toLowerCase().includes(q)
+                        );
+                      })
+                      .map((exh) => (
                       <button
                         key={exh.id}
                         onClick={() => {
@@ -515,11 +542,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
                       <div className="pt-4 border-t border-gray-200">
                         <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-4 border border-blue-200">
                           <div className="text-center">
-                            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                              </svg>
-                            </div>
+                            {/* 상단 아이콘 제거 - 중복 혼란 방지 */}
                             <h4 className="text-base font-bold text-gray-900 mb-1">전시회가 목록에 없나요?</h4>
                             <p className="text-xs text-gray-600 mb-3">직접 전시회 정보를 입력하여 리뷰를 작성할 수 있습니다</p>
                             <button

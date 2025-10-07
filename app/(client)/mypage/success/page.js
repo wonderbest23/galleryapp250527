@@ -772,12 +772,12 @@ const Success = () => {
         {/* 주요 기능 그리드 */}
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
           <h3 className="text-lg font-bold text-gray-900 mb-4">주요 기능</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 justify-items-start -ml-2">
             
             {/* 즐겨찾기 */}
             <button
               onClick={() => setIsFavoriteOpen(true)}
-              className="flex items-center gap-4 p-4 rounded-xl hover:bg-red-50 hover:border-red-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+              className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-red-50 hover:border-red-200 border border-transparent transition-all duration-200 hover:-translate-y-1 justify-start"
             >
               <div className="icon-48 w-12 h-12 bg-gradient-to-br from-red-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
                 <Heart className="w-7 h-7 text-white" />
@@ -791,7 +791,7 @@ const Success = () => {
             {/* 나의 예매 */}
             <button 
               onClick={() => setIsOrderOpen(true)}
-              className="flex items-center gap-4 p-4 rounded-xl hover:bg-orange-50 hover:border-orange-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+              className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-orange-50 hover:border-orange-200 border border-transparent transition-all duration-200 hover:-translate-y-1 justify-start"
             >
               <div className="icon-48 w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
                 <Ticket className="w-7 h-7 text-white" />
@@ -805,7 +805,7 @@ const Success = () => {
             {/* 리뷰 */}
             <button
               onClick={() => setIsReviewOpen(true)}
-              className="flex items-center gap-4 p-4 rounded-xl hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+              className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-all duration-200 hover:-translate-y-1 justify-start"
             >
               <div className="icon-48 w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
                 <MessageCircle className="w-7 h-7 text-white" />
@@ -819,7 +819,7 @@ const Success = () => {
             {/* 메시지 */}
             <button
               onClick={() => setIsMessageOpen(true)}
-              className="flex items-center gap-4 p-4 rounded-xl hover:bg-green-50 hover:border-green-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+              className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-green-50 hover:border-green-200 border border-transparent transition-all duration-200 hover:-translate-y-1 justify-start"
             >
               <div className="icon-48 w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
                 <MessageCircle className="w-7 h-7 text-white" />
@@ -835,12 +835,12 @@ const Success = () => {
         {/* 리워드 섹션 */}
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
           <h3 className="text-lg font-bold text-gray-900 mb-4">리워드</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 justify-items-start -ml-2">
             
             {/* 리워드샵 */}
             <button 
               onClick={() => setIsRewardShopOpen(true)}
-              className="flex items-center gap-4 p-4 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+              className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-all duration-200 hover:-translate-y-1 justify-start"
             >
               <div className="icon-48 w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
                 <ShoppingCart className="w-7 h-7 text-white" />
@@ -854,7 +854,7 @@ const Success = () => {
             {/* 리워드 혜택 */}
             <button 
               onClick={() => setIsRewardBenefitsOpen(true)}
-              className="flex items-center gap-4 p-4 rounded-xl hover:bg-yellow-50 hover:border-yellow-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+              className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-yellow-50 hover:border-yellow-200 border border-transparent transition-all duration-200 hover:-translate-y-1 justify-start"
             >
               <div className="icon-48 w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
                 <Gift className="w-7 h-7 text-white" />
@@ -870,12 +870,12 @@ const Success = () => {
         {/* 특별 활동 섹션 */}
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
           <h3 className="text-lg font-bold text-gray-900 mb-4">특별 활동</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 justify-items-start -ml-2">
             
             {/* 기자단 신청 */}
             <button 
               onClick={() => setIsJournalistOpen(true)}
-              className="flex items-center gap-4 p-4 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+              className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-all duration-200 hover:-translate-y-1 justify-start"
             >
               <div className="icon-48 w-12 h-12 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg">
                 <PenTool className="w-7 h-7 text-white" />
@@ -890,7 +890,7 @@ const Success = () => {
             {isArtist && profile?.isArtistApproval && (
               <button
                 onClick={() => setIsMyArtOpen(true)}
-                className="flex items-center gap-4 p-4 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 border border-transparent transition-all duration-200 hover:-translate-y-1"
+                className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 border border-transparent transition-all duration-200 hover:-translate-y-1 justify-start"
               >
                 <div className="icon-48 w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
                   <Palette className="w-7 h-7 text-white" />

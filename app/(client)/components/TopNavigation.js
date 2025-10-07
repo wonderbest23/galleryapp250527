@@ -477,14 +477,15 @@ export default function TopNavigation({ search, setSearch, exhibitions, setExhib
       {/* 상단 네비게이션 바 */}
       <div className="bg-white/95 backdrop-blur-md border-b border-gray-100 sticky top-0 z-20">
         <div className="px-3 py-2">
-          <div className="flex items-center justify-between">
+          {/* 3열 그리드(좌 아이콘/중앙 검색/우 알림). 중앙 영역 안에서만 가변 폭 */}
+          <div className="grid grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-2">
             {/* 홈 버튼 - 좌측 */}
             <Link href="/" className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-all duration-200 group">
               <FiHome className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors" />
             </Link>
 
             {/* 검색바 - 중앙 */}
-            <div className="flex-1 max-w-xl mx-4 relative search-container">
+            <div className="mx-1 relative search-container">
               <div className="relative">
                 <input
                   type="text"
@@ -492,7 +493,7 @@ export default function TopNavigation({ search, setSearch, exhibitions, setExhib
                   value={currentSearch}
                   onChange={(e) => setCurrentSearch(e.target.value)}
                   onFocus={() => currentSearch.trim() && setCurrentShowSearchResults(true)}
-                  className="w-full px-4 py-2 pl-10 pr-4 bg-gray-50 hover:bg-white focus:bg-white rounded-full text-sm border border-transparent hover:border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all duration-200 placeholder-gray-400"
+                  className="w-full max-w-md px-4 py-2 pl-10 pr-4 bg-gray-50 hover:bg-white focus:bg-white rounded-full text-sm border border-transparent hover:border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all duration-200 placeholder-gray-400"
                 />
                 <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               </div>
@@ -552,7 +553,7 @@ export default function TopNavigation({ search, setSearch, exhibitions, setExhib
             </div>
 
             {/* 알림 아이콘 또는 로그인 버튼 - 우측 */}
-            <div className="flex items-center">
+            <div className="flex items-center justify-end">
               {currentUser ? (
                 <div className="relative">
                   <button
