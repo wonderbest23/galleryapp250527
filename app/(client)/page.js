@@ -414,10 +414,7 @@ export default function Home() {
       {/* 하단 네비게이션 */}
       <BottomNavigation />
       
-      {/* 스크롤 상태 표시 */}
-      <div className="fixed top-0 left-0 z-50 bg-blue-500 text-white px-2 py-1 rounded-br-lg text-xs">
-        스크롤: {isScrolled ? 'ON' : 'OFF'}
-      </div>
+      {/* 개발용 스크롤 상태 배지 제거 */}
 
       {/* 플로팅 리뷰쓰기 버튼 */}
       <div className="fixed bottom-20 right-4 z-50">

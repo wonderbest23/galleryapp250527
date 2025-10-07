@@ -590,28 +590,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
                       </button>
                     ))}
                     
-                    {/* 새롭게 등록하기 버튼 - 전시회가 있어도 항상 표시 */}
-                    {onCustomReview && (
-                      <div className="pt-6 border-t border-gray-200">
-                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-200">
-                          <div className="text-center">
-                            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                              </svg>
-                            </div>
-                            <h4 className="text-lg font-bold text-gray-900 mb-2">전시회가 목록에 없나요?</h4>
-                            <p className="text-sm text-gray-600 mb-4">직접 전시회 정보를 입력하여 리뷰를 작성할 수 있습니다</p>
-                            <button
-                              onClick={onCustomReview}
-                              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg"
-                            >
-                              + 새롭게 등록하기
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    {/* 새롭게 등록하기 UI 제거 (요청에 따라 숨김) */}
                   </div>
                 )}
                 

@@ -16,6 +16,7 @@ html, body {
   scrollbar-width: none;  /* Firefox */
   /* 스크롤 위치 초기화 */
   scroll-behavior: auto;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* 페이지 로드 시 스크롤 위치 강제 초기화 */
