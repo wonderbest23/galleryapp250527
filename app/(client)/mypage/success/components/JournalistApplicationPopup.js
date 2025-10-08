@@ -4,15 +4,7 @@ import { useRouter } from "next/navigation";
 import { FaChevronLeft, FaPlus, FaTimes, FaPenFancy, FaPhone, FaUserEdit, FaTags, FaCalendarAlt } from "react-icons/fa";
 import { createClient } from "@/utils/supabase/client";
 import { useUserStore } from "@/stores/userStore";
-import { 
-  Button,
-  Input,
-  Textarea,
-  Checkbox,
-  Select,
-  SelectItem,
-  Spinner
-} from "@heroui/react";
+// @heroui/react import 제거됨 - 모든 컴포넌트를 네이티브 HTML로 변경
 import { motion } from "framer-motion";
 import { PenTool, X } from "lucide-react";
 
@@ -209,10 +201,7 @@ export default function JournalistApplicationPopup({ isOpen, onClose }) {
           <div className="p-6">
             {loading ? (
               <div className="flex justify-center items-center py-16">
-                <div className="text-center">
-                  <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-600">신청 정보를 불러오는 중...</p>
-                </div>
+                <p className="text-gray-600">잠시만 기다려주세요...</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -250,13 +239,13 @@ export default function JournalistApplicationPopup({ isOpen, onClose }) {
                       <FaPhone className="text-blue-600" />
                       연락처 정보
                     </h3>
-                    <Input
-                      label="전화번호"
-                      placeholder="010-0000-0000"
+                    <input
+                      type="tel"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      isRequired
-                      className="mb-4"
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+                      style={{ textAlign: 'left' }}
                     />
                   </div>
 
@@ -266,14 +255,13 @@ export default function JournalistApplicationPopup({ isOpen, onClose }) {
                       <FaUserEdit className="text-green-600" />
                       자기소개
                     </h3>
-                    <Textarea
-                      label="간단한 자기소개를 작성해주세요"
-                      placeholder="아트에 대한 관심사, 경험, 기자단 활동에 대한 의지 등을 자유롭게 작성해주세요."
+                    <textarea
                       value={formData.introduction}
                       onChange={(e) => handleInputChange('introduction', e.target.value)}
-                      isRequired
-                      minRows={4}
-                      maxRows={8}
+                      required
+                      rows={6}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      style={{ textAlign: 'left' }}
                     />
                   </div>
 
@@ -283,17 +271,26 @@ export default function JournalistApplicationPopup({ isOpen, onClose }) {
                       <FaTags className="text-purple-600" />
                       관심 분야 (복수 선택 가능)
                     </h3>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2">
                       {interests_options.map((interest) => (
-                        <Checkbox
+                        <button
                           key={interest}
-                          isSelected={formData.interests.includes(interest)}
-                          onValueChange={() => handleInterestToggle(interest)}
-                          className="text-sm"
+                          type="button"
+                          onClick={() => handleInterestToggle(interest)}
+                          className={`
+                            px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                            ${formData.interests.includes(interest)
+                              ? 'bg-purple-500 text-white shadow-md transform scale-105'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
+                            }
+                          `}
                         >
                           {interest}
-                        </Checkbox>
+                        </button>
                       ))}
+                    </div>
+                    <div className="mt-3 text-xs text-gray-500">
+                      선택된 관심 분야: {formData.interests.length}개
                     </div>
                   </div>
 
@@ -303,36 +300,35 @@ export default function JournalistApplicationPopup({ isOpen, onClose }) {
                       <FaCalendarAlt className="text-orange-600" />
                       전시회 관람 빈도
                     </h3>
-                    <Select
-                      label="평소 전시회 관람 빈도를 선택해주세요"
-                      placeholder="관람 빈도 선택"
-                      selectedKeys={formData.visit_frequency ? [formData.visit_frequency] : []}
-                      onSelectionChange={(keys) => {
-                        const selected = Array.from(keys)[0];
-                        handleInputChange('visit_frequency', selected);
-                      }}
-                      isRequired
+                    <select
+                      value={formData.visit_frequency}
+                      onChange={(e) => handleInputChange('visit_frequency', e.target.value)}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      style={{ textAlign: 'left' }}
                     >
+                      <option value="">평소 전시회 관람 빈도를 선택해주세요</option>
                       {visit_frequency_options.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
+                        <option key={option} value={option}>{option}</option>
                       ))}
-                    </Select>
+                    </select>
                   </div>
 
                   {/* 제출 버튼 */}
                   <div className="flex justify-center pt-6">
-                    <Button
+                    <button
                       type="submit"
-                      color="primary"
-                      size="lg"
-                      isLoading={submitting}
-                      startContent={!submitting && <FaPenFancy />}
-                      className="px-12 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                      disabled={submitting}
+                      className={`
+                        px-12 py-3 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200
+                        ${submitting 
+                          ? 'bg-gray-400 cursor-not-allowed text-white' 
+                          : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700'
+                        }
+                      `}
                     >
-                      {hasApplied ? '신청 수정하기' : '기자단 신청하기'}
-                    </Button>
+                      {submitting ? '처리 중...' : (hasApplied ? '신청 수정하기' : '기자단 신청하기')}
+                    </button>
                   </div>
                 </form>
               </div>

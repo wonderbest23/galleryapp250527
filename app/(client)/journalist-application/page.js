@@ -4,16 +4,7 @@ import { useRouter } from "next/navigation";
 import { FaChevronLeft, FaPlus, FaTimes, FaPenFancy, FaPhone, FaUserEdit, FaTags, FaCalendarAlt } from "react-icons/fa";
 import { createClient } from "@/utils/supabase/client";
 import { useUserStore } from "@/stores/userStore";
-import { 
-  Button,
-  Input,
-  Textarea,
-  Checkbox,
-  Select,
-  SelectItem,
-  Spinner
-} from "@heroui/react";
-import { motion } from "framer-motion";
+import { Spinner } from "@heroui/react";
 
 export default function JournalistApplicationPage() {
   const router = useRouter();
@@ -163,9 +154,12 @@ export default function JournalistApplicationPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">로그인이 필요합니다.</p>
-          <Button color="primary" onPress={() => router.push("/mypage")}>
+          <button
+            onClick={() => router.push("/mypage")}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+          >
             로그인하기
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -237,82 +231,116 @@ export default function JournalistApplicationPage() {
         {/* 신청 폼 */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 연락처 */}
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              연락처 <span className="text-red-500">*</span>
-            </label>
-            <Input
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-2 mb-3">
+              <FaPhone className="text-blue-600" />
+              <label className="text-sm font-semibold text-gray-900">
+                연락처 <span className="text-red-500">*</span>
+              </label>
+            </div>
+            <input
               type="tel"
-              placeholder="010-1234-5678"
               value={formData.phone}
-              onValueChange={(value) => setFormData({ ...formData, phone: value })}
-              isRequired
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           {/* 자기소개 및 지원동기 */}
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              자기소개 및 지원동기 <span className="text-red-500">*</span>
-            </label>
-            <Textarea
-              placeholder="기자단 지원 동기와 본인의 강점을 작성해주세요"
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-2 mb-3">
+              <FaUserEdit className="text-blue-600" />
+              <label className="text-sm font-semibold text-gray-900">
+                자기소개 및 지원동기 <span className="text-red-500">*</span>
+              </label>
+            </div>
+            <textarea
               value={formData.introduction}
-              onValueChange={(value) => setFormData({ ...formData, introduction: value })}
-              minRows={5}
-              isRequired
+              onChange={(e) => setFormData({ ...formData, introduction: e.target.value })}
+              rows={6}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
             />
+            <div className="mt-2 text-xs text-gray-500 text-right">
+              {formData.introduction.length}자
+            </div>
           </div>
 
           {/* 관심 분야 */}
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <label className="block text-sm font-semibold text-gray-900 mb-3">
-              관심 분야 (복수 선택 가능) <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+              <FaTags className="text-blue-600" />
+              <label className="text-sm font-semibold text-gray-900">
+                관심 분야 (복수 선택 가능) <span className="text-red-500">*</span>
+              </label>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
               {interests_options.map((interest) => (
-                <Checkbox
+                <button
                   key={interest}
-                  isSelected={formData.interests.includes(interest)}
-                  onValueChange={() => toggleInterest(interest)}
-                  className="p-2"
+                  type="button"
+                  onClick={() => toggleInterest(interest)}
+                  className={`
+                    px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                    ${formData.interests.includes(interest)
+                      ? 'bg-blue-500 text-white shadow-md transform scale-105'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
+                    }
+                  `}
                 >
                   {interest}
-                </Checkbox>
+                </button>
               ))}
+            </div>
+            <div className="mt-3 text-xs text-gray-500">
+              선택된 관심 분야: {formData.interests.length}개
             </div>
           </div>
 
           {/* 전시회 관람 빈도 */}
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              평소 전시회 관람 빈도 <span className="text-red-500">*</span>
-            </label>
-            <Select
-              placeholder="평소 전시회 관람 빈도를 선택해주세요"
-              selectedKeys={formData.visit_frequency ? new Set([formData.visit_frequency]) : new Set()}
-              onSelectionChange={(keys) => {
-                const value = Array.from(keys)[0];
-                setFormData({ ...formData, visit_frequency: value });
-              }}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-2 mb-3">
+              <FaCalendarAlt className="text-blue-600" />
+              <label className="text-sm font-semibold text-gray-900">
+                평소 전시회 관람 빈도 <span className="text-red-500">*</span>
+              </label>
+            </div>
+            <select
+              value={formData.visit_frequency}
+              onChange={(e) => setFormData({ ...formData, visit_frequency: e.target.value })}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
+              <option value="">평소 전시회 관람 빈도를 선택해주세요</option>
               {visit_frequency_options.map((option) => (
-                <SelectItem key={option}>{option}</SelectItem>
+                <option key={option} value={option}>{option}</option>
               ))}
-            </Select>
+            </select>
           </div>
 
           {/* 제출 버튼 */}
-          <Button
+          <button
             type="submit"
-            color="primary"
-            size="lg"
-            className="w-full"
-            isLoading={submitting}
-            isDisabled={submitting}
+            disabled={submitting}
+            className={`
+              w-full py-4 px-6 rounded-xl font-bold text-lg text-white
+              transition-all duration-200 shadow-lg
+              ${submitting 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl transform hover:-translate-y-0.5'
+              }
+            `}
           >
-            {hasApplied ? "재제출하기" : "신청하기"}
-          </Button>
+            {submitting ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>처리 중...</span>
+              </div>
+            ) : (
+              hasApplied ? "재제출하기" : "신청하기"
+            )}
+          </button>
         </form>
       </div>
     </div>
