@@ -1,23 +1,5 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import {
-  Input,
-  Table,
-  TableHeader,
-  TableBody,
-  TableColumn,
-  TableRow,
-  TableCell,
-  Pagination,
-  Button,
-  addToast,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Progress,
-} from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { createClient } from "@/utils/supabase/client";
 import { debounce } from "lodash";
@@ -340,16 +322,14 @@ export function ExhibitionList({
   return (
     <div className="space-y-4 ExhibitionList">
       <div className="grid grid-cols-4 items-center justify-end gap-4">
-        <Button
-          className="text-white col-span-4 md:col-span-1"
-          color="primary"
-          variant="solid"
-          onPress={handleUploadClick}
-          isLoading={uploading}
+        <button
+          onClick={handleUploadClick}
+          disabled={uploading}
+          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors col-span-4 md:col-span-1"
         >
-          <Icon icon="lucide:upload" className="mr-1" />
+          <Icon icon="lucide:upload" className="w-4 h-4" />
           {uploading ? "업로드 중..." : "전시회 엑셀 업로드"}
-        </Button>
+        </button>
         <input
           type="file"
           ref={fileInputRef}
@@ -357,30 +337,23 @@ export function ExhibitionList({
           className="hidden"
           accept=".xlsx,.xls"
         />
-        <Button
-          className="text-white col-span-4 md:col-span-1"
-          color="primary"
-          variant="solid"
-          onPress={handleExcelDownload}
-          isLoading={uploading}
+        <button
+          onClick={handleExcelDownload}
+          disabled={uploading}
+          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors col-span-4 md:col-span-1"
         >
-          <Icon icon="lucide:download" className="mr-1" />
+          <Icon icon="lucide:download" className="w-4 h-4" />
           {uploading ? "처리 중..." : "전시회 엑셀 다운로드"}
-        </Button>
-        <Button
-          className="text-white col-span-4 md:col-span-1"
-          color="primary"
-          variant="solid"
-          onPress={onCreateExhibition}
+        </button>
+        <button
+          onClick={onCreateExhibition}
+          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors col-span-4 md:col-span-1"
         >
-          <Icon icon="lucide:plus" className="mr-1" />
+          <Icon icon="lucide:plus" className="w-4 h-4" />
           전시회 신규 등록
-        </Button>
-        <Button
-          className="text-white col-span-4 md:col-span-1"
-          color="primary"
-          variant="solid"
-          onPress={() => {
+        </button>
+        <button
+          onClick={() => {
             const link = document.createElement("a");
             link.href = "/sample/exhibitionupload.xlsx";
             link.download = "exhibitionupload.xlsx";
@@ -388,10 +361,11 @@ export function ExhibitionList({
             link.click();
             document.body.removeChild(link);
           }}
+          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors col-span-4 md:col-span-1"
         >
-          <Icon icon="lucide:file-spreadsheet" className="mr-1" />
+          <Icon icon="lucide:file-spreadsheet" className="w-4 h-4" />
           전시회 엑셀 업로드 양식
-        </Button>
+        </button>
       </div>
       {progressVisible && (
         <div className="w-full">
@@ -407,68 +381,84 @@ export function ExhibitionList({
               {Math.round(uploadProgress)}%
             </span>
           </div>
-          <Progress
-            value={uploadProgress}
-            color={getProgressColor()}
-            size="md"
-            showValueLabel={false}
-          />
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className={`h-2 rounded-full transition-all duration-300 ${
+                uploadProgress < 30 ? 'bg-red-500' : 
+                uploadProgress < 70 ? 'bg-yellow-500' : 'bg-green-500'
+              }`}
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
         </div>
       )}
       <div className="flex items-center gap-4 w-full">
-        <Input
-          placeholder="전시회 검색..."
-          value={search}
-          onValueChange={setSearch}
-          startContent={
-            <Icon icon="lucide:search" className="text-default-400" />
-          }
-          className="w-full"
-        />
+        <div className="relative w-full">
+          <Icon icon="lucide:search" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="전시회 검색..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
       </div>
       <div className="overflow-x-auto">
-        <Table
-          classNames={{ wrapper: "p-0" }}
-          className="min-w-[600px] "
-          shadow="none"
-          variant="bordered"
-          aria-label="전시회 목록"
-          selectionMode="single"
-          selectedKeys={selectedKeys}
-          onSelectionChange={handleSelectionChange}
-        >
-          <TableHeader>
-            <TableColumn>제목</TableColumn>
-            <TableColumn>갤러리</TableColumn>
-            <TableColumn>시작일</TableColumn>
-            <TableColumn>종료일</TableColumn>
-            <TableColumn>URL</TableColumn>
-          </TableHeader>
-          <TableBody>
+        <table className="min-w-[600px] w-full border-collapse border border-gray-300">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">제목</th>
+              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">갤러리</th>
+              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">시작일</th>
+              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">종료일</th>
+              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">URL</th>
+            </tr>
+          </thead>
+          <tbody>
             {exhibitions.map((exhibition) => (
-              <TableRow key={exhibition.id}>
-                <TableCell>{exhibition.contents}</TableCell>
-                <TableCell>{exhibition.naver_gallery_url.name}</TableCell>
-                <TableCell>{exhibition.start_date}</TableCell>
-                <TableCell>{exhibition.end_date}</TableCell>
-                <TableCell>
+              <tr 
+                key={exhibition.id} 
+                className="hover:bg-gray-50 cursor-pointer"
+                onClick={() => {
+                  const newKeys = new Set([exhibition.id]);
+                  handleSelectionChange(newKeys);
+                }}
+              >
+                <td className="border border-gray-300 px-4 py-2 text-sm">{exhibition.contents}</td>
+                <td className="border border-gray-300 px-4 py-2 text-sm">{exhibition.naver_gallery_url.name}</td>
+                <td className="border border-gray-300 px-4 py-2 text-sm">{exhibition.start_date}</td>
+                <td className="border border-gray-300 px-4 py-2 text-sm">{exhibition.end_date}</td>
+                <td className="border border-gray-300 px-4 py-2 text-sm">
                   <Link className="text-blue-500 underline" href={exhibition.naver_gallery_url.url} target="_blank">
                     {exhibition.naver_gallery_url.url}
                   </Link>
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             ))}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
       <div className="flex justify-center w-full">
-        <Pagination
-          page={page}
-          total={total}
-          initialPage={1}
-          onChange={handlePageChange}
-          showControls
-        />
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 1}
+            className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            이전
+          </button>
+          <span className="px-3 py-2 text-sm text-gray-700">
+            {page} / {total}
+          </span>
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page >= total}
+            className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            다음
+          </button>
+        </div>
       </div>
     </div>
   );

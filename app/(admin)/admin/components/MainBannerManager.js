@@ -1,17 +1,7 @@
 import React from "react";
-import {
-  Button,
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  Image,
-  Spinner,
-} from "@heroui/react";
 import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
 import compressToWebp from "@/utils/compressImage";
-import { addToast } from "@heroui/react";
 
 export default function MainBannerManager() {
   const supabase = createClient();
@@ -27,11 +17,7 @@ export default function MainBannerManager() {
         const { data, error } = await supabase.from("banner").select("*");
         if (error) {
           console.error("배너 데이터 가져오기 오류:", error);
-          addToast({
-            title: "로드 실패",
-            description: "배너 데이터를 불러오는 중 오류가 발생했습니다.",
-            variant: "error",
-          });
+          alert("배너 데이터를 불러오는 중 오류가 발생했습니다.");
         } else {
           // 데이터가 없으면 기본 배너 객체 생성
           if (data.length === 0) {
@@ -76,11 +62,7 @@ export default function MainBannerManager() {
 
       if (uploadError) {
         console.log("배너 이미지 업로드 오류:", uploadError);
-        addToast({
-          title: "업로드 실패",
-          description: "배너 이미지를 업로드하는 중 오류가 발생했습니다.",
-          color: "danger",
-        });
+        alert("배너 이미지를 업로드하는 중 오류가 발생했습니다.");
         return;
       }
 
@@ -96,18 +78,10 @@ export default function MainBannerManager() {
         )
       );
 
-      addToast({
-        title: "업로드 완료",
-        description: "배너 이미지가 성공적으로 업로드되었습니다.",
-        color: "success",
-      });
+      alert("배너 이미지가 성공적으로 업로드되었습니다.");
     } catch (err) {
       console.log("배너 이미지 업로드 예외:", err);
-      addToast({
-        title: "업로드 실패",
-        description: "배너 이미지를 업로드하는 중 오류가 발생했습니다.",
-        color: "danger",
-      });
+      alert("배너 이미지를 업로드하는 중 오류가 발생했습니다.");
     } finally {
       setUploadingId(null);
     }
@@ -141,112 +115,104 @@ export default function MainBannerManager() {
 
       if (error) {
         console.error("배너 저장 오류:", error);
-        addToast({
-          title: "저장 실패",
-          description: "배너 저장 중 오류가 발생했습니다.",
-          color: "danger",
-        });
+        alert("배너 저장 중 오류가 발생했습니다.");
       } else {
         console.log("배너 저장 성공:", data);
-        addToast({
-          title: "저장 완료",
-          description: "메인 배너가 성공적으로 저장되었습니다.",
-          color: "success",
-        });
+        alert("메인 배너가 성공적으로 저장되었습니다.");
         setBanners(data);
       }
     } catch (error) {
       console.error("배너 저장 중 예외 발생:", error);
-      addToast({
-        title: "저장 실패",
-        description: "배너 저장 중 오류가 발생했습니다.",
-        color: "danger",
-      });
+      alert("배너 저장 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Card
-      shadow="sm"
-      radius="lg"
-      className="max-w-full col-span-2 md:col-span-1"
-    >
-      <CardHeader className="flex gap-3">
-        <div className="flex flex-col">
-          <p className="text-xl font-semibold">메인 배너 관리</p>
-          <p className="text-small text-default-500">
-            메인 화면에 표시될 배너를 관리합니다
-          </p>
-        </div>
-      </CardHeader>
-      <CardBody>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 max-w-full col-span-2 md:col-span-1">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200">
+        <h2 className="text-xl font-semibold text-gray-900">메인 배너 관리</h2>
+        <p className="text-sm text-gray-500 mt-1">
+          메인 화면에 표시될 배너를 관리합니다
+        </p>
+      </div>
+
+      {/* Body */}
+      <div className="p-6">
         {isLoading ? (
           <div className="flex justify-center py-8">
-            <Spinner size="lg" />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         ) : (
           <div className="space-y-6">
             {banners.length > 0 ? (
               banners.map((banner, index) => (
-                <div key={banner.id} className="p-4 border rounded-lg space-y-3">
+                <div key={banner.id} className="p-4 border border-gray-200 rounded-lg space-y-4 bg-gray-50">
                   <div className="flex justify-between items-center">
-                    <label className="font-medium">
+                    <label className="font-medium text-gray-900">
                       메인 배너 {index + 1}
                     </label>
-
                   </div>
                   
                   {/* 파일 업로드 인풋 */}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleBannerUpload(e, banner.id)}
-                    className="file-input file-input-bordered w-full"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      이미지 업로드
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleBannerUpload(e, banner.id)}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-gray-300 rounded-md"
+                    />
+                  </div>
 
-                  {/* 업로드 중 스피너 */}
+                  {/* 업로드 중 표시 */}
                   {uploadingId === banner.id && (
-                    <div className="flex items-center gap-2 text-sm text-default-500">
-                      <Spinner size="sm" /> 이미지 업로드 중...
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      이미지 업로드 중...
                     </div>
                   )}
 
                   {/* 미리보기 */}
                   {banner.url && (
-                    <Image
-                      src={banner.url}
-                      alt={`메인 배너 ${index + 1}`}
-                      width={300}
-                      height={150}
-                      className="object-contain rounded border"
-                    />
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-gray-700 mb-2">미리보기</p>
+                      <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+                        <img
+                          src={banner.url}
+                          alt={`메인 배너 ${index + 1}`}
+                          className="w-full h-auto object-contain max-h-64"
+                        />
+                      </div>
+                    </div>
                   )}
-
-
                 </div>
               ))
             ) : (
-              <p>등록된 배너가 없습니다.</p>
+              <p className="text-center text-gray-500 py-8">등록된 배너가 없습니다.</p>
             )}
-            
-
           </div>
         )}
-      </CardBody>
-      <CardFooter>
-        <Button 
-          onPress={onSave} 
-          color="primary" 
-          radius="sm" 
-          className="w-full"
-          isLoading={isLoading}
-          isDisabled={isLoading}
+      </div>
+
+      {/* Footer */}
+      <div className="p-6 border-t border-gray-200">
+        <button 
+          onClick={onSave} 
+          disabled={isLoading}
+          className={`w-full px-4 py-3 rounded-md text-white font-medium transition-colors ${
+            isLoading 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
+          }`}
         >
-          메인 배너 저장하기
-        </Button>
-      </CardFooter>
-    </Card>
+          {isLoading ? '저장 중...' : '메인 배너 저장하기'}
+        </button>
+      </div>
+    </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { Button, Select, SelectItem } from "@heroui/react";
 
 export default function DBManagePage() {
   const [users, setUsers] = useState([]);
@@ -72,35 +71,48 @@ export default function DBManagePage() {
     <div className="max-w-3xl mx-auto p-8">
       <h1 className="text-2xl font-bold mb-4">DB관리 - 전체 회원 정보</h1>
       <div className="flex items-center mb-2 gap-2">
-        <Button size="sm" color="primary" onClick={() => setShowAlarmUI(v => !v)}>
+        <button 
+          onClick={() => setShowAlarmUI(v => !v)}
+          className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+        >
           전시회 알람 발송
-        </Button>
-        <Button size="sm" color="default" onClick={()=>setViewGallery(v=>!v)}>
+        </button>
+        <button 
+          onClick={()=>setViewGallery(v=>!v)}
+          className="px-3 py-1 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm"
+        >
           {viewGallery ? '일반 고객 보기' : '갤러리 계정 보기'}
-        </Button>
-        <Button size="sm" color="default" onClick={handleDeselectAll}>선택 해제</Button>
+        </button>
+        <button 
+          onClick={handleDeselectAll}
+          className="px-3 py-1 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm"
+        >
+          선택 해제
+        </button>
         <span className="text-sm text-gray-500">선택된 회원: {selectedIds.length}명</span>
       </div>
       {showAlarmUI && (
         <div className="flex items-center gap-2 mb-4">
-          <Select
-            label="전시회 선택"
-            selectedKeys={selectedExhibition ? new Set([String(selectedExhibition)]) : new Set([])}
-            onSelectionChange={keys => setSelectedExhibition(String(keys.values().next().value) || "")}
-            renderValue={() => {
-              const e = exhibitions.find(e => String(e.id) === String(selectedExhibition));
-              return e ? `${e.contents} (${e.id})` : "전시회를 선택하세요";
-            }}
-            className="min-w-[200px]"
+          <div className="min-w-[200px]">
+            <label className="block text-sm font-medium text-gray-700 mb-1">전시회 선택</label>
+            <select
+              value={selectedExhibition || ""}
+              onChange={(e) => setSelectedExhibition(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">전시회를 선택하세요</option>
+              {exhibitions.map(e => (
+                <option key={e.id} value={e.id}>{e.contents} ({e.id})</option>
+              ))}
+            </select>
+          </div>
+          <button 
+            disabled={!selectedExhibition || selectedIds.length === 0} 
+            onClick={handleSendAlarm}
+            className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
           >
-            <SelectItem key="" value="">전시회를 선택하세요</SelectItem>
-            {exhibitions.map(e => (
-              <SelectItem key={e.id} value={e.id}>{e.contents} ({e.id})</SelectItem>
-            ))}
-          </Select>
-          <Button size="sm" color="success" disabled={!selectedExhibition || selectedIds.length === 0} onClick={handleSendAlarm}>
             발송
-          </Button>
+          </button>
         </div>
       )}
       <div className="overflow-x-auto">

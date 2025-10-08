@@ -1,27 +1,5 @@
 'use client';
 import { useState, useEffect } from 'react';
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  CardFooter,
-  Button,
-  Input,
-  Select,
-  SelectItem,
-  Checkbox,
-  Switch,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Chip,
-  Tabs,
-  Tab,
-  Spinner
-} from '@heroui/react';
 import { Icon } from '@iconify/react';
 
 export default function AiManagerPage() {
@@ -560,38 +538,59 @@ export default function AiManagerPage() {
         </div>
 
         {/* 탭 네비게이션 */}
-        <Tabs 
-          selectedKey={activeTab} 
-          onSelectionChange={setActiveTab}
-          className="w-full"
-        >
-          <Tab key="scrape" title="스크랩하기">
+        <div className="w-full">
+          <div className="flex border-b border-gray-200 mb-6">
+            <button
+              onClick={() => setActiveTab('scrape')}
+              className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+                activeTab === 'scrape'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              스크랩하기
+            </button>
+            <button
+              onClick={() => setActiveTab('manage')}
+              className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+                activeTab === 'manage'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              데이터 관리
+            </button>
+          </div>
+          
+          {activeTab === 'scrape' && (
             <div className="space-y-6">
               {/* 사이트 선택 카드들 */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {sites.map((site) => (
-                  <Card
+                  <div
                     key={site.key}
-                    isPressable
-                    isSelected={selectedSite === site.key}
-                    onPress={() => setSelectedSite(site.key)}
-                    className="p-4"
+                    onClick={() => setSelectedSite(site.key)}
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      selectedSite === site.key
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   >
-                    <CardBody className="text-center">
+                    <div className="text-center">
                       <h3 className="text-lg font-semibold">{site.name}</h3>
                       <p className="text-sm text-gray-600">{site.description}</p>
-                    </CardBody>
-                  </Card>
+                    </div>
+                  </div>
                 ))}
               </div>
 
               {/* 선택된 사이트 설정 */}
               {currentSite && (
-                <Card className="p-6">
-                  <CardHeader>
+                <div className="bg-white border rounded-lg p-6">
+                  <div className="mb-4">
                     <h3 className="text-xl font-semibold">{currentSite.name} 설정</h3>
-                  </CardHeader>
-                  <CardBody className="space-y-4">
+                  </div>
+                  <div className="space-y-4">
                     {/* Visit Seoul 설정 */}
                     {selectedSite === 'visitSeoul' && (
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -1,20 +1,5 @@
 "use client";
 import React from "react";
-import { 
-  Input, 
-  Button, 
-  Textarea, 
-  Checkbox, 
-  addToast, 
-  Select, 
-  SelectItem,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure 
-} from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -45,7 +30,7 @@ export function RewardShopDetail({
   const fileInputRef = useRef(null);
 
   // 삭제 확인 모달
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     if (item && prevItemIdRef.current !== item.id) {
@@ -69,21 +54,13 @@ export function RewardShopDetail({
 
     // 파일 유효성 검사
     if (!file.type.includes("image")) {
-      addToast({
-        title: "이미지 업로드 오류",
-        description: "이미지 파일만 업로드 가능합니다.",
-        color: "danger",
-      });
+      alert("이미지 파일만 업로드 가능합니다.");
       return;
     }
 
     // 파일 크기 체크 (5MB 제한)
     if (file.size > 5 * 1024 * 1024) {
-      addToast({
-        title: "이미지 업로드 오류",
-        description: "파일 크기가 5MB를 초과합니다.",
-        color: "danger",
-      });
+      alert("파일 크기가 5MB를 초과합니다.");
       return;
     }
 
@@ -123,11 +100,7 @@ export function RewardShopDetail({
       return publicUrl;
     } catch (error) {
       console.log("이미지 업로드 오류:", error);
-      addToast({
-        title: "이미지 업로드 오류",
-        description: error.message,
-        color: "danger",
-      });
+      alert(`이미지 업로드 오류: ${error.message}`);
       return null;
     } finally {
       setIsUploading(false);
@@ -138,20 +111,12 @@ export function RewardShopDetail({
   const handleSave = async () => {
     // 필수 필드 검증
     if (!editedItem.title?.trim()) {
-      addToast({
-        title: "입력 오류",
-        description: "상품명을 입력해주세요.",
-        color: "danger",
-      });
+      alert("상품명을 입력해주세요.");
       return;
     }
 
     if (!editedItem.points_required || editedItem.points_required <= 0) {
-      addToast({
-        title: "입력 오류",
-        description: "필요 포인트를 입력해주세요.",
-        color: "danger",
-      });
+      alert("필요 포인트를 입력해주세요.");
       return;
     }
 
@@ -182,11 +147,7 @@ export function RewardShopDetail({
         if (error) throw error;
         result = data;
 
-        addToast({
-          title: "등록 완료",
-          description: "상품이 성공적으로 등록되었습니다.",
-          color: "success",
-        });
+        alert("상품이 성공적으로 등록되었습니다.");
       } else {
         // 업데이트
         itemData.updated_at = new Date().toISOString();
@@ -201,11 +162,7 @@ export function RewardShopDetail({
         if (error) throw error;
         result = data;
 
-        addToast({
-          title: "저장 완료",
-          description: "상품이 성공적으로 수정되었습니다.",
-          color: "success",
-        });
+        alert("상품이 성공적으로 수정되었습니다.");
       }
 
       // 상품 목록 새로고침
@@ -218,11 +175,7 @@ export function RewardShopDetail({
 
     } catch (error) {
       console.log("저장 오류:", error);
-      addToast({
-        title: "저장 실패",
-        description: error.message,
-        color: "danger",
-      });
+      alert(`저장 실패: ${error.message}`);
     }
   };
 
@@ -238,11 +191,7 @@ export function RewardShopDetail({
 
       if (error) throw error;
 
-      addToast({
-        title: "삭제 완료",
-        description: "상품이 삭제되었습니다.",
-        color: "success",
-      });
+      alert("상품이 삭제되었습니다.");
 
       // 목록 새로고침
       setRefreshToggle(refreshToggle + 1);
@@ -251,14 +200,10 @@ export function RewardShopDetail({
       setSelectedItem(null);
       setSelectedKeys(new Set([]));
       
-      onClose();
+      setIsDeleteModalOpen(false);
     } catch (error) {
       console.log("삭제 오류:", error);
-      addToast({
-        title: "삭제 실패",
-        description: error.message,
-        color: "danger",
-      });
+      alert(`삭제 실패: ${error.message}`);
     }
   };
 
@@ -279,43 +224,53 @@ export function RewardShopDetail({
           {isNewItem ? "신규 상품 등록" : "상품 정보"}
         </h2>
         {!isNewItem && (
-          <Button
-            color="danger"
-            variant="flat"
-            startContent={<Icon icon="mdi:delete" />}
-            onPress={onOpen}
+          <button
+            onClick={() => setIsDeleteModalOpen(true)}
+            className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
           >
+            <Icon icon="mdi:delete" />
             삭제
-          </Button>
+          </button>
         )}
       </div>
 
       <div className="space-y-4">
         {/* 상품명 */}
-        <Input
-          label="상품명"
-          placeholder="상품명을 입력하세요"
-          value={editedItem.title || ""}
-          onValueChange={(value) =>
-            setEditedItem({ ...editedItem, title: value })
-          }
-          isRequired
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            상품명 <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            placeholder="상품명을 입력하세요"
+            value={editedItem.title || ""}
+            onChange={(e) =>
+              setEditedItem({ ...editedItem, title: e.target.value })
+            }
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            required
+          />
+        </div>
 
         {/* 설명 */}
-        <Textarea
-          label="설명"
-          placeholder="상품 설명을 입력하세요"
-          value={editedItem.description || ""}
-          onValueChange={(value) =>
-            setEditedItem({ ...editedItem, description: value })
-          }
-          minRows={3}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            설명
+          </label>
+          <textarea
+            placeholder="상품 설명을 입력하세요"
+            value={editedItem.description || ""}
+            onChange={(e) =>
+              setEditedItem({ ...editedItem, description: e.target.value })
+            }
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+          />
+        </div>
 
         {/* 이미지 업로드 */}
         <div>
-          <label className="block text-sm font-medium mb-2">상품 이미지</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">상품 이미지</label>
           <input
             type="file"
             accept="image/*"
@@ -323,15 +278,14 @@ export function RewardShopDetail({
             ref={fileInputRef}
             className="hidden"
           />
-          <Button
-            color="default"
-            variant="bordered"
-            startContent={<Icon icon="mdi:image-plus" />}
-            onPress={() => fileInputRef.current?.click()}
-            className="mb-2"
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors mb-2"
           >
+            <Icon icon="mdi:image-plus" />
             이미지 선택
-          </Button>
+          </button>
           {imagePreview && (
             <div className="mt-2 relative w-40 h-40 border rounded-lg overflow-hidden">
               <Image
@@ -345,88 +299,113 @@ export function RewardShopDetail({
         </div>
 
         {/* 필요 포인트 */}
-        <Input
-          type="number"
-          label="필요 포인트"
-          placeholder="0"
-          value={editedItem.points_required?.toString() || ""}
-          onValueChange={(value) =>
-            setEditedItem({ ...editedItem, points_required: parseInt(value) || 0 })
-          }
-          endContent={<span className="text-gray-500">P</span>}
-          isRequired
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            필요 포인트 <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              placeholder="0"
+              value={editedItem.points_required?.toString() || ""}
+              onChange={(e) =>
+                setEditedItem({ ...editedItem, points_required: parseInt(e.target.value) || 0 })
+              }
+              className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">P</span>
+          </div>
+        </div>
 
         {/* 재고 */}
-        <Input
-          type="number"
-          label="재고"
-          placeholder="0"
-          value={editedItem.stock?.toString() || ""}
-          onValueChange={(value) =>
-            setEditedItem({ ...editedItem, stock: parseInt(value) || 0 })
-          }
-          endContent={<span className="text-gray-500">개</span>}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">재고</label>
+          <div className="relative">
+            <input
+              type="number"
+              placeholder="0"
+              value={editedItem.stock?.toString() || ""}
+              onChange={(e) =>
+                setEditedItem({ ...editedItem, stock: parseInt(e.target.value) || 0 })
+              }
+              className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">개</span>
+          </div>
+        </div>
 
         {/* 카테고리 */}
-        <Select
-          label="카테고리"
-          selectedKeys={new Set([editedItem.category || "general"])}
-          onSelectionChange={(keys) => {
-            const category = Array.from(keys)[0];
-            setEditedItem({ ...editedItem, category });
-          }}
-        >
-          <SelectItem key="general">일반</SelectItem>
-          <SelectItem key="ticket">티켓</SelectItem>
-          <SelectItem key="goods">굿즈</SelectItem>
-          <SelectItem key="special">특별</SelectItem>
-        </Select>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">카테고리</label>
+          <select
+            value={editedItem.category || "general"}
+            onChange={(e) =>
+              setEditedItem({ ...editedItem, category: e.target.value })
+            }
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="general">일반</option>
+            <option value="ticket">티켓</option>
+            <option value="goods">굿즈</option>
+            <option value="special">특별</option>
+          </select>
+        </div>
 
         {/* 활성 상태 */}
-        <Checkbox
-          isSelected={editedItem.is_active !== false}
-          onValueChange={(checked) =>
-            setEditedItem({ ...editedItem, is_active: checked })
-          }
-        >
-          활성 상태 (체크하면 리워드샵에 노출됩니다)
-        </Checkbox>
+        <div className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            id="is_active"
+            checked={editedItem.is_active !== false}
+            onChange={(e) =>
+              setEditedItem({ ...editedItem, is_active: e.target.checked })
+            }
+            className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <label htmlFor="is_active" className="text-sm font-medium text-gray-700">
+            활성 상태 (체크하면 리워드샵에 노출됩니다)
+          </label>
+        </div>
 
         {/* 저장 버튼 */}
         <div className="flex gap-2 pt-4">
-          <Button
-            color="primary"
-            className="flex-1"
-            onPress={handleSave}
-            isLoading={isUploading}
+          <button
+            onClick={handleSave}
+            disabled={isUploading}
+            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isNewItem ? "등록" : "저장"}
-          </Button>
+            {isUploading ? "처리 중..." : (isNewItem ? "등록" : "저장")}
+          </button>
         </div>
       </div>
 
       {/* 삭제 확인 모달 */}
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalContent>
-          <ModalHeader>상품 삭제</ModalHeader>
-          <ModalBody>
-            <p>정말로 이 상품을 삭제하시겠습니까?</p>
-            <p className="text-sm text-gray-500 mt-2">
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">상품 삭제</h3>
+            <p className="text-gray-700 mb-2">정말로 이 상품을 삭제하시겠습니까?</p>
+            <p className="text-sm text-gray-500 mb-6">
               이 작업은 되돌릴 수 없습니다.
             </p>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="light" onPress={onClose}>
-              취소
-            </Button>
-            <Button color="danger" onPress={handleDelete}>
-              삭제
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
