@@ -233,8 +233,7 @@ async function validateImageAdvanced(imageUrl: string) {
     }
 
     // 6. 파일명 패턴 분석
-    const filename = imageUrl.split('/').pop()?.toLowerCase() || '';
-    details.filename = filename;
+    // filename은 이미 위에서 선언됨
     
     // 워터마크 키워드
     if (filename.includes('watermark') || filename.includes('sample') || filename.includes('preview')) {
