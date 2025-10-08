@@ -1016,6 +1016,21 @@ const Success = () => {
                 <ChevronRight className="w-4 h-4 text-gray-400" />
               </Link>
             )}
+            
+            {/* 로그아웃 */}
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-red-50 hover:border-red-200 border border-transparent transition-all duration-200"
+            >
+              <div className="w-10 h-10 bg-gradient-to-br from-red-400 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                <FiLogOut className="w-5 h-5 text-white" />
+              </div>
+              <div className="text-left flex-1">
+                <div className="text-gray-900 font-semibold whitespace-nowrap">로그아웃</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">계정에서 로그아웃</div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </button>
           </div>
         </div>
         
