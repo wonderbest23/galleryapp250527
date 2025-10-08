@@ -562,21 +562,30 @@ export default function TopNavigation({ search, setSearch, exhibitions, setExhib
 
             {/* 알림 아이콘 또는 로그인 버튼 - 우측 */}
             <div className="flex items-center justify-end">
-              {currentUser ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setNotificationBarOpen(true)}
-                    className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-all duration-200 group relative"
-                  >
-                    <FiBell className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors" />
-                    {unreadCount > 0 && (
-                      <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center font-bold shadow-sm">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </div>
-                    )}
-                  </button>
-                </div>
-              ) : (
+              {/* 알림 아이콘 - 로그인/비로그인 모두 표시 */}
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    if (currentUser) {
+                      setNotificationBarOpen(true);
+                    } else {
+                      // 비로그인 시 로그인 페이지로 이동
+                      window.location.href = '/mypage';
+                    }
+                  }}
+                  className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-all duration-200 group relative"
+                >
+                  <FiBell className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors" />
+                  {currentUser && unreadCount > 0 && (
+                    <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center font-bold shadow-sm">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </div>
+                  )}
+                </button>
+              </div>
+              
+              {/* 로그인 버튼 - 비로그인 시에만 표시 */}
+              {!currentUser && (
                 <Link href="/mypage">
                   <button className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-all duration-200">
                     로그인

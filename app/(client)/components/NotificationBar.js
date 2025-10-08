@@ -494,21 +494,9 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       // DB에 읽음 상태 저장
       await markNotificationAsRead(notification);
       
-      // 로컬 상태 갱신: 읽음으로 전환
-      setNotifications(prev => {
-        const next = prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n);
-        if (filterType === 'unread') {
-          return next.filter(n => !n.is_read);
-        }
-        return next;
-      });
-      setFilteredNotifications(prev => {
-        const next = prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n);
-        if (filterType === 'unread') {
-          return next.filter(n => !n.is_read);
-        }
-        return next;
-      });
+      // 로컬 상태 갱신: 알림을 목록에서 제거 (삭제)
+      setNotifications(prev => prev.filter(n => n.id !== notification.id));
+      setFilteredNotifications(prev => prev.filter(n => n.id !== notification.id));
       
       if (notification.link_url) {
         window.location.href = notification.link_url;
@@ -518,18 +506,20 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       // 상위에서 뱃지/상태 갱신 필요 시 콜백
       if (typeof onRead === 'function') onRead(notification);
     } catch (error) {
-      console.log('알림 읽음 처리 오류:', error);
+      console.log('알림 삭제 처리 오류:', error);
     }
   };
 
-  // 전체 확인(읽지 않음 모두 읽음 처리 후 비우기)
+  // 전체 확인(모든 알림 삭제)
   const handleMarkAllRead = async () => {
     try {
       const unread = notifications.filter(n => !n.is_read);
       await Promise.all(unread.map(n => markNotificationAsRead(n)));
-      const allRead = notifications.map(n => ({ ...n, is_read: true }));
-      setNotifications(filterType === 'unread' ? [] : allRead);
-      setFilteredNotifications(filterType === 'unread' ? [] : allRead);
+      
+      // 모든 알림을 목록에서 제거 (삭제)
+      setNotifications([]);
+      setFilteredNotifications([]);
+      
       if (typeof onRead === 'function') {
         onRead({ id: '__all__', type: 'all_read' });
       }
@@ -747,104 +737,58 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
                   ))}
                 </div>
 
-                {/* 알림 목록 */}
+                {/* 알림 목록 - 한 줄 디자인 */}
                 {filteredNotifications.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     {filteredNotifications.map((notification, index) => (
                       <motion.div
                         key={notification.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2, delay: index * 0.05 }}
+                        className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-200 hover:shadow-md ${getNotificationColor(notification.type)} ${
+                          notification.is_read ? 'opacity-70' : ''
+                        }`}
                       >
-                        <div 
-                          className={`bg-white rounded-2xl border shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden ${getNotificationColor(notification.type)}`}
-                        >
-                          <div className="p-6">
-                            {/* 알림 헤더 */}
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
-                                  {getNotificationIcon(notification.type)}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="text-lg font-bold text-gray-900 line-clamp-2">
-                                      {notification.title}
-                                    </h3>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getNotificationColor(notification.type)}`}>
-                                      {getNotificationTypeLabel(notification.type)}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                                    <div className="flex items-center gap-1">
-                                      <Calendar className="w-4 h-4" />
-                                      <span>{getTimeAgo(notification.created_at)}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* 읽지 않은 알림 표시 */}
+                        {/* 왼쪽: 아이콘 + 내용 */}
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+                            {getNotificationIcon(notification.type)}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="text-sm font-semibold text-gray-900 truncate">
+                                {notification.title}
+                              </h4>
                               {!notification.is_read && (
-                                <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                                <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
                               )}
                             </div>
-
-                            {/* 알림 내용 */}
-                            <div className="mb-4">
-                              <p className="text-gray-700 leading-relaxed line-clamp-3">
-                                {notification.message}
-                              </p>
+                            <p className="text-xs text-gray-600 truncate">
+                              {notification.message}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-gray-500">
+                                {getTimeAgo(notification.created_at)}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getNotificationColor(notification.type)}`}>
+                                {getNotificationTypeLabel(notification.type)}
+                              </span>
                             </div>
-
-                            {/* 갤러리 정보 (공지사항인 경우) */}
-                            {notification.type === "announcement" && notification.gallery && (
-                              <div className="mb-4">
-                                <div className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-xs font-medium inline-block">
-                                  {notification.gallery.name}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* 알림 이미지 (공지사항인 경우) */}
-                            {notification.type === "announcement" && notification.image && (
-                              <div className="mb-4">
-                                <div className="relative w-full h-48 bg-gray-100 rounded-xl overflow-hidden">
-                                  <img
-                                    src={notification.image}
-                                    alt={notification.title}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      e.target.style.display = 'none';
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            )}
-
-                            {/* 확인 버튼 */}
-                            <div className="flex justify-end">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleNotificationClick(notification);
-                                }}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                                확인
-                              </button>
-                            </div>
-
-                            {/* 포인트 알림 상세 정보 */}
-                            {["point_approved", "point_rejected", "point_re_review"].includes(notification.type) && notification.details && (
-                              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                                <p className="text-sm text-gray-700 whitespace-pre-wrap">{notification.details}</p>
-                              </div>
-                            )}
                           </div>
                         </div>
+
+                        {/* 오른쪽: 확인 버튼 */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNotificationClick(notification);
+                          }}
+                          className="ml-3 px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition-colors flex-shrink-0"
+                        >
+                          확인
+                        </button>
                       </motion.div>
                     ))}
                   </div>

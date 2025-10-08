@@ -319,6 +319,8 @@ function CommunityPageContent() {
   const [showComments, setShowComments] = useState({});
   const [commentText, setCommentText] = useState({});
   const [submittingComment, setSubmittingComment] = useState({});
+  const [postComments, setPostComments] = useState({}); // 각 게시글의 댓글 목록
+  const [replyTo, setReplyTo] = useState({}); // 대댓글 대상 댓글 ID
   
   // 광고 배너 상태
   const [adBanner, setAdBanner] = useState(null);
@@ -498,10 +500,34 @@ function CommunityPageContent() {
         return;
       }
 
-      // profiles 정보를 별도로 가져와서 병합
+      // 각 게시글의 댓글 수 계산
       if (data && data.length > 0) {
+        const postIds = data.map(post => post.id);
+        const { data: commentCounts, error: commentError } = await supabase
+          .from('community_comments')
+          .select('post_id')
+          .in('post_id', postIds);
+
+        if (!commentError && commentCounts) {
+          // post_id별 댓글 수 계산
+          const commentCountMap = {};
+          commentCounts.forEach(comment => {
+            commentCountMap[comment.post_id] = (commentCountMap[comment.post_id] || 0) + 1;
+          });
+
+          // 게시글에 댓글 수 추가
+          data.forEach(post => {
+            post.comments_count = commentCountMap[post.id] || 0;
+          });
+        }
+      }
+
+      // 사용자 정보 및 좋아요 상태 가져오기
+      if (data && data.length > 0) {
+        const { data: { user } } = await supabase.auth.getUser();
         const userIds = [...new Set(data.map(post => post.user_id).filter(id => id))];
         
+        // profiles 정보 가져오기
         if (userIds.length > 0) {
           const { data: profiles, error: profilesError } = await supabase
             .from('profiles')
@@ -514,10 +540,28 @@ function CommunityPageContent() {
               profilesMap[profile.id] = profile;
             });
             
-            // 게시글에 profiles 정보 병합
+            // 사용자의 좋아요 상태 가져오기
+            let userLikes = {};
+            if (user) {
+              const postIds = data.map(post => post.id);
+              const { data: likes, error: likesError } = await supabase
+                .from('community_likes')
+                .select('post_id')
+                .eq('user_id', user.id)
+                .in('post_id', postIds);
+              
+              if (!likesError && likes) {
+                likes.forEach(like => {
+                  userLikes[like.post_id] = true;
+                });
+              }
+            }
+            
+            // 게시글에 profiles 정보 및 좋아요 상태 병합
             const postsWithProfiles = data.map(post => ({
               ...post,
-              profiles: post.user_id ? profilesMap[post.user_id] : null
+              profiles: post.user_id ? profilesMap[post.user_id] : null,
+              user_liked: userLikes[post.id] || false
             }));
             
             console.log('조회된 게시글:', postsWithProfiles.length, '개');
@@ -563,6 +607,19 @@ function CommunityPageContent() {
         return;
       }
 
+      // UI 즉시 업데이트 (낙관적 업데이트)
+      setPosts(prevPosts => prevPosts.map(post => {
+        if (post.id === postId) {
+          const newLiked = !post.user_liked;
+          return {
+            ...post,
+            user_liked: newLiked,
+            likes: newLiked ? (post.likes || 0) + 1 : Math.max(0, (post.likes || 0) - 1)
+          };
+        }
+        return post;
+      }));
+
       // 좋아요 토글
       const { error } = await supabase.rpc('like_post_once', {
         p_post_id: postId,
@@ -571,13 +628,17 @@ function CommunityPageContent() {
 
       if (error) {
         console.error('좋아요 처리 오류:', error);
+        // 오류 시 원래 상태로 되돌리기
+        fetchPosts();
         return;
       }
 
-      // 게시글 목록 새로고침
+      // 성공 시 최신 데이터로 동기화
       fetchPosts();
     } catch (error) {
       console.error('좋아요 처리 중 오류:', error);
+      // 오류 시 원래 상태로 되돌리기
+      fetchPosts();
     }
   };
 
@@ -602,17 +663,50 @@ function CommunityPageContent() {
     }
   };
 
+  // 댓글 가져오기 함수
+  const fetchComments = async (postId) => {
+    try {
+      console.log('댓글 가져오기 시작, post_id:', postId);
+      const { data: comments, error } = await supabase
+        .from('community_comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('댓글 가져오기 오류:', error);
+        return;
+      }
+
+      console.log('댓글 가져오기 성공:', comments?.length || 0, '개');
+      setPostComments(prev => ({
+        ...prev,
+        [postId]: comments || []
+      }));
+    } catch (error) {
+      console.error('댓글 가져오기 예외:', error);
+    }
+  };
+
   // 댓글 토글 기능
   const toggleComments = (postId) => {
+    const isCurrentlyShowing = showComments[postId];
+    
     setShowComments(prev => ({
       ...prev,
       [postId]: !prev[postId]
     }));
+
+    // 댓글을 보여줄 때만 댓글 데이터를 가져옴
+    if (!isCurrentlyShowing) {
+      fetchComments(postId);
+    }
   };
 
   // 댓글 작성 기능
-  const handleCommentSubmit = async (postId) => {
-    const comment = commentText[postId];
+  const handleCommentSubmit = async (postId, parentId = null) => {
+    const commentKey = parentId ? `${postId}_${parentId}` : postId;
+    const comment = commentText[commentKey];
     if (!comment || !comment.trim()) {
       alert('댓글을 입력해주세요.');
       return;
@@ -625,21 +719,25 @@ function CommunityPageContent() {
         return;
       }
 
-      setSubmittingComment(prev => ({ ...prev, [postId]: true }));
+      setSubmittingComment(prev => ({ ...prev, [commentKey]: true }));
 
       const { error } = await supabase
         .from('community_comments')
         .insert({
           post_id: postId,
           user_id: user.id,
-          content: comment.trim()
+          content: comment.trim(),
+          parent_id: parentId
         });
 
       if (error) {
         console.error('댓글 작성 오류:', error);
         alert('댓글 작성에 실패했습니다.');
       } else {
-        setCommentText(prev => ({ ...prev, [postId]: '' }));
+        setCommentText(prev => ({ ...prev, [commentKey]: '' }));
+        setReplyTo(prev => ({ ...prev, [postId]: null }));
+        // 댓글 목록 새로고침
+        fetchComments(postId);
         // 댓글 수 업데이트를 위해 게시글 목록 새로고침
         fetchPosts();
       }
@@ -647,8 +745,86 @@ function CommunityPageContent() {
       console.error('댓글 작성 중 오류:', error);
       alert('댓글 작성 중 오류가 발생했습니다.');
     } finally {
-      setSubmittingComment(prev => ({ ...prev, [postId]: false }));
+      setSubmittingComment(prev => ({ ...prev, [commentKey]: false }));
     }
+  };
+
+  // 댓글 렌더링 컴포넌트
+  const renderComment = (comment, postId, depth = 0) => {
+    const commentKey = `${postId}_${comment.id}`;
+    const isReplyMode = replyTo[postId] === comment.id;
+    
+    return (
+      <div key={comment.id} className={`${depth > 0 ? 'ml-8 border-l-2 border-gray-200 pl-3' : ''}`}>
+        {/* 댓글 본문 */}
+        <div className="flex items-start gap-2 py-2">
+          <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
+            익명
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm font-medium text-gray-900">익명</span>
+              <span className="text-xs text-gray-500">
+                {comment.created_at ? new Date(comment.created_at).toLocaleString('ko-KR') : ''}
+              </span>
+            </div>
+            <div className="text-sm text-gray-800 mb-2 whitespace-pre-wrap break-words">
+              {comment.content || '(내용 없음)'}
+            </div>
+            <div className="flex items-center gap-3 text-xs text-gray-500">
+              <button
+                onClick={() => setReplyTo(prev => ({ ...prev, [postId]: comment.id }))}
+                className="hover:text-blue-600 transition-colors"
+              >
+                답글
+              </button>
+              <button className="hover:text-red-600 transition-colors">신고</button>
+            </div>
+          </div>
+        </div>
+
+        {/* 답글 입력창 */}
+        {isReplyMode && (
+          <div className="ml-8 mb-3">
+            <div className="bg-gray-50 p-3 rounded-lg border">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  U
+                </div>
+                <span className="text-sm text-gray-600">익명에게 답글</span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="답글을 입력하세요..."
+                  value={commentText[commentKey] || ''}
+                  onChange={(e) => setCommentText(prev => ({ ...prev, [commentKey]: e.target.value }))}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleCommentSubmit(postId, comment.id);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => handleCommentSubmit(postId, comment.id)}
+                  disabled={submittingComment[commentKey]}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm transition-colors disabled:opacity-50"
+                >
+                  등록
+                </button>
+                <button
+                  onClick={() => setReplyTo(prev => ({ ...prev, [postId]: null }))}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm transition-colors"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const seoMeta = generateSEOMeta({
@@ -1077,16 +1253,36 @@ function CommunityPageContent() {
                       <div className="flex items-center space-x-6">
                         <button 
                           onClick={() => handleLike(post.id)}
-                          className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors"
+                          className={`flex items-center space-x-1 transition-colors ${
+                            post.user_liked 
+                              ? 'text-red-500' 
+                              : 'text-gray-600 hover:text-red-500'
+                          }`}
                         >
-                          <Heart className="w-5 h-5" />
+                          <Heart 
+                            className={`w-5 h-5 ${
+                              post.user_liked 
+                                ? 'fill-current' 
+                                : 'stroke-current'
+                            }`} 
+                          />
                           <span className="text-sm font-medium">{post.likes || 0}</span>
                         </button>
                         <button 
                           onClick={() => toggleComments(post.id)}
-                          className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors"
+                          className={`flex items-center space-x-1 transition-colors ${
+                            showComments[post.id] 
+                              ? 'text-blue-500' 
+                              : 'text-gray-600 hover:text-blue-500'
+                          }`}
                         >
-                          <MessageCircle className="w-5 h-5" />
+                          <MessageCircle 
+                            className={`w-5 h-5 ${
+                              showComments[post.id] 
+                                ? 'fill-current' 
+                                : 'stroke-current'
+                            }`} 
+                          />
                           <span className="text-sm font-medium">{post.comments_count || 0}</span>
                         </button>
                         <button 
@@ -1099,20 +1295,56 @@ function CommunityPageContent() {
                     </div>
                   </div>
 
-                  {/* 댓글 섹션 */}
+                  {/* 댓글 섹션 - 디시인사이드 스타일 */}
                   {showComments[post.id] && (
-                    <div className="border-t border-gray-100 p-4 bg-gray-50">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                          {user?.user_metadata?.full_name?.charAt(0) || 'U'}
+                    <div className="border-t border-gray-200 bg-white">
+                      {/* 댓글 목록 */}
+                      <div className="p-4">
+                        {(() => {
+                          const comments = postComments[post.id] || [];
+                          console.log(`게시글 ${post.id}의 댓글 목록:`, comments.length, '개');
+                          
+                          if (comments.length === 0) {
+                            return (
+                              <div className="text-center py-6 text-gray-500 text-sm border-b border-gray-100">
+                                아직 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!
+                              </div>
+                            );
+                          }
+                          
+                          // 댓글을 부모-자식 관계로 정리
+                          const parentComments = comments.filter(comment => !comment.parent_id);
+                          const childComments = comments.filter(comment => comment.parent_id);
+                          
+                          const renderCommentsWithReplies = (parentComment) => {
+                            const replies = childComments.filter(child => child.parent_id === parentComment.id);
+                            return (
+                              <div key={parentComment.id}>
+                                {renderComment(parentComment, post.id, 0)}
+                                {replies.map(reply => renderComment(reply, post.id, 1))}
+                              </div>
+                            );
+                          };
+                          
+                          return parentComments.map(renderCommentsWithReplies);
+                        })()}
+                      </div>
+                      
+                      {/* 댓글 작성 입력창 */}
+                      <div className="border-t border-gray-100 p-4 bg-gray-50">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            U
+                          </div>
+                          <span className="text-sm text-gray-600">익명</span>
                         </div>
-                        <div className="flex-1 flex gap-2">
+                        <div className="flex gap-2">
                           <input
                             type="text"
-                            placeholder="댓글을 작성해보세요..."
+                            placeholder="댓글을 입력하세요..."
                             value={commentText[post.id] || ''}
                             onChange={(e) => setCommentText(prev => ({ ...prev, [post.id]: e.target.value }))}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             onKeyPress={(e) => {
                               if (e.key === 'Enter') {
                                 handleCommentSubmit(post.id);
@@ -1122,11 +1354,9 @@ function CommunityPageContent() {
                           <button
                             onClick={() => handleCommentSubmit(post.id)}
                             disabled={submittingComment[post.id]}
-                            className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-full transition-colors disabled:opacity-50"
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm transition-colors disabled:opacity-50"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                            </svg>
+                            등록
                           </button>
                         </div>
                       </div>

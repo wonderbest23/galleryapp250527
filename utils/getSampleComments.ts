@@ -5,10 +5,9 @@ export async function getSampleComments(
 ): Promise<string> {
   try {
     const { data, error } = await supabase
-      .from('community_comment')
+      .from('community_comments')
       .select('content')
-      .eq('board_id', boardId)
-      .order('likes', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(limit);
 
     if (error) {

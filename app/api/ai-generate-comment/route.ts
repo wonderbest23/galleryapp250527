@@ -109,12 +109,11 @@ export async function POST(req: NextRequest) {
     }
 
     // insert comment
-    const { error: insErr } = await supabase.from('community_comment').insert({
+    const { error: insErr } = await supabase.from('community_comments').insert({
       post_id: postId,
       user_id: null,
       content: clean,
       created_at: new Date().toISOString(),
-      likes: 0,
     });
     if (insErr) {
       console.log('insert comment error', insErr);

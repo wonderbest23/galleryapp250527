@@ -58,12 +58,10 @@ export async function simulateComment(boardId: number = 1, postId: number) {
   const style = rand(Object.keys(COMMENTS) as (keyof typeof COMMENTS)[]);
   const content = rand(COMMENTS[style]);
 
-  const { error } = await supabase.from("community_comment").insert({
-    board_id: boardId,
+  const { error } = await supabase.from("community_comments").insert({
     post_id: postId,
     user_id: null,
     content,
-    likes: 0,
     created_at: new Date().toISOString(),
   });
   if (error) {
@@ -88,7 +86,7 @@ async function commentOnFreshPosts({ boardId, minutes = 10, maxComments = 3 }: {
   // fetch comment counts
   for (const p of posts) {
     const { count, error: cntErr } = await supabase
-      .from("community_comment")
+      .from("community_comments")
       .select("id", { count: "exact", head: true })
       .eq("post_id", p.id);
     if (cntErr) continue;
