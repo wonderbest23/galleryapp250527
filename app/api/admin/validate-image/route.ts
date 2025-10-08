@@ -133,6 +133,7 @@ async function validateImageAdvanced(imageUrl: string) {
     // 4. URL 분석
     const urlObj = new URL(imageUrl);
     details.domain = urlObj.hostname;
+    const urlLower = imageUrl.toLowerCase();
     
     // Supabase Storage 확인 (우리 서버)
     if (urlLower.includes('supabase.co/storage')) {
@@ -191,8 +192,7 @@ async function validateImageAdvanced(imageUrl: string) {
     }
 
     // 5. URL 및 도메인 분석
-    const urlLower = imageUrl.toLowerCase();
-    // urlObj는 이미 위에서 선언됨
+    // urlLower와 urlObj는 이미 위에서 선언됨
     
     // 스톡 이미지 사이트 확인
     const stockSites = [
