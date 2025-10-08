@@ -581,9 +581,10 @@ export default function WritePostPage() {
             <ul className="space-y-2 text-sm text-green-700">
               <li>• 게시글 작성: 10P</li>
               <li>• 등급별 추가 포인트</li>
-              <li className="ml-4 text-xs">- 실버: +5P</li>
-              <li className="ml-4 text-xs">- 골드: +10P</li>
-              <li className="ml-4 text-xs">- 플래티넘: +15P</li>
+              <li className="ml-4 text-xs">- 브론즈: +0P (기본)</li>
+              <li className="ml-4 text-xs">- 실버: +5P (리뷰 4개 + 게시글 4개)</li>
+              <li className="ml-4 text-xs">- 골드: +10P (리뷰 50개 + 게시글 50개)</li>
+              <li className="ml-4 text-xs">- 플래티넘: +15P (리뷰 100개 + 게시글 100개)</li>
             </ul>
             <div className="mt-3 pt-3 border-t border-green-200">
               <p className="text-sm font-medium text-green-800">

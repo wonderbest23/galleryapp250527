@@ -93,6 +93,7 @@ const Success = () => {
   const [isJournalistOpen, setIsJournalistOpen] = useState(false);
   const [isAnnouncementsOpen, setIsAnnouncementsOpen] = useState(false);
   const [userPoints, setUserPoints] = useState(0);
+  const [postCount, setPostCount] = useState(0);
 
   // 포인트 상태 조회
   const [pointStatus, setPointStatus] = useState({
@@ -214,76 +215,91 @@ const Success = () => {
   }, []);
 
   useEffect(() => {
-    const fetchPointStatus = async () => {
+    const fetchUserStats = async () => {
       try {
+        // 포인트 상태 조회
         const response = await fetch('/api/points/status');
+        let pointData = null;
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
+            pointData = data.data;
             setPointStatus(data.data);
             setUserPoints(data.data.available_points || 0);
-            
-            // 등급 자동 업데이트 로직 (DB에 grade 컬럼 추가됨)
-            const totalPoints = data.data.available_points + data.data.locked_points;
-            const reviewCount = Math.floor(totalPoints / 500);
-            
-            // 등급 기준에 따른 자동 등급 업데이트
-            let newGrade = data.data.grade;
-            if (reviewCount >= 25) {
-              newGrade = 'platinum';
-            } else if (reviewCount >= 10) {
-              newGrade = 'gold';
-            } else if (reviewCount >= 3) {
-              newGrade = 'silver';
-            } else {
-              newGrade = 'bronze';
-            }
-            
-            // 등급이 변경된 경우 프로필 업데이트
-            if (newGrade !== data.data.grade) {
-              console.log(`등급 업데이트 필요: ${data.data.grade} → ${newGrade} (리뷰 ${reviewCount}개)`);
-              
-              try {
-                const supabase = createClient();
-                const { error } = await supabase
-                  .from('profiles')
-                  .update({ grade: newGrade })
-                  .eq('id', user.id);
-                
-                if (error) {
-                  console.error('등급 업데이트 오류:', error);
-                } else {
-                  // 상태 업데이트
-                  setPointStatus(prev => ({ ...prev, grade: newGrade }));
-                  console.log(`등급 업데이트 완료: ${data.data.grade} → ${newGrade}`);
-                  
-                  // 사용자에게 알림
-                  alert(`축하합니다! ${newGrade === 'silver' ? '실버' : newGrade === 'gold' ? '골드' : newGrade === 'platinum' ? '플래티넘' : '브론즈'} 등급으로 승급되었습니다!`);
-                  
-                  // 페이지 새로고침으로 등급 변경사항 반영
-                  setTimeout(() => {
-                    window.location.reload();
-                  }, 2000);
-                }
-              } catch (error) {
-                console.error('등급 업데이트 중 오류:', error);
-              }
-            }
-            
-            console.log('포인트 상태 로드 완료:', {
-              grade: data.data.grade,
-              totalPoints: data.data.available_points + data.data.locked_points,
-              reviewCount: Math.floor((data.data.available_points + data.data.locked_points) / 500)
-            });
           }
         }
+
+        // 게시글 수 조회
+        const supabase = createClient();
+        const { count: postCount } = await supabase
+          .from('community_post')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user?.id);
+        
+        setPostCount(postCount || 0);
+        
+        // 포인트 데이터가 있을 때만 등급 업데이트 로직 실행
+        if (pointData) {
+          // 등급 자동 업데이트 로직 (리뷰 수 + 게시글 수 기준)
+          const totalPoints = pointData.available_points + pointData.locked_points;
+          const reviewCount = Math.floor(totalPoints / 500);
+          
+          // 새로운 등급 기준에 따른 자동 등급 업데이트
+          let newGrade = pointData.grade;
+          if (reviewCount >= 100 && (postCount || 0) >= 100) {
+            newGrade = 'platinum';
+          } else if (reviewCount >= 50 && (postCount || 0) >= 50) {
+            newGrade = 'gold';
+          } else if (reviewCount >= 4 && (postCount || 0) >= 4) {
+            newGrade = 'silver';
+          } else {
+            newGrade = 'bronze';
+          }
+          
+          // 등급이 변경된 경우 프로필 업데이트
+          if (newGrade !== pointData.grade) {
+            console.log(`등급 업데이트 필요: ${pointData.grade} → ${newGrade} (리뷰 ${reviewCount}개, 게시글 ${postCount || 0}개)`);
+            
+            try {
+              const { error } = await supabase
+                .from('profiles')
+                .update({ grade: newGrade })
+                .eq('id', user.id);
+              
+              if (error) {
+                console.error('등급 업데이트 오류:', error);
+              } else {
+                // 상태 업데이트
+                setPointStatus(prev => ({ ...prev, grade: newGrade }));
+                console.log(`등급 업데이트 완료: ${pointData.grade} → ${newGrade}`);
+                
+                // 사용자에게 알림
+                alert(`축하합니다! ${newGrade === 'silver' ? '실버' : newGrade === 'gold' ? '골드' : newGrade === 'platinum' ? '플래티넘' : '브론즈'} 등급으로 승급되었습니다!`);
+                
+                // 페이지 새로고침으로 등급 변경사항 반영
+                setTimeout(() => {
+                  window.location.reload();
+                }, 2000);
+              }
+            } catch (error) {
+              console.error('등급 업데이트 중 오류:', error);
+            }
+          }
+          
+          console.log('포인트 상태 로드 완료:', {
+            grade: pointData.grade,
+            totalPoints: pointData.available_points + pointData.locked_points,
+            reviewCount: Math.floor((pointData.available_points + pointData.locked_points) / 500),
+            postCount: postCount || 0
+          });
+        }
       } catch (error) {
-        console.error('포인트 상태 조회 오류:', error);
+        console.error('사용자 통계 조회 오류:', error);
       }
     };
 
     if (user) {
-      fetchPointStatus();
+      fetchUserStats();
     }
   }, [user]);
 
@@ -463,24 +479,24 @@ const Success = () => {
   }
 
 
-  // 등급 정보 계산 (실제 리뷰 수 기반)
+  // 등급 정보 계산 (리뷰 수 + 게시글 수 기반)
   const getGradeInfo = () => {
     const grade = pointStatus.grade;
     const totalPoints = pointStatus.available_points + pointStatus.locked_points;
     const reviewCount = Math.floor(totalPoints / 500); // 리뷰당 500P
     
-    // 등급별 기준 리뷰 수
+    // 등급별 기준 (리뷰 수 + 게시글 수)
     const gradeRequirements = {
-      bronze: 0,
-      silver: 3,
-      gold: 10,
-      platinum: 25
+      bronze: { reviews: 0, posts: 0 },
+      silver: { reviews: 4, posts: 4 },
+      gold: { reviews: 50, posts: 50 },
+      platinum: { reviews: 100, posts: 100 }
     };
     
-    // 현재 등급의 기준 리뷰 수
-    const currentGradeRequirement = gradeRequirements[grade] || 0;
+    // 현재 등급의 기준
+    const currentGradeRequirement = gradeRequirements[grade] || { reviews: 0, posts: 0 };
     
-    // 다음 등급까지 필요한 리뷰 수
+    // 다음 등급까지 필요한 활동 수
     const getNextGradeRequirement = (currentGrade) => {
       switch (currentGrade) {
         case 'bronze': return gradeRequirements.silver;
@@ -491,9 +507,10 @@ const Success = () => {
     };
     
     const nextGradeRequirement = getNextGradeRequirement(grade);
-    const remainingReviews = Math.max(0, nextGradeRequirement - reviewCount);
+    const remainingReviews = Math.max(0, nextGradeRequirement.reviews - reviewCount);
+    const remainingPosts = Math.max(0, nextGradeRequirement.posts - postCount);
     
-    // 진행률 계산 (현재 등급 내에서의 진행률)
+    // 진행률 계산 (리뷰와 게시글 모두 고려)
     let progress = 0;
     let nextGoal = '';
     
@@ -503,22 +520,25 @@ const Success = () => {
         nextGoal = '최고 등급입니다';
         break;
       case 'gold':
-        // 골드 등급에서 플래티넘까지의 진행률 (10~25개 리뷰)
-        const goldProgress = Math.min(100, Math.round((reviewCount - gradeRequirements.gold) / (gradeRequirements.platinum - gradeRequirements.gold) * 100));
-        progress = Math.max(0, goldProgress);
-        nextGoal = `플래티넘 등급까지 ${remainingReviews}개 이상의 리뷰가 필요합니다`;
+        // 골드에서 플래티넘까지의 진행률 (50~100개 리뷰 + 게시글)
+        const reviewProgress = Math.min(100, Math.round((reviewCount - gradeRequirements.gold.reviews) / (gradeRequirements.platinum.reviews - gradeRequirements.gold.reviews) * 100));
+        const postProgress = Math.min(100, Math.round((postCount - gradeRequirements.gold.posts) / (gradeRequirements.platinum.posts - gradeRequirements.gold.posts) * 100));
+        progress = Math.max(0, Math.round((reviewProgress + postProgress) / 2));
+        nextGoal = `플래티넘 등급까지 리뷰 ${remainingReviews}개, 게시글 ${remainingPosts}개 더 필요합니다`;
         break;
       case 'silver':
-        // 실버 등급에서 골드까지의 진행률 (3~10개 리뷰)
-        const silverProgress = Math.min(100, Math.round((reviewCount - gradeRequirements.silver) / (gradeRequirements.gold - gradeRequirements.silver) * 100));
-        progress = Math.max(0, silverProgress);
-        nextGoal = `골드 등급까지 ${remainingReviews}개 이상의 리뷰가 필요합니다`;
+        // 실버에서 골드까지의 진행률 (4~50개 리뷰 + 게시글)
+        const silverReviewProgress = Math.min(100, Math.round((reviewCount - gradeRequirements.silver.reviews) / (gradeRequirements.gold.reviews - gradeRequirements.silver.reviews) * 100));
+        const silverPostProgress = Math.min(100, Math.round((postCount - gradeRequirements.silver.posts) / (gradeRequirements.gold.posts - gradeRequirements.silver.posts) * 100));
+        progress = Math.max(0, Math.round((silverReviewProgress + silverPostProgress) / 2));
+        nextGoal = `골드 등급까지 리뷰 ${remainingReviews}개, 게시글 ${remainingPosts}개 더 필요합니다`;
         break;
       default: // bronze
-        // 브론즈 등급에서 실버까지의 진행률 (0~3개 리뷰)
-        const bronzeProgress = Math.min(100, Math.round(reviewCount / gradeRequirements.silver * 100));
-        progress = Math.max(0, bronzeProgress);
-        nextGoal = `실버 등급까지 ${remainingReviews}개 이상의 리뷰가 필요합니다`;
+        // 브론즈에서 실버까지의 진행률 (0~4개 리뷰 + 게시글)
+        const bronzeReviewProgress = Math.min(100, Math.round(reviewCount / gradeRequirements.silver.reviews * 100));
+        const bronzePostProgress = Math.min(100, Math.round(postCount / gradeRequirements.silver.posts * 100));
+        progress = Math.max(0, Math.round((bronzeReviewProgress + bronzePostProgress) / 2));
+        nextGoal = `실버 등급까지 리뷰 ${remainingReviews}개, 게시글 ${remainingPosts}개 더 필요합니다`;
         break;
     }
     
@@ -539,7 +559,9 @@ const Success = () => {
       nextGoal,
       exchangePoints: config.exchangePoints,
       reviewCount,
-      remainingReviews
+      postCount,
+      remainingReviews,
+      remainingPosts
     };
   };
   
@@ -550,14 +572,16 @@ const Success = () => {
     grade: pointStatus.grade,
     totalPoints: pointStatus.available_points + pointStatus.locked_points,
     reviewCount: gradeInfo.reviewCount,
+    postCount: gradeInfo.postCount,
     progress: gradeInfo.progress,
     nextGoal: gradeInfo.nextGoal,
     remainingReviews: gradeInfo.remainingReviews,
+    remainingPosts: gradeInfo.remainingPosts,
     gradeRequirements: {
-      bronze: 0,
-      silver: 3,
-      gold: 10,
-      platinum: 25
+      bronze: { reviews: 0, posts: 0 },
+      silver: { reviews: 4, posts: 4 },
+      gold: { reviews: 50, posts: 50 },
+      platinum: { reviews: 100, posts: 100 }
     }
   });
 
