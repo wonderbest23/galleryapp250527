@@ -91,6 +91,13 @@ export default function CustomReviewsPage() {
     }
 
     try {
+      // 리뷰 정보 조회
+      const review = reviews.find(r => r.id === reviewId);
+      if (!review) {
+        alert('리뷰를 찾을 수 없습니다.');
+        return;
+      }
+
       // 리뷰 거부
       const { error: reviewError } = await supabase
         .from("exhibition_review")
@@ -105,6 +112,15 @@ export default function CustomReviewsPage() {
         alert("리뷰 거부에 실패했습니다.");
         return;
       }
+
+      // 사용자에게 알림 전송
+      await supabase.from('user_notifications').insert({
+        user_id: review.user_id,
+        type: 'custom_review_rejected',
+        title: '커스텀 리뷰 거부 알림',
+        message: `작성하신 커스텀 리뷰가 거부되었습니다. 사유: ${rejectionReason}`,
+        details: `전시회: ${review.exhibition?.title || '제목 없음'}\n거부 사유: ${rejectionReason}`
+      });
 
       alert("거부되었습니다!");
       setRejectionReason("");

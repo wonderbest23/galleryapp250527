@@ -185,6 +185,13 @@ export default function ReviewMonitoringPage() {
 
   const handleReviewAction = async (reviewId, action) => {
     try {
+      // 리뷰 정보 조회
+      const review = reviews.find(r => r.id === reviewId);
+      if (!review) {
+        alert('리뷰를 찾을 수 없습니다.');
+        return;
+      }
+
       let updateData = {};
       
       if (action === 'approve') {
@@ -202,6 +209,17 @@ export default function ReviewMonitoringPage() {
         console.error('리뷰 상태 변경 오류:', error);
         alert('상태 변경에 실패했습니다.');
         return;
+      }
+
+      // 거부 시 사용자에게 알림 전송
+      if (action === 'reject') {
+        await supabase.from('user_notifications').insert({
+          user_id: review.user_id,
+          type: 'review_rejected',
+          title: '리뷰 거부 알림',
+          message: '작성하신 리뷰가 관리자에 의해 거부되었습니다.',
+          details: `거부 사유: 관리자에 의한 거부\n리뷰 내용: ${review.description?.substring(0, 50)}...`
+        });
       }
 
       alert(`${action === 'approve' ? '승인' : '거부'}되었습니다.`);
