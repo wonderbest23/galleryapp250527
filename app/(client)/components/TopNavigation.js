@@ -577,9 +577,7 @@ export default function TopNavigation({ search, setSearch, exhibitions, setExhib
                 >
                   <FiBell className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors" />
                   {currentUser && unreadCount > 0 && (
-                    <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center font-bold shadow-sm">
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </div>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full shadow-sm"></div>
                   )}
                 </button>
               </div>

@@ -16,12 +16,19 @@ export default function CommunityPostDetail({ params }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [commentText, setCommentText] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [lastCommentTime, setLastCommentTime] = useState(0); // 댓글 스팸 방지용
   const [relatedPosts, setRelatedPosts] = useState([]);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [comments, setComments] = useState([]);
   const [showComments, setShowComments] = useState(true); // 댓글 목록 표시/숨김 상태
   const [replyTo, setReplyTo] = useState(null); // 대댓글 대상 댓글 ID
+  
+  // 투표 관련 상태
+  const [poll, setPoll] = useState(null);
+  const [pollVotes, setPollVotes] = useState([]);
+  const [userVote, setUserVote] = useState(null);
+  const [submittingVote, setSubmittingVote] = useState(false);
   
   // comments 상태 변경 감지
   useEffect(() => {
@@ -189,6 +196,27 @@ export default function CommunityPostDetail({ params }) {
             .limit(5);
           setRelatedPosts(rel || []);
         }
+
+        // 투표 정보 로드
+        if (data?.category === '토론') {
+          const { data: pollData } = await supabase
+            .from('community_polls')
+            .select('*')
+            .eq('post_id', data.id)
+            .single();
+          
+          if (pollData) {
+            setPoll(pollData);
+            
+            // 투표 결과 로드
+            const { data: votesData } = await supabase
+              .from('community_poll_votes')
+              .select('*')
+              .eq('poll_id', pollData.id);
+            
+            setPollVotes(votesData || []);
+          }
+        }
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -221,6 +249,17 @@ export default function CommunityPostDetail({ params }) {
             .eq('user_id', user.id)
             .maybeSingle();
           setLiked(!!myLike);
+
+          // 사용자의 투표 상태 확인
+          if (poll) {
+            const { data: myVote } = await supabase
+              .from('community_poll_votes')
+              .select('option_index')
+              .eq('poll_id', poll.id)
+              .eq('user_id', user.id)
+              .maybeSingle();
+            setUserVote(myVote?.option_index || null);
+          }
         }
 
         console.log('=== 댓글 목록 가져오기 시작 ===');
@@ -267,12 +306,64 @@ export default function CommunityPostDetail({ params }) {
       }
     };
     loadMeta();
-  }, [post]);
+  }, [post, poll]);
+
+  // 스팸 방지 함수들
+  const checkSpamWords = (text) => {
+    const spamWords = [
+      '광고', '홍보', '판매', '구매', '거래', '돈', '돈벌이', '수익', '부업',
+      '스팸', '도배', '반복', '클릭', '링크', '사이트', '무료', '이벤트',
+      '카지노', '도박', '로또', '복권', '대출', '보험', '투자', '주식',
+      '성인', '야동', '야사', '음란', '섹스', '성관계', '유흥', '마사지',
+      '바이럴', '마케팅', '프로모션', '세일', '할인', '쿠폰', '적립금',
+      'www.', 'http://', 'https://', '.com', '.kr', '.net', '.org'
+    ];
+    
+    const lowerText = text.toLowerCase();
+    return spamWords.some(word => lowerText.includes(word.toLowerCase()));
+  };
+
+  const checkUrlPattern = (text) => {
+    const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})/gi;
+    return urlPattern.test(text);
+  };
+
+  const checkCommentSpam = (text) => {
+    // URL 체크
+    if (checkUrlPattern(text)) {
+      return { isSpam: true, message: '댓글에 URL을 포함할 수 없습니다.' };
+    }
+    
+    // 스팸 단어 체크
+    if (checkSpamWords(text)) {
+      return { isSpam: true, message: '부적절한 단어가 포함되어 있습니다.' };
+    }
+    
+    // 연속 댓글 방지 (1초 이내)
+    const now = Date.now();
+    if (now - lastCommentTime < 1000) {
+      return { isSpam: true, message: '너무 빠르게 연속 댓글을 작성할 수 없습니다. 잠시 후 다시 시도해주세요.' };
+    }
+    
+    // 댓글 길이 체크
+    if (text.length > 500) {
+      return { isSpam: true, message: '댓글은 500자 이내로 작성해주세요.' };
+    }
+    
+    return { isSpam: false };
+  };
 
   const handleLike = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { alert('로그인이 필요합니다.'); return; }
+      
+      // 자기 게시글 좋아요 방지
+      if (user.id === post.user_id) {
+        alert('본인 게시글에는 좋아요를 누를 수 없습니다.');
+        return;
+      }
+      
       // 낙관적 업데이트
       setLiked(prev => !prev);
       setLikeCount(prev => (liked ? Math.max(0, prev - 1) : prev + 1));
@@ -314,11 +405,75 @@ export default function CommunityPostDetail({ params }) {
     }
   };
 
+  // 투표 함수
+  const handleVote = async (optionIndex) => {
+    if (!currentUser) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    if (!poll) {
+      alert('투표 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    setSubmittingVote(true);
+    try {
+      // 기존 투표가 있으면 삭제
+      if (userVote !== null) {
+        await supabase
+          .from('community_poll_votes')
+          .delete()
+          .eq('poll_id', poll.id)
+          .eq('user_id', currentUser.id);
+      }
+
+      // 새 투표 추가
+      const { error } = await supabase
+        .from('community_poll_votes')
+        .insert({
+          poll_id: poll.id,
+          user_id: currentUser.id,
+          option_index: optionIndex
+        });
+
+      if (error) {
+        console.error('투표 저장 오류:', error);
+        alert('투표에 실패했습니다.');
+        return;
+      }
+
+      // 투표 상태 업데이트
+      setUserVote(optionIndex);
+      
+      // 투표 결과 다시 로드
+      const { data: votesData } = await supabase
+        .from('community_poll_votes')
+        .select('*')
+        .eq('poll_id', poll.id);
+      
+      setPollVotes(votesData || []);
+    } catch (error) {
+      console.error('투표 처리 오류:', error);
+      alert('투표 처리 중 오류가 발생했습니다.');
+    } finally {
+      setSubmittingVote(false);
+    }
+  };
+
   const submitComment = async () => {
     if (!commentText.trim()) {
       console.log('댓글 텍스트가 비어있음');
       return;
     }
+
+    // 스팸 방지 체크
+    const spamCheck = checkCommentSpam(commentText.trim());
+    if (spamCheck.isSpam) {
+      alert(spamCheck.message);
+      return;
+    }
+
     try {
       console.log('댓글 작성 시작:', commentText.trim());
       const { data: { user } } = await supabase.auth.getUser();
@@ -355,6 +510,7 @@ export default function CommunityPostDetail({ params }) {
       
       setCommentText("");
       setReplyTo(null); // 답글 상태 초기화
+      setLastCommentTime(Date.now()); // 댓글 작성 시간 기록
       console.log('댓글 작성 완료');
       
       // 댓글 작성 후 댓글 목록 표시
@@ -529,6 +685,68 @@ export default function CommunityPostDetail({ params }) {
                 {post.content}
               </p>
             </div>
+
+            {/* 투표 UI */}
+            {poll && (
+              <div className="mt-6 p-6 bg-gray-50 rounded-lg border">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <span className="text-blue-600">📊</span>
+                  {poll.question}
+                </h3>
+                
+                <div className="space-y-3">
+                  {poll.options.map((option, index) => {
+                    const optionVotes = pollVotes.filter(vote => vote.option_index === index);
+                    const votePercentage = pollVotes.length > 0 ? (optionVotes.length / pollVotes.length) * 100 : 0;
+                    const isUserVoted = userVote === index;
+                    
+                    return (
+                      <div key={index} className="relative">
+                        <button
+                          onClick={() => handleVote(index)}
+                          disabled={submittingVote || !currentUser}
+                          className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
+                            isUserVoted
+                              ? 'border-blue-500 bg-blue-50'
+                              : currentUser
+                              ? 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                              : 'border-gray-200 bg-gray-100 cursor-not-allowed'
+                          } ${submittingVote ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className={`font-medium ${isUserVoted ? 'text-blue-900' : 'text-gray-900'}`}>
+                              {option}
+                            </span>
+                            <span className={`text-sm ${isUserVoted ? 'text-blue-700' : 'text-gray-600'}`}>
+                              {optionVotes.length}표 ({votePercentage.toFixed(1)}%)
+                            </span>
+                          </div>
+                          
+                          {/* 투표 진행률 바 */}
+                          <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-300 ${
+                                isUserVoted ? 'bg-blue-500' : 'bg-gray-400'
+                              }`}
+                              style={{ width: `${votePercentage}%` }}
+                            />
+                          </div>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                <div className="mt-4 text-sm text-gray-600 text-center">
+                  총 {pollVotes.length}명이 참여했습니다
+                  {!currentUser && (
+                    <span className="block mt-1 text-blue-600">
+                      투표하려면 로그인이 필요합니다
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* 이미지 */}
             {post.image_url && (

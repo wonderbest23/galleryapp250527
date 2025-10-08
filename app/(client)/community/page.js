@@ -318,6 +318,7 @@ function CommunityPageContent() {
   const [submittingComment, setSubmittingComment] = useState({});
   const [postComments, setPostComments] = useState({}); // 각 게시글의 댓글 목록
   const [replyTo, setReplyTo] = useState({}); // 대댓글 대상 댓글 ID
+  const [lastCommentTimes, setLastCommentTimes] = useState({}); // 댓글 스팸 방지용 (postId별)
   
   // 광고 배너 상태
   const [adBanner, setAdBanner] = useState(null);
@@ -602,6 +603,13 @@ function CommunityPageContent() {
         return;
       }
 
+      // 자기 게시글 좋아요 방지
+      const targetPost = posts.find(post => post.id === postId);
+      if (targetPost && user.id === targetPost.user_id) {
+        alert('본인 게시글에는 좋아요를 누를 수 없습니다.');
+        return;
+      }
+
       // UI 즉시 업데이트 (낙관적 업데이트)
       setPosts(prevPosts => prevPosts.map(post => {
         if (post.id === postId) {
@@ -683,6 +691,52 @@ function CommunityPageContent() {
     }
   };
 
+  // 스팸 방지 함수들
+  const checkSpamWords = (text) => {
+    const spamWords = [
+      '광고', '홍보', '판매', '구매', '거래', '돈', '돈벌이', '수익', '부업',
+      '스팸', '도배', '반복', '클릭', '링크', '사이트', '무료', '이벤트',
+      '카지노', '도박', '로또', '복권', '대출', '보험', '투자', '주식',
+      '성인', '야동', '야사', '음란', '섹스', '성관계', '유흥', '마사지',
+      '바이럴', '마케팅', '프로모션', '세일', '할인', '쿠폰', '적립금',
+      'www.', 'http://', 'https://', '.com', '.kr', '.net', '.org'
+    ];
+    
+    const lowerText = text.toLowerCase();
+    return spamWords.some(word => lowerText.includes(word.toLowerCase()));
+  };
+
+  const checkUrlPattern = (text) => {
+    const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})/gi;
+    return urlPattern.test(text);
+  };
+
+  const checkCommentSpam = (text, postId) => {
+    // URL 체크
+    if (checkUrlPattern(text)) {
+      return { isSpam: true, message: '댓글에 URL을 포함할 수 없습니다.' };
+    }
+    
+    // 스팸 단어 체크
+    if (checkSpamWords(text)) {
+      return { isSpam: true, message: '부적절한 단어가 포함되어 있습니다.' };
+    }
+    
+    // 연속 댓글 방지 (1초 이내)
+    const now = Date.now();
+    const lastTime = lastCommentTimes[postId] || 0;
+    if (now - lastTime < 1000) {
+      return { isSpam: true, message: '너무 빠르게 연속 댓글을 작성할 수 없습니다. 잠시 후 다시 시도해주세요.' };
+    }
+    
+    // 댓글 길이 체크
+    if (text.length > 500) {
+      return { isSpam: true, message: '댓글은 500자 이내로 작성해주세요.' };
+    }
+    
+    return { isSpam: false };
+  };
+
   // 댓글 토글 기능
   const toggleComments = (postId) => {
     const isCurrentlyShowing = showComments[postId];
@@ -704,6 +758,13 @@ function CommunityPageContent() {
     const comment = commentText[commentKey];
     if (!comment || !comment.trim()) {
       alert('댓글을 입력해주세요.');
+      return;
+    }
+
+    // 스팸 방지 체크
+    const spamCheck = checkCommentSpam(comment.trim(), postId);
+    if (spamCheck.isSpam) {
+      alert(spamCheck.message);
       return;
     }
 
@@ -731,6 +792,7 @@ function CommunityPageContent() {
       } else {
         setCommentText(prev => ({ ...prev, [commentKey]: '' }));
         setReplyTo(prev => ({ ...prev, [postId]: null }));
+        setLastCommentTimes(prev => ({ ...prev, [postId]: Date.now() })); // 댓글 작성 시간 기록
         // 댓글 목록 새로고침
         fetchComments(postId);
         // 댓글 수 업데이트를 위해 게시글 목록 새로고침
@@ -1366,8 +1428,8 @@ function CommunityPageContent() {
         {/* 기자단 신청 팝업 */}
         {showJournalistApplication && (
           <JournalistApplicationPopup
-            showJournalistApplication={showJournalistApplication}
-            setShowJournalistApplication={setShowJournalistApplication}
+            isOpen={showJournalistApplication}
+            onClose={() => setShowJournalistApplication(false)}
           />
         )}
 
