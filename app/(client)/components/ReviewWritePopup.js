@@ -259,7 +259,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          exhibition_id: exhibition?.id || formData.exhibition_id || null,
+          exhibition_id: customExhibitionData ? null : (exhibition?.id || formData.exhibition_id),
           rating: formData.rating,
           description: formData.content,
           proof_image: publicUrl,

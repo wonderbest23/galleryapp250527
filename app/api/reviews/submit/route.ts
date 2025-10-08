@@ -31,6 +31,17 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
+    // exhibition_id UUID 형식 검증 (null이 아닐 때만)
+    if (exhibition_id && typeof exhibition_id === 'string') {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(exhibition_id)) {
+        return NextResponse.json({ 
+          success: false, 
+          error: '유효하지 않은 전시회 ID 형식입니다.' 
+        }, { status: 400 });
+      }
+    }
+
     // 별점 검증
     if (rating < 1 || rating > 5) {
       return NextResponse.json({ 
@@ -58,20 +69,25 @@ export async function POST(request: Request) {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // 1. 중복 리뷰 최종 확인
-    const { data: existingReview, error: duplicateError } = await supabase
-      .from('exhibition_review')
-      .select('id')
-      .eq('exhibition_id', exhibition_id)
-      .eq('user_id', user.id)
-      .single();
-
-    if (duplicateError && duplicateError.code !== 'PGRST116') {
-      console.error('중복 리뷰 확인 오류:', duplicateError);
-      return NextResponse.json({ 
-        success: false, 
-        error: '리뷰 확인 중 오류가 발생했습니다.' 
-      }, { status: 500 });
+    // 1. 중복 리뷰 최종 확인 (exhibition_id가 있을 때만)
+    let existingReview = null;
+    if (exhibition_id) {
+      const { data, error: duplicateError } = await supabase
+        .from('exhibition_review')
+        .select('id')
+        .eq('exhibition_id', exhibition_id)
+        .eq('user_id', user.id)
+        .single();
+      
+      existingReview = data;
+      
+      if (duplicateError && duplicateError.code !== 'PGRST116') {
+        console.error('중복 리뷰 확인 오류:', duplicateError);
+        return NextResponse.json({ 
+          success: false, 
+          error: '리뷰 확인 중 오류가 발생했습니다.' 
+        }, { status: 500 });
+      }
     }
 
     if (existingReview) {
