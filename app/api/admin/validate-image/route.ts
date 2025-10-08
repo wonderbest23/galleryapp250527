@@ -192,8 +192,7 @@ async function validateImageAdvanced(imageUrl: string) {
 
     // 5. URL 및 도메인 분석
     const urlLower = imageUrl.toLowerCase();
-    const urlObj = new URL(imageUrl);
-    details.domain = urlObj.hostname;
+    // urlObj는 이미 위에서 선언됨
     
     // 스톡 이미지 사이트 확인
     const stockSites = [
