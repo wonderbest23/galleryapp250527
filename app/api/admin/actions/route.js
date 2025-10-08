@@ -29,15 +29,41 @@ export async function POST(req) {
     let result = null;
 
     if (type === 'report') {
-      // 신고: 삭제로 처리(해결) - 여러 테이블 시도
+      // 신고: 처리 완료로 상태 변경 (삭제 대신 resolved로 상태 변경)
       try {
-        result = await supabase.from('post_reports_uuid').delete().eq('id', id);
-        if (result?.error) {
-          // post_reports_uuid가 실패하면 post_reports 시도
-          result = await supabase.from('post_reports').delete().eq('id', id);
+        if (action === 'delete') {
+          // 해결됨으로 처리
+          result = await supabase
+            .from('post_reports')
+            .update({ 
+              status: 'resolved',
+              admin_note: '관리자가 처리 완료함',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
+        } else if (action === 'approve') {
+          // 승인 (신고 무효 처리)
+          result = await supabase
+            .from('post_reports')
+            .update({ 
+              status: 'dismissed',
+              admin_note: '신고 무효 처리',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
+        } else if (action === 'reject') {
+          // 신고 수용 (게시글 조치)
+          result = await supabase
+            .from('post_reports')
+            .update({ 
+              status: 'accepted',
+              admin_note: reason || '신고 수용, 게시글 조치 완료',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
         }
       } catch (e) {
-        console.log('report delete error:', e);
+        console.log('report action error:', e);
         result = { error: e };
       }
     } else if (type === 'point') {

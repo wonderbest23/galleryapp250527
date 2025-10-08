@@ -39,6 +39,8 @@ export default function PointReviewPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [selectedTab, setSelectedTab] = useState("pending");
   const [showTestData, setShowTestData] = useState(false);
+  const [validatingImage, setValidatingImage] = useState({});
+  const [imageValidations, setImageValidations] = useState({});
   const supabase = createClient();
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export default function PointReviewPage() {
         .select('id', { count: 'exact', head: true });
       console.log('전체 리뷰 수:', totalReviews);
       
-      // 먼저 exhibition_review 테이블의 기본 구조만 조회 (조인 없이)
+            // 먼저 exhibition_review 테이블의 기본 구조만 조회 (조인 없이)
       const { data: recentReviews, error } = await supabase
         .from('exhibition_review')
         .select(`
@@ -71,7 +73,8 @@ export default function PointReviewPage() {
           description,
           created_at,
           exhibition_id,
-          title
+          title,
+          proof_image
         `)
         .gte('created_at', fortyEightHoursAgo)
         .order('created_at', { ascending: false });
@@ -338,6 +341,89 @@ export default function PointReviewPage() {
     } catch (error) {
       console.error("포인트 승인 처리 중 오류:", error);
       alert("포인트 승인 처리에 실패했습니다.");
+    }
+  };
+
+  const handleValidateImage = async (reviewId, imageUrl) => {
+    if (!imageUrl) {
+      alert('이미지 URL이 없습니다.');
+      return;
+    }
+
+    setValidatingImage(prev => ({ ...prev, [reviewId]: true }));
+
+    try {
+      const response = await fetch('/api/admin/validate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setImageValidations(prev => ({
+          ...prev,
+          [reviewId]: result.data
+        }));
+        
+        // 검증 결과 상세 표시
+        const { warnings, riskLevel, riskScore, details } = result.data;
+        
+        let message = `=== 이미지 검증 결과 ===\n\n`;
+        message += `위험도: ${getRiskLevelText(riskLevel)} (점수: ${riskScore}/100)\n\n`;
+        
+        if (details.hasEXIF !== undefined) {
+          message += `EXIF 데이터: ${details.hasEXIF ? '있음 ✅' : '없음 ❌'}\n`;
+        }
+        if (details.camera) {
+          message += `카메라: ${details.camera} ✅\n`;
+        }
+        if (details.software) {
+          message += `편집 소프트웨어: ${details.software}\n`;
+        }
+        if (details.dateTime) {
+          message += `촬영 날짜: ${details.dateTime}\n`;
+        }
+        if (details.fileSize) {
+          message += `파일 크기: ${details.fileSize}\n`;
+        }
+        if (details.domain) {
+          message += `도메인: ${details.domain}\n`;
+        }
+        
+        message += `\n경고 사항:\n`;
+        message += warnings.join('\n');
+        
+        alert(message);
+      } else {
+        alert('이미지 검증에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('이미지 검증 오류:', error);
+      alert('이미지 검증 중 오류가 발생했습니다.');
+    } finally {
+      setValidatingImage(prev => ({ ...prev, [reviewId]: false }));
+    }
+  };
+
+  const getRiskLevelText = (level) => {
+    switch (level) {
+      case 'safe': return '안전';
+      case 'low': return '낮음';
+      case 'medium': return '중간';
+      case 'high': return '높음';
+      default: return '알 수 없음';
+    }
+  };
+
+  const getRiskLevelColor = (level) => {
+    switch (level) {
+      case 'safe': return 'text-green-600';
+      case 'low': return 'text-yellow-600';
+      case 'medium': return 'text-orange-600';
+      case 'high': return 'text-red-600';
+      default: return 'text-gray-600';
     }
   };
 
@@ -712,29 +798,118 @@ export default function PointReviewPage() {
                   </div>
                 </div>
 
-                {/* 리뷰 상세 목록 */}
+                {/* 리뷰 상세 목록 (이미지 포함) */}
                 <div>
                   <h4 className="font-medium mb-2">작성된 리뷰 목록</h4>
-                  <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                  <div className="bg-gray-50 p-3 rounded-lg space-y-3">
                     {selectedRequest.reviews && selectedRequest.reviews.length > 0 ? (
                       selectedRequest.reviews.map((review, idx) => (
-                        <div key={idx} className="p-2 bg-white rounded border border-gray-200">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium text-sm">
-                              {review.exhibition_id?.title || '전시회 제목 없음'}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500">
-                                {review.rating}/5점
-                              </span>
-                              <span className="text-xs text-blue-600 font-medium">
-                                500P
-                              </span>
+                        <div key={idx} className="p-3 bg-white rounded border border-gray-200">
+                          <div className="flex gap-3">
+                            {/* 리뷰 이미지 */}
+                            {review.proof_image && (
+                              <div className="flex-shrink-0">
+                                <img
+                                  src={review.proof_image}
+                                  alt="리뷰 증빙 이미지"
+                                  className="w-24 h-24 object-cover rounded border border-gray-300 cursor-pointer hover:opacity-80"
+                                  onClick={() => window.open(review.proof_image, '_blank')}
+                                  onError={(e) => {
+                                    e.target.src = '/noimage.jpg';
+                                  }}
+                                />
+                                
+                                {/* AI 검증 버튼 */}
+                                <button
+                                  onClick={() => handleValidateImage(review.id, review.proof_image)}
+                                  disabled={validatingImage[review.id]}
+                                  className="mt-1 w-full px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {validatingImage[review.id] ? '검증 중...' : 'AI 검증'}
+                                </button>
+                                
+                                {/* AI 검증 결과 표시 */}
+                                {imageValidations[review.id] && (
+                                  <div className={`mt-1 p-2 rounded text-xs ${
+                                    imageValidations[review.id].riskLevel === 'safe' 
+                                      ? 'bg-green-50 border border-green-200' 
+                                      : imageValidations[review.id].riskLevel === 'low'
+                                      ? 'bg-yellow-50 border border-yellow-200'
+                                      : imageValidations[review.id].riskLevel === 'medium'
+                                      ? 'bg-orange-50 border border-orange-200'
+                                      : 'bg-red-50 border border-red-200'
+                                  }`}>
+                                    <div className={`font-semibold mb-1 flex items-center justify-between ${getRiskLevelColor(imageValidations[review.id].riskLevel)}`}>
+                                      <span>위험도: {getRiskLevelText(imageValidations[review.id].riskLevel)}</span>
+                                      <span className="text-xs font-normal">{imageValidations[review.id].riskScore}/100</span>
+                                    </div>
+                                    
+                                    {/* EXIF 정보 */}
+                                    {imageValidations[review.id].details && (
+                                      <div className="mb-2 pb-2 border-b border-gray-300">
+                                        {imageValidations[review.id].details.hasEXIF !== undefined && (
+                                          <div className={imageValidations[review.id].details.hasEXIF ? 'text-green-700' : 'text-red-700'}>
+                                            EXIF: {imageValidations[review.id].details.hasEXIF ? '✅ 있음' : '❌ 없음'}
+                                          </div>
+                                        )}
+                                        {imageValidations[review.id].details.camera && (
+                                          <div className="text-green-700">카메라: {imageValidations[review.id].details.camera}</div>
+                                        )}
+                                        {imageValidations[review.id].details.fileSize && (
+                                          <div className="text-gray-600">크기: {imageValidations[review.id].details.fileSize}</div>
+                                        )}
+                                      </div>
+                                    )}
+                                    
+                                    {/* 경고 목록 */}
+                                    {imageValidations[review.id].warnings && imageValidations[review.id].warnings.length > 0 && (
+                                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                                        {imageValidations[review.id].warnings.slice(0, 3).map((warning, wIdx) => (
+                                          <div key={wIdx} className="flex items-start gap-1">
+                                            <span className="flex-shrink-0">{warning.startsWith('✅') ? '✅' : warning.startsWith('❌') ? '❌' : '⚠️'}</span>
+                                            <span className="line-clamp-2">{warning.replace(/^[✅❌⚠️]\s*/, '')}</span>
+                                          </div>
+                                        ))}
+                                        {imageValidations[review.id].warnings.length > 3 && (
+                                          <div className="text-gray-500 text-center">...외 {imageValidations[review.id].warnings.length - 3}개</div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* 리뷰 정보 */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-sm">
+                                  {review.exhibition_id?.title || review.title || '전시회 제목 없음'}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-gray-500">
+                                    {review.rating}/5점
+                                  </span>
+                                  <span className="text-xs text-blue-600 font-medium">
+                                    500P
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-600 line-clamp-2">
+                                {review.description || '내용 없음'}
+                              </p>
+                              <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                                <Calendar className="w-3 h-3" />
+                                <span>{new Date(review.created_at).toLocaleDateString('ko-KR')}</span>
+                                {!review.proof_image && (
+                                  <>
+                                    <AlertCircle className="w-3 h-3 text-orange-500" />
+                                    <span className="text-orange-500">증빙 이미지 없음</span>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          <p className="text-xs text-gray-600 mt-1 line-clamp-1">
-                            {review.description || '내용 없음'}
-                          </p>
                         </div>
                       ))
                     ) : (

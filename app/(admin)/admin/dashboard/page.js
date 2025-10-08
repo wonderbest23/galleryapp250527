@@ -92,7 +92,23 @@ export default function AdminDashboardPage() {
               .select('id', { count: 'exact', head: true });
             console.log('Posts count:', postsCount, 'Error:', postsError);
 
-            // 2. 포인트 검토 대기 (승인된 리뷰 제외)
+            // 2. 신고 접수 (처리 대기 중인 신고)
+            const { count: reportsCount, error: reportsError } = await supabase
+              .from('post_reports')
+              .select('id', { count: 'exact', head: true })
+              .eq('status', 'pending');
+            console.log('Reports count:', reportsCount, 'Error:', reportsError);
+
+            // 실제 신고 데이터도 조회 (큐에 표시)
+            const { data: reportsData, error: reportsDataError } = await supabase
+              .from('post_reports')
+              .select('id, post_id, reason, detail, created_at')
+              .eq('status', 'pending')
+              .order('created_at', { ascending: false })
+              .limit(5);
+            console.log('Reports data:', reportsData, 'Error:', reportsDataError);
+
+            // 3. 포인트 검토 대기 (승인된 리뷰 제외)
             const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
             const { data: recentReviews, error: pointsError } = await supabase
               .from('exhibition_review')
@@ -153,13 +169,31 @@ export default function AdminDashboardPage() {
               .select('id', { count: 'exact', head: true });
             console.log('Comments count:', commentsCount, 'Error:', commentsError);
 
+            // 4. 기자단 승인 대기 (is_journalist_approved 컬럼 사용)
+            const { count: journalistsCount, error: journalistsError } = await supabase
+              .from('profiles')
+              .select('id', { count: 'exact', head: true })
+              .eq('is_journalist', true)
+              .eq('is_journalist_approved', false);
+            console.log('Journalists count:', journalistsCount, 'Error:', journalistsError);
+
+            // 실제 기자단 대기 목록도 조회해서 큐에 표시
+            const { data: journalistsData, error: journalistsDataError } = await supabase
+              .from('profiles')
+              .select('id, full_name, email, created_at')
+              .eq('is_journalist', true)
+              .eq('is_journalist_approved', false)
+              .order('created_at', { ascending: false })
+              .limit(5);
+            console.log('Journalists data:', journalistsData, 'Error:', journalistsDataError);
+
             // 통계 데이터 설정
             const directStats = {
               posts: postsCount || 0,
-              reports: 0, // 신고 테이블 문제 있으므로 일단 0
+              reports: reportsCount || 0, // 실제 신고 수
               pendingPoints: pendingUsersCount || 0, // 검토 대기 사용자 수
               artistsPending: artistsCount || 0,
-              journalistsPending: 0, // 컬럼 문제 있으므로 일단 0
+              journalistsPending: journalistsCount || 0, // 실제 기자단 승인 대기 수
               commentsToday: commentsCount || 0,
             };
             
@@ -197,14 +231,16 @@ export default function AdminDashboardPage() {
           }));
           
           setQueues({
-            reports: [],
+            reports: reportsData || [], // 실제 신고 데이터 사용
             pointReviews: dashboardPointReviewsData, // 실제 포인트 검토 데이터 사용
             artists: artistsData || [],
-            journalists: [],
+            journalists: journalistsData || [], // 실제 기자단 데이터 사용
           });
           console.log('검토 큐 설정 완료:', {
+            신고대기: (reportsData || []).length,
             작가대기: (artistsData || []).length,
             포인트검토: dashboardPointReviewsData.length,
+            기자단대기: (journalistsData || []).length,
             총포인트: totalPendingPoints
           });
         }
