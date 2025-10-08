@@ -28,7 +28,7 @@ export default function WritePostPage() {
   const [isJournalist, setIsJournalist] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
 
-  const categories = ["자유", "토론", "전시회", "작품", "숏폼", "기자단"];
+  const categories = ["자유", "토론", "전시회", "작품", "기자단"];
   const currentPoints = 20;
 
   // 기자단 승인 상태 확인

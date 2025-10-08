@@ -163,7 +163,6 @@ const CATEGORY_LABELS = {
   all: '전체',
   free: '자유',
   exhibition: '전시회',
-  short_video: '숏폼',
   discussion: '토론',
   '토론': '토론',
   review: '리뷰',
@@ -181,8 +180,6 @@ const getCategoryBadgeClass = (category) => {
       return 'bg-blue-100 text-blue-700';
     case 'review':
       return 'bg-amber-100 text-amber-700';
-    case 'short_video':
-      return 'bg-purple-100 text-purple-700';
     case 'journalist':
       return 'bg-slate-100 text-slate-700';
     case 'free':
@@ -331,7 +328,6 @@ function CommunityPageContent() {
     { id: 'all', label: '전체' },
     { id: 'free', label: '자유' },
     { id: 'exhibition', label: '전시회' },
-    { id: 'short_video', label: '숏폼' },
     { id: 'discussion', label: '토론' },
     { id: 'review', label: '리뷰' },
     { id: 'journalist', label: '기자단' }
@@ -340,7 +336,7 @@ function CommunityPageContent() {
   useEffect(() => {
     const tab = searchParams.get('tab');
     console.log('URL 파라미터 tab:', tab);
-    if (tab && ['all', 'exhibition', 'short_video', 'discussion', 'free', 'review'].includes(tab)) {
+    if (tab && ['all', 'exhibition', 'discussion', 'free', 'review'].includes(tab)) {
       console.log('탭 변경:', activeTab, '->', tab);
       setActiveTab(tab);
     }
@@ -475,7 +471,6 @@ function CommunityPageContent() {
         const categoryMap = {
           'free': 'free',
           'exhibition': 'exhibition',
-          'short_video': 'short_video',
           'discussion': '토론',
           'review': 'review',
           'journalist': 'journalist'
@@ -1194,7 +1189,7 @@ function CommunityPageContent() {
                     <p className="text-gray-700 leading-relaxed">{post.content}</p>
                   </div>
 
-                  {/* 비디오 (숏폼) */}
+                  {/* 비디오 */}
                   {post.video_url && (
                     <div className="bg-black relative">
                       <VideoPlayer
