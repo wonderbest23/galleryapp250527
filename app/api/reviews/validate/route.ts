@@ -15,39 +15,34 @@ export async function POST(request: Request) {
 
     const { exhibition_id } = await request.json();
 
-    if (!exhibition_id) {
-      return NextResponse.json({ 
-        success: false, 
-        error: '전시회 ID가 필요합니다.' 
-      }, { status: 400 });
-    }
-
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // 1. 같은 전시회에 대한 중복 리뷰 확인
-    const { data: existingReview, error: duplicateError } = await supabase
-      .from('exhibition_review')
-      .select('id')
-      .eq('exhibition_id', exhibition_id)
-      .eq('user_id', user.id)
-      .single();
+    // 1. 같은 전시회에 대한 중복 리뷰 확인 (exhibition_id가 있을 때만)
+    if (exhibition_id) {
+      const { data: existingReview, error: duplicateError } = await supabase
+        .from('exhibition_review')
+        .select('id')
+        .eq('exhibition_id', exhibition_id)
+        .eq('user_id', user.id)
+        .single();
 
-    if (duplicateError && duplicateError.code !== 'PGRST116') {
-      console.error('중복 리뷰 확인 오류:', duplicateError);
-      return NextResponse.json({ 
-        success: false, 
-        error: '리뷰 확인 중 오류가 발생했습니다.' 
-      }, { status: 500 });
-    }
+      if (duplicateError && duplicateError.code !== 'PGRST116') {
+        console.error('중복 리뷰 확인 오류:', duplicateError);
+        return NextResponse.json({ 
+          success: false, 
+          error: '리뷰 확인 중 오류가 발생했습니다.' 
+        }, { status: 500 });
+      }
 
-    if (existingReview) {
-      return NextResponse.json({ 
-        success: false, 
-        error: '이미 이 전시회에 대한 리뷰를 작성하셨습니다.',
-        code: 'DUPLICATE_REVIEW'
-      }, { status: 400 });
+      if (existingReview) {
+        return NextResponse.json({ 
+          success: false, 
+          error: '이미 이 전시회에 대한 리뷰를 작성하셨습니다.',
+          code: 'DUPLICATE_REVIEW'
+        }, { status: 400 });
+      }
     }
 
     // 2. 오늘 작성한 리뷰 개수 확인 (하루 최대 2개)
