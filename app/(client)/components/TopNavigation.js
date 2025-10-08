@@ -427,18 +427,40 @@ export default function TopNavigation({ search, setSearch, exhibitions, setExhib
     if (!currentUser) return;
 
     try {
-      const { error } = await supabase
+      // user_notifications 테이블의 모든 읽지 않은 알림을 읽음 처리
+      await supabase
         .from("user_notifications")
         .update({ is_read: true })
         .eq("user_id", currentUser.id)
         .eq("is_read", false);
 
-      if (!error) {
-        setNotifications(prev => 
-          prev.map(notification => ({ ...notification, is_read: true }))
-        );
-        setUnreadCount(0);
+      // 모든 알림 타입에 대해 읽음 상태를 user_notifications에 upsert
+      const notificationTypes = [
+        'announcement_read', 'like_read', 'comment_read', 
+        'reward_purchase_read', 'artist_approved', 'journalist_approved', 
+        'point_earned', 'point_approved', 'point_rejected', 'point_re_review'
+      ];
+
+      // 각 타입별로 읽음 상태를 upsert
+      for (const type of notificationTypes) {
+        await supabase
+          .from('user_notifications')
+          .upsert({
+            user_id: currentUser.id,
+            type: type,
+            title: '전체 읽음 처리',
+            message: '모든 알림이 읽음 처리되었습니다.',
+            is_read: true,
+            related_id: `mark_all_read_${Date.now()}`,
+            created_at: new Date().toISOString()
+          }, { onConflict: 'user_id,type,related_id' });
       }
+
+      // 로컬 상태 업데이트
+      setNotifications(prev => 
+        prev.map(notification => ({ ...notification, is_read: true }))
+      );
+      setUnreadCount(0);
     } catch (error) {
       console.log("전체 읽음 처리 오류:", error);
     }

@@ -494,9 +494,13 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       // DB에 읽음 상태 저장
       await markNotificationAsRead(notification);
       
-      // 로컬 상태 갱신: 알림을 목록에서 제거 (삭제)
-      setNotifications(prev => prev.filter(n => n.id !== notification.id));
-      setFilteredNotifications(prev => prev.filter(n => n.id !== notification.id));
+      // 로컬 상태 갱신: 알림을 읽음 처리 (삭제하지 않음)
+      setNotifications(prev => 
+        prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n)
+      );
+      setFilteredNotifications(prev => 
+        prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n)
+      );
       
       if (notification.link_url) {
         window.location.href = notification.link_url;
@@ -506,19 +510,23 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       // 상위에서 뱃지/상태 갱신 필요 시 콜백
       if (typeof onRead === 'function') onRead(notification);
     } catch (error) {
-      console.log('알림 삭제 처리 오류:', error);
+      console.log('알림 읽음 처리 오류:', error);
     }
   };
 
-  // 전체 확인(모든 알림 삭제)
+  // 전체 확인(모든 알림 읽음 처리)
   const handleMarkAllRead = async () => {
     try {
       const unread = notifications.filter(n => !n.is_read);
       await Promise.all(unread.map(n => markNotificationAsRead(n)));
       
-      // 모든 알림을 목록에서 제거 (삭제)
-      setNotifications([]);
-      setFilteredNotifications([]);
+      // 로컬 상태에서 모든 알림을 읽음 처리 (삭제하지 않음)
+      setNotifications(prev => 
+        prev.map(notification => ({ ...notification, is_read: true }))
+      );
+      setFilteredNotifications(prev => 
+        prev.map(notification => ({ ...notification, is_read: true }))
+      );
       
       if (typeof onRead === 'function') {
         onRead({ id: '__all__', type: 'all_read' });
