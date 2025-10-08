@@ -134,7 +134,7 @@ const FroalaEditorComponent = ({
     let isImageBeingUploaded = false;
 
     const setupEditor = () => {
-      if (editorRef.current && editorRef.current.editor) {
+      if (editorRef.current && editorRef.current.editor && editorRef.current.editor.events) {
         const editor = editorRef.current.editor;
         setIsEditorLoaded(true);
         
