@@ -15,8 +15,8 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
   const supabase = createClient();
   const [authChecked, setAuthChecked] = useState(false);
 
-  // 단계 관리 (customExhibitionData가 있으면 전시 선택(0단계) 생략)
-  const [currentStep, setCurrentStep] = useState(exhibition ? 1 : (customExhibitionData ? 1 : 0)); // 0: 전시회선택, 1: 별점, 2: 리뷰내용, 3: 증빙사진
+  // 단계 관리 (customExhibitionData가 유효하면 전시 선택(0단계) 생략)
+  const [currentStep, setCurrentStep] = useState(exhibition ? 1 : (customExhibitionData && customExhibitionData.title && customExhibitionData.gallery && customExhibitionData.visitDate ? 1 : 0)); // 0: 전시회선택, 1: 별점, 2: 리뷰내용, 3: 증빙사진
   const [canProceed, setCanProceed] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
@@ -44,7 +44,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
 
   // 전시회 목록 가져오기
   const fetchExhibitions = async () => {
-    if (exhibition || customExhibitionData) return; // 이미 전시회가 선택되었거나 커스텀 입력인 경우
+    if (exhibition || (customExhibitionData && customExhibitionData.title && customExhibitionData.gallery && customExhibitionData.visitDate)) return; // 이미 전시회가 선택되었거나 커스텀 입력인 경우
     
     setLoadingExhibitions(true);
     try {
@@ -86,7 +86,7 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
       setAuthChecked(true);
     }
 
-    if (!exhibition && !customExhibitionData) {
+    if (!exhibition && (!customExhibitionData || !customExhibitionData.title || !customExhibitionData.gallery || !customExhibitionData.visitDate)) {
       fetchExhibitions();
     }
 
