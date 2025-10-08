@@ -180,7 +180,22 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
     }
   };
 
-  // 초안 저장 기능 제거
+  // 리뷰 초안 저장 함수
+  const saveReviewDraft = () => {
+    try {
+      const draftData = {
+        rating: formData.rating,
+        content: formData.content,
+        exhibition: exhibition,
+        customExhibitionData: customExhibitionData,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('reviewDraft', JSON.stringify(draftData));
+      console.log('리뷰 초안 저장 완료');
+    } catch (error) {
+      console.error('리뷰 초안 저장 실패:', error);
+    }
+  };
 
   // 리뷰 제출
   const handleSubmit = async () => {
@@ -273,9 +288,40 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
         }),
       });
 
-      const submitResult = await submitResponse.json();
+      console.log('응답 상태:', submitResponse.status, submitResponse.statusText);
+
+      let submitResult;
+      try {
+        const responseText = await submitResponse.text();
+        console.log('서버 응답 텍스트:', responseText);
+        
+        if (responseText && responseText.trim() !== '') {
+          submitResult = JSON.parse(responseText);
+        } else {
+          console.error('서버에서 빈 응답을 받았습니다.');
+          alert('서버에서 응답을 받지 못했습니다. 잠시 후 다시 시도해주세요.');
+          setSubmitting(false);
+          return;
+        }
+      } catch (parseError) {
+        console.error('응답 파싱 오류:', parseError);
+        console.error('원본 응답:', await submitResponse.text());
+        alert(`서버 응답 오류: ${parseError.message}`);
+        setSubmitting(false);
+        return;
+      }
+
+      // submitResult가 제대로 파싱되었는지 확인
+      if (!submitResult || typeof submitResult !== 'object') {
+        console.error('잘못된 응답 형식:', submitResult);
+        alert('서버 응답 형식이 올바르지 않습니다.');
+        setSubmitting(false);
+        return;
+      }
+
       if (!submitResult.success) {
-        alert(submitResult.error);
+        console.error('리뷰 제출 오류:', submitResult);
+        alert(`리뷰 제출 실패: ${submitResult.error || '알 수 없는 오류'}`);
         setSubmitting(false);
         return;
       }
@@ -300,7 +346,8 @@ export default function ReviewWritePopup({ exhibition, customExhibitionData, onB
 
     } catch (error) {
       console.error("리뷰 작성 오류:", error);
-      alert("리뷰 작성 중 오류가 발생했습니다.");
+      console.error("오류 스택:", error.stack);
+      alert(`리뷰 작성 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
     } finally {
       setSubmitting(false);
     }
