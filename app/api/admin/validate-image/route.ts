@@ -320,7 +320,7 @@ async function validateImageAdvanced(imageUrl: string) {
       warnings: ['❌ 검증 중 오류 발생'],
       riskLevel: 'medium' as const,
       riskScore: 50,
-      details: { error: error.message }
+      details: { error: error instanceof Error ? error.message : String(error) }
     };
   }
 }
