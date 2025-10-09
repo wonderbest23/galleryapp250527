@@ -1279,8 +1279,8 @@ function CommunityPageContent() {
                         }}
                       />
                       
-                      {/* 음소거 토글 버튼 */}
-                      <button
+                      {/* 음소거 토글 버튼 - 오버레이 버튼 제거, 컨트롤 바 버튼만 사용 */}
+                      {/* <button
                         onClick={() => toggleMute(post.id)}
                         className="absolute bottom-4 right-4 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 transition-colors z-10"
                       >
@@ -1289,7 +1289,7 @@ function CommunityPageContent() {
                         ) : (
                           <Volume2 className="w-5 h-5" />
                         )}
-                      </button>
+                      </button> */}
                     </div>
                   )}
 

@@ -242,24 +242,23 @@ export default function VideoPlayer({
                   {isPlaying ? <FiPause size={20} /> : <FiPlay size={20} />}
                 </button>
 
-                {/* 음량 */}
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={toggleMute}
-                    className="text-white hover:text-blue-400 transition-colors"
-                  >
-                    {isMuted ? <FiVolumeX size={20} /> : <FiVolume2 size={20} />}
-                  </button>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={isMuted ? 0 : volume}
-                    onChange={handleVolumeChange}
-                    className="w-16 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
+                {/* 음량 컨트롤 - 음소거 버튼만 유지, 슬라이더는 숨김 */}
+                <button
+                  onClick={toggleMute}
+                  className="text-white hover:text-blue-400 transition-colors"
+                >
+                  {isMuted ? <FiVolumeX size={20} /> : <FiVolume2 size={20} />}
+                </button>
+                {/* 음량 슬라이더 숨김 처리 */}
+                {/* <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={isMuted ? 0 : volume}
+                  onChange={handleVolumeChange}
+                  className="w-16 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
+                /> */}
 
                 {/* 시간 표시 */}
                 <span className="text-white text-sm">
