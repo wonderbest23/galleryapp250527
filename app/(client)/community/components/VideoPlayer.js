@@ -23,6 +23,7 @@ export default function VideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasFirstFrame, setHasFirstFrame] = useState(false);
   
   const videoRef = useRef(null);
   const containerRef = useRef(null);
@@ -33,11 +34,22 @@ export default function VideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
+    // 모바일 환경 감지
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
     const handleLoadedMetadata = () => {
       setDuration(video.duration);
       setIsLoading(false);
-      // 첫 프레임을 표시하기 위해 currentTime을 0.1초로 설정
-      video.currentTime = 0.1;
+      // 모바일에서는 첫 프레임을 더 확실하게 표시
+      if (isMobile) {
+        // 모바일에서는 약간의 지연 후 첫 프레임 설정
+        setTimeout(() => {
+          video.currentTime = 0.1;
+          setHasFirstFrame(true);
+        }, 100);
+      } else {
+        video.currentTime = 0.1;
+      }
     };
 
     const handleLoadedData = () => {
@@ -199,12 +211,37 @@ export default function VideoPlayer({
         loop={loop}
         muted={isMuted}
         playsInline
-        preload="auto"
+        preload="metadata"
+        webkit-playsinline="true"
         onLoadedData={() => {
           setIsLoading(false);
           // 첫 프레임을 표시하기 위해 currentTime을 0.1초로 설정
-          if (videoRef.current) {
+          if (videoRef.current && !hasFirstFrame) {
             videoRef.current.currentTime = 0.1;
+            setHasFirstFrame(true);
+          }
+        }}
+        onLoadedMetadata={() => {
+          // 메타데이터 로드 시 첫 프레임 강제 표시
+          if (videoRef.current && !hasFirstFrame) {
+            videoRef.current.currentTime = 0.1;
+            setHasFirstFrame(true);
+          }
+        }}
+        onCanPlay={() => {
+          // 재생 가능 상태가 되면 로딩 완료
+          setIsLoading(false);
+          // 첫 프레임이 아직 표시되지 않았다면 강제로 표시
+          if (videoRef.current && !hasFirstFrame) {
+            videoRef.current.currentTime = 0.1;
+            setHasFirstFrame(true);
+          }
+        }}
+        onSeeked={() => {
+          // 시크 완료 시 첫 프레임 표시 완료
+          if (!hasFirstFrame) {
+            setHasFirstFrame(true);
+            setIsLoading(false);
           }
         }}
         onLoadStart={() => setIsLoading(true)}

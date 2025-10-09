@@ -1315,7 +1315,7 @@ function CommunityPageContent() {
                     <div className="bg-black relative">
                       <VideoPlayer
                         src={post.video_url}
-                        poster={post.image_url || undefined}
+                        poster={post.image_url || "/images/noimage.jpg"}
                         className="w-full max-h-[600px]"
                         autoPlay={false}
                         loop={true}
