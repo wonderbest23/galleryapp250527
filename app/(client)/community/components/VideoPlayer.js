@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { FiPlay, FiPause, FiVolume2, FiVolumeX, FiMaximize } from 'react-icons/fi';
+import { Play } from 'lucide-react';
 
 export default function VideoPlayer({ 
   src, 
@@ -35,6 +36,12 @@ export default function VideoPlayer({
     const handleLoadedMetadata = () => {
       setDuration(video.duration);
       setIsLoading(false);
+      // 첫 프레임을 표시하기 위해 currentTime을 0.1초로 설정
+      video.currentTime = 0.1;
+    };
+
+    const handleLoadedData = () => {
+      setIsLoading(false);
     };
 
     const handleTimeUpdate = () => {
@@ -66,6 +73,7 @@ export default function VideoPlayer({
     };
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('loadeddata', handleLoadedData);
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
@@ -75,6 +83,7 @@ export default function VideoPlayer({
 
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('loadeddata', handleLoadedData);
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('play', handlePlay);
       video.removeEventListener('pause', handlePause);
@@ -95,11 +104,13 @@ export default function VideoPlayer({
     }
   };
 
-  const toggleMute = () => {
+  const toggleMute = (e) => {
+    e.stopPropagation(); // 이벤트 버블링 방지
     const video = videoRef.current;
     if (!video) return;
 
     video.muted = !video.muted;
+    setIsMuted(video.muted);
   };
 
   const handleProgressClick = (e) => {
@@ -188,7 +199,15 @@ export default function VideoPlayer({
         loop={loop}
         muted={isMuted}
         playsInline
-        preload="metadata"
+        preload="auto"
+        onLoadedData={() => {
+          setIsLoading(false);
+          // 첫 프레임을 표시하기 위해 currentTime을 0.1초로 설정
+          if (videoRef.current) {
+            videoRef.current.currentTime = 0.1;
+          }
+        }}
+        onLoadStart={() => setIsLoading(true)}
       />
 
       {/* 로딩 인디케이터 */}
@@ -198,23 +217,37 @@ export default function VideoPlayer({
         </div>
       )}
 
+      {/* 재생 버튼 오버레이 - 영상이 정지 상태일 때만 표시 */}
+      {!isPlaying && !isLoading && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 hover:bg-opacity-30 transition-all cursor-pointer z-10"
+          onClick={(e) => {
+            // 컨트롤 영역 클릭 시에는 재생하지 않음
+            if (e.target.closest('.video-controls')) {
+              e.stopPropagation();
+              return;
+            }
+            togglePlay();
+          }}
+        >
+          <div className="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center shadow-lg hover:bg-opacity-100 transition-all transform hover:scale-105">
+            <Play className="w-8 h-8 text-gray-800 ml-1" fill="currentColor" />
+          </div>
+        </div>
+      )}
+
       {/* 커스텀 컨트롤 */}
       {controls && (
-        <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-300 ${
+        <div className={`video-controls absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-300 z-20 ${
           showControls ? 'opacity-100' : 'opacity-0'
         }`}>
-          {/* 중앙 플레이 버튼 */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <button
-              onClick={togglePlay}
-              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-4 transition-all duration-200 transform hover:scale-110"
-            >
-              {isPlaying ? (
-                <FiPause size={32} />
-              ) : (
-                <FiPlay size={32} className="ml-1" />
-              )}
-            </button>
+          {/* 중앙 클릭 영역 (버튼 이미지는 숨김) */}
+          <div 
+            className="absolute inset-0 cursor-pointer"
+            onClick={togglePlay}
+            title={isPlaying ? '일시정지' : '재생'}
+          >
+            {/* 투명한 클릭 영역 - 버튼 이미지는 없음 */}
           </div>
 
           {/* 하단 컨트롤 바 */}
@@ -244,7 +277,7 @@ export default function VideoPlayer({
 
                 {/* 음량 컨트롤 - 음소거 버튼만 유지, 슬라이더는 숨김 */}
                 <button
-                  onClick={toggleMute}
+                  onClick={(e) => toggleMute(e)}
                   className="text-white hover:text-blue-400 transition-colors"
                 >
                   {isMuted ? <FiVolumeX size={20} /> : <FiVolume2 size={20} />}
