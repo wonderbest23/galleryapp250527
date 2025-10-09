@@ -737,24 +737,44 @@ export function ExhibitionDetail({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-2 gap-4 ">
-        <Input
-          className="col-span-2 md:col-span-1"
-          label="전시회 제목"
-          value={editedExhibition.contents||""}
-          onValueChange={(value) =>
-            setEditedExhibition({ ...editedExhibition, contents: value })
-          }
-          isRequired={true}
-          placeholder="전시회 제목을 입력하세요"
-        />
-                <Input
-          className="col-span-2 md:col-span-1"
-          label="전시회 아이디"
-          value={editedExhibition.id||""}
-          
-          isDisabled={true}
-        />
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
+        {/* 필수 필드 - 전시회 제목 */}
+        <div className="col-span-2 md:col-span-1">
+          <label className="block text-sm font-bold text-gray-900 mb-2 flex items-center">
+            <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold mr-2">필수</span>
+            전시회 제목
+          </label>
+          <Input
+            value={editedExhibition.contents||""}
+            onValueChange={(value) =>
+              setEditedExhibition({ ...editedExhibition, contents: value })
+            }
+            placeholder="전시회 제목을 입력하세요"
+            variant="bordered"
+            size="lg"
+            classNames={{
+              input: "bg-white text-base",
+              inputWrapper: "border-2 border-red-300 hover:border-red-400 focus-within:border-red-500 bg-white shadow-sm"
+            }}
+          />
+        </div>
+        
+        {/* 전시회 아이디 - 숨김 처리 */}
+        <div className="col-span-2 md:col-span-1 hidden">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            전시회 아이디
+          </label>
+          <Input
+            value={editedExhibition.id||""}
+            isDisabled={true}
+            variant="bordered"
+            size="lg"
+            classNames={{
+              input: "bg-gray-100 text-base",
+              inputWrapper: "border-2 border-gray-300 bg-gray-100"
+            }}
+          />
+        </div>
         
         {/* 썸네일 이미지 업로드 컴포넌트 */}
         <div className="space-y-2 col-span-2">
@@ -820,19 +840,28 @@ export function ExhibitionDetail({
               </p>
               
               {/* 외부 URL 입력 필드 */}
-              <Input
-                size="sm"
-                label="또는 이미지 URL 직접 입력"
-                value={!imageFile ? editedExhibition.photo || "" : ""}
-                onValueChange={(value) => {
-                  if (!imageFile) {
-                    setEditedExhibition({ ...editedExhibition, photo: value });
-                    setPreviewUrl(value);
-                  }
-                }}
-                placeholder="https://example.com/image.jpg"
-                isDisabled={!!imageFile || isUploading}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  또는 이미지 URL 직접 입력
+                </label>
+                <Input
+                  value={!imageFile ? editedExhibition.photo || "" : ""}
+                  onValueChange={(value) => {
+                    if (!imageFile) {
+                      setEditedExhibition({ ...editedExhibition, photo: value });
+                      setPreviewUrl(value);
+                    }
+                  }}
+                  placeholder="https://example.com/image.jpg"
+                  isDisabled={!!imageFile || isUploading}
+                  variant="bordered"
+                  size="lg"
+                  classNames={{
+                    input: "bg-white text-base",
+                    inputWrapper: "border-2 border-gray-300 hover:border-blue-400 focus-within:border-blue-500 bg-white shadow-sm"
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -842,7 +871,10 @@ export function ExhibitionDetail({
           <>
             <div className="grid grid-cols-2 gap-4">
               <div className="relative">
-                <label className="text-sm font-medium mb-1 block">전시시작 *</label>
+                <label className="block text-sm font-bold text-gray-900 mb-2 flex items-center">
+                  <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold mr-2">필수</span>
+                  전시 시작일
+                </label>
                 <DatePicker
                   locale={ko}
                   selected={startDate}
@@ -859,7 +891,7 @@ export function ExhibitionDetail({
                   customInput={
                     <div className="relative">
                       <input
-                        className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-400 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
+                        className="w-full pl-3 pr-10 py-3 rounded-lg border-2 border-red-300 hover:border-red-400 focus:border-red-500 focus:outline-none cursor-pointer text-base bg-white shadow-sm"
                         value={
                           editedExhibition.start_date
                             ? `${editedExhibition.start_date.slice(0,4)}.${editedExhibition.start_date.slice(4,6)}.${editedExhibition.start_date.slice(6,8)}`
@@ -877,7 +909,10 @@ export function ExhibitionDetail({
                 />
               </div>
               <div className="relative">
-                <label className="text-sm font-medium mb-1 block">전시종료 *</label>
+                <label className="block text-sm font-bold text-gray-900 mb-2 flex items-center">
+                  <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold mr-2">필수</span>
+                  전시 종료일
+                </label>
                 <DatePicker
                   locale={ko}
                   selected={endDate}
@@ -894,7 +929,7 @@ export function ExhibitionDetail({
                   customInput={
                     <div className="relative">
                       <input
-                        className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-400 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
+                        className="w-full pl-3 pr-10 py-3 rounded-lg border-2 border-red-300 hover:border-red-400 focus:border-red-500 focus:outline-none cursor-pointer text-base bg-white shadow-sm"
                         value={
                           editedExhibition.end_date
                             ? `${editedExhibition.end_date.slice(0,4)}.${editedExhibition.end_date.slice(4,6)}.${editedExhibition.end_date.slice(6,8)}`
@@ -914,10 +949,13 @@ export function ExhibitionDetail({
             </div>
           </>
         ) : (
-          // 기존 코드 유지 (수정/상세 모드)
+          // 기존 전시회 수정 모드
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">전시시작 *</label>
+              <label className="block text-sm font-bold text-gray-900 mb-2 flex items-center">
+                <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold mr-2">필수</span>
+                전시 시작일
+              </label>
               <DatePicker
                 locale={ko}
                 selected={startDate}
@@ -934,7 +972,7 @@ export function ExhibitionDetail({
                 customInput={
                   <div className="relative">
                     <input
-                      className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-400 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
+                      className="w-full pl-3 pr-10 py-3 rounded-lg border-2 border-red-300 hover:border-red-400 focus:border-red-500 focus:outline-none cursor-pointer text-base bg-white shadow-sm"
                       value={
                         editedExhibition.start_date
                           ? `${editedExhibition.start_date.slice(0,4)}.${editedExhibition.start_date.slice(4,6)}.${editedExhibition.start_date.slice(6,8)}`
@@ -952,7 +990,10 @@ export function ExhibitionDetail({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">전시종료 *</label>
+              <label className="block text-sm font-bold text-gray-900 mb-2 flex items-center">
+                <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold mr-2">필수</span>
+                전시 종료일
+              </label>
               <DatePicker
                 locale={ko}
                 selected={endDate}
@@ -969,7 +1010,7 @@ export function ExhibitionDetail({
                 customInput={
                   <div className="relative">
                     <input
-                      className="w-full pl-3 pr-10 py-2 rounded-lg border-2 border-gray-400 focus:border-blue-500 focus:outline-none cursor-pointer text-lg"
+                      className="w-full pl-3 pr-10 py-3 rounded-lg border-2 border-red-300 hover:border-red-400 focus:border-red-500 focus:outline-none cursor-pointer text-base bg-white shadow-sm"
                       value={
                         editedExhibition.end_date
                           ? `${editedExhibition.end_date.slice(0,4)}.${editedExhibition.end_date.slice(4,6)}.${editedExhibition.end_date.slice(6,8)}`
@@ -989,56 +1030,109 @@ export function ExhibitionDetail({
           </div>
         )}
 
-        <Input
-          label="운영 시간"
-          value={editedExhibition.working_hour}
-          onValueChange={(value) =>
-            setEditedExhibition({ ...editedExhibition, working_hour: value })
-          }
-          className="col-span-2 md:col-span-1"
-        />
-        <Input
-          label="휴무일"
-          value={editedExhibition.off_date}
-          onValueChange={(value) =>
-            setEditedExhibition({ ...editedExhibition, off_date: value })
-          }
-        />
-        <Input
-          label="홈페이지 URL"
-          value={editedExhibition.homepage_url}
-          onValueChange={(value) =>
-            setEditedExhibition({ ...editedExhibition, homepage_url: value })
-          }
-          className="col-span-2 md:col-span-1"
-        />
-        <Input
-          label="리뷰 수"
-          value={editedExhibition.review_count||0}
-          onValueChange={(value) =>
-            setEditedExhibition({ ...editedExhibition, review_count: value })
-          }
-        />
-        <Input
-          label="평균 평점"
-          value={editedExhibition.review_average||0}
-          onValueChange={(value) =>
-            setEditedExhibition({ ...editedExhibition, review_average: value })
-          }
-          className="col-span-2 md:col-span-1"
-        />
+        <div className="col-span-2 md:col-span-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">운영 시간</label>
+          <Input
+            value={editedExhibition.working_hour || ""}
+            onValueChange={(value) =>
+              setEditedExhibition({ ...editedExhibition, working_hour: value })
+            }
+            placeholder="예: 10:00 - 18:00"
+            variant="bordered"
+            size="lg"
+            classNames={{
+              input: "bg-white text-base",
+              inputWrapper: "border-2 border-gray-300 hover:border-blue-400 focus-within:border-blue-500 bg-white shadow-sm"
+            }}
+          />
+        </div>
+        
+        <div className="col-span-2 md:col-span-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">휴무일</label>
+          <Input
+            value={editedExhibition.off_date || ""}
+            onValueChange={(value) =>
+              setEditedExhibition({ ...editedExhibition, off_date: value })
+            }
+            placeholder="예: 매주 월요일"
+            variant="bordered"
+            size="lg"
+            classNames={{
+              input: "bg-white text-base",
+              inputWrapper: "border-2 border-gray-300 hover:border-blue-400 focus-within:border-blue-500 bg-white shadow-sm"
+            }}
+          />
+        </div>
+        
+        <div className="col-span-2 md:col-span-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">홈페이지 URL</label>
+          <Input
+            value={editedExhibition.homepage_url || ""}
+            onValueChange={(value) =>
+              setEditedExhibition({ ...editedExhibition, homepage_url: value })
+            }
+            placeholder="https://example.com"
+            variant="bordered"
+            size="lg"
+            classNames={{
+              input: "bg-white text-base",
+              inputWrapper: "border-2 border-gray-300 hover:border-blue-400 focus-within:border-blue-500 bg-white shadow-sm"
+            }}
+          />
+        </div>
+        
+        <div className="col-span-2 md:col-span-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">리뷰 수</label>
+          <Input
+            value={editedExhibition.review_count||0}
+            onValueChange={(value) =>
+              setEditedExhibition({ ...editedExhibition, review_count: value })
+            }
+            variant="bordered"
+            size="lg"
+            classNames={{
+              input: "bg-white text-base",
+              inputWrapper: "border-2 border-gray-300 hover:border-blue-400 focus-within:border-blue-500 bg-white shadow-sm"
+            }}
+          />
+        </div>
+        
+        <div className="col-span-2 md:col-span-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">평균 평점</label>
+          <Input
+            value={editedExhibition.review_average||0}
+            onValueChange={(value) =>
+              setEditedExhibition({ ...editedExhibition, review_average: value })
+            }
+            variant="bordered"
+            size="lg"
+            classNames={{
+              input: "bg-white text-base",
+              inputWrapper: "border-2 border-gray-300 hover:border-blue-400 focus-within:border-blue-500 bg-white shadow-sm"
+            }}
+          />
+        </div>
+        
         <div className="col-span-2 md:col-span-1 space-y-2">
+          <label className="block text-sm font-bold text-gray-900 mb-2 flex items-center">
+            <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold mr-2">필수</span>
+            네이버 갤러리 URL
+          </label>
           <div className="flex items-end gap-2">
             <Input
-              label="네이버 갤러리 URL"
               value={editedExhibition.naver_gallery_url && typeof editedExhibition.naver_gallery_url === 'object' ? editedExhibition.naver_gallery_url.url || "" : editedExhibition.naver_gallery_url || ""}
               onValueChange={(value) =>
                 setEditedExhibition({ ...editedExhibition, naver_gallery_url: value })
               }
               className="flex-1"
-              isRequired
               isDisabled={!isEditing}
               placeholder="갤러리를 검색하거나 URL을 직접 입력하세요"
+              variant="bordered"
+              size="lg"
+              classNames={{
+                input: "bg-white text-base",
+                inputWrapper: "border-2 border-red-300 hover:border-red-400 focus-within:border-red-500 bg-white shadow-sm"
+              }}
             />
             {isEditing && (
               <Button
@@ -1058,98 +1152,118 @@ export function ExhibitionDetail({
             </div>
           )}
         </div>
-        <Input
-          label="가격"
-          value={editedExhibition.price}
-          onValueChange={(value) =>
-            setEditedExhibition({ ...editedExhibition, price: value })
-          }
-          className="col-span-2 md:col-span-1"
-        />
+        <div className="col-span-2 md:col-span-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">가격</label>
+          <Input
+            value={editedExhibition.price || ""}
+            onValueChange={(value) =>
+              setEditedExhibition({ ...editedExhibition, price: value })
+            }
+            placeholder="예: 15,000원"
+            variant="bordered"
+            size="lg"
+            classNames={{
+              input: "bg-white text-base",
+              inputWrapper: "border-2 border-gray-300 hover:border-blue-400 focus-within:border-blue-500 bg-white shadow-sm"
+            }}
+          />
+        </div>
 
-        <h1>추가 정보</h1>
-        {/* <Froala
-          label="추가 정보"
-          value={editedExhibition.add_info}
-          onChange={(value) => {
-            setEditedExhibition({ ...editedExhibition, add_info: value });
-          }}
-          className="col-span-2 w-full"
-        /> */}
-                <RichTextEditor
-          contents={editedExhibition.add_info}
-          setContents={(value) => {
-            
-            setEditedExhibition({ ...editedExhibition, add_info: value });
-          }}
-          className="col-span-2 w-full"
-        />
+        {/* 추가 정보 섹션 */}
+        <div className="col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">추가 정보</label>
+          <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
+            <RichTextEditor
+              contents={editedExhibition.add_info}
+              setContents={(value) => {
+                setEditedExhibition({ ...editedExhibition, add_info: value });
+              }}
+              className="w-full"
+            />
+          </div>
+        </div>
 
-        <div className="flex flex-col gap-4 md:col-span-2 mt-2">
-          <h3 className="text-md font-medium">전시회 옵션</h3>
-          <div className="flex flex-col gap-3 pl-1">
-            <Checkbox
-              id="isFree"
-              isSelected={editedExhibition.isFree||false}
-              onValueChange={(value) =>
-                setEditedExhibition({ ...editedExhibition, isFree: value })
-              }
-              className="col-span-2 md:col-span-1"
-            >
-              무료 전시회
-            </Checkbox>
-            <Checkbox
-              id="isRecommended"
-              isSelected={editedExhibition.isRecommended||false}
-              onValueChange={(value) =>
-                setEditedExhibition({ ...editedExhibition, isRecommended: value })
-              }
-            >
-              추천 전시회로 표시
-            </Checkbox>
-            {/* 티켓판매로 표시 + 무료티켓 전체수량 UI 개선 (가로 정렬) */}
-            <div className="flex flex-row items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50 w-fit mb-2">
-              <Checkbox
-                id="isSale"
-                isSelected={editedExhibition.isSale||false}
-                onValueChange={(value) =>
-                  setEditedExhibition({
-                    ...editedExhibition,
-                    isSale: value,
-                    free_ticket_limit:
-                      value && (editedExhibition.free_ticket_limit === undefined || editedExhibition.free_ticket_limit === '' || isNaN(Number(editedExhibition.free_ticket_limit)))
-                        ? 0
-                        : editedExhibition.free_ticket_limit,
-                  })
+        {/* 전시회 옵션 섹션 */}
+        <div className="col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-4">전시회 옵션</label>
+          <div className="space-y-4 bg-white p-4 rounded-lg border-2 border-gray-200">
+            {/* 무료 전시회 */}
+            <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+              <input
+                type="checkbox"
+                checked={editedExhibition.isFree || false}
+                onChange={(e) =>
+                  setEditedExhibition({ ...editedExhibition, isFree: e.target.checked })
                 }
-                className="whitespace-nowrap"
-              >
-                티켓판매로 표시
-              </Checkbox>
-              <Input
-                type="number"
-                min={1}
-                step={1}
-                size="sm"
-                label=""
-                value={editedExhibition.free_ticket_limit ?? 0}
-                onValueChange={(v) => setEditedExhibition({ ...editedExhibition, free_ticket_limit: v.replace(/[^0-9]/g, '') })}
-                isDisabled={!editedExhibition.isSale}
-                placeholder="티켓수량 (예: 100)"
-                className="w-40 border border-blue-300 bg-white px-2 py-1 rounded-md"
-                style={{minWidth:'160px'}}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
               />
+              <span className="text-gray-900 font-medium">무료 전시회</span>
+            </label>
+            
+            {/* 추천 전시회 */}
+            <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+              <input
+                type="checkbox"
+                checked={editedExhibition.isRecommended || false}
+                onChange={(e) =>
+                  setEditedExhibition({ ...editedExhibition, isRecommended: e.target.checked })
+                }
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <span className="text-gray-900 font-medium">추천 전시회로 표시</span>
+            </label>
+            
+            {/* 아트앤브릿지 */}
+            <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+              <input
+                type="checkbox"
+                checked={editedExhibition.pick || false}
+                onChange={(e) =>
+                  setEditedExhibition({ ...editedExhibition, pick: e.target.checked })
+                }
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <span className="text-gray-900 font-medium">아트앤브릿지</span>
+            </label>
+            
+            {/* 티켓 판매 */}
+            <div className="border-t pt-4">
+              <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                <input
+                  type="checkbox"
+                  checked={editedExhibition.isSale || false}
+                  onChange={(e) =>
+                    setEditedExhibition({
+                      ...editedExhibition,
+                      isSale: e.target.checked,
+                      free_ticket_limit:
+                        e.target.checked && (editedExhibition.free_ticket_limit === undefined || editedExhibition.free_ticket_limit === '' || isNaN(Number(editedExhibition.free_ticket_limit)))
+                          ? 0
+                          : editedExhibition.free_ticket_limit,
+                    })
+                  }
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <span className="text-gray-900 font-medium">티켓판매로 표시</span>
+              </label>
+              
+              {/* 티켓 수량 입력 */}
+              {editedExhibition.isSale && (
+                <div className="ml-7 mt-2">
+                  <label className="block text-sm text-gray-600 mb-1">무료 티켓 수량</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={editedExhibition.free_ticket_limit ?? 0}
+                    onChange={(e) => setEditedExhibition({ ...editedExhibition, free_ticket_limit: e.target.value.replace(/[^0-9]/g, '') })}
+                    placeholder="티켓수량 (예: 100)"
+                    className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              )}
             </div>
-            <span className="text-xs text-gray-500 mt-1 ml-1 mb-2 block">무료티켓 수량을 입력하세요</span>
-            <Checkbox
-              id="pick"
-              isSelected={editedExhibition.pick || false}
-              onValueChange={(value) =>
-                setEditedExhibition({ ...editedExhibition, pick: value })
-              }
-            >
-                              아트앤브릿지
-            </Checkbox>
+          </div>
             {/* <Checkbox
               id="isTestSale"
               isSelected={editedExhibition.isTestSale || false}
@@ -1168,7 +1282,6 @@ export function ExhibitionDetail({
             >
               사전티켓예매
             </Checkbox> */}
-          </div>
         </div>
 
         {/* QR 코드 섹션 - 편집 모드가 아닌 경우에만 표시 */}

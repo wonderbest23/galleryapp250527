@@ -102,53 +102,77 @@ export default function Exhibition() {
   }, [selectedExhibition]);
 
   return (
-    <div className="w-full h-full p-4 space-y-8 py-20">
-      <div className="flex max-w-7xl mx-auto flex-col gap-6">
-        {/* 왼쪽 영역 - 전시회 목록 */}
-        <div className="w-full space-y-4">
-          <h1 className="text-2xl font-bold">전시회 관리</h1>
-          <ExhibitionList
-            onSelectExhibition={handleSelectExhibition}
-            selectedKeys={selectedKeys}
-            onSelectionChange={setSelectedKeys}
-            onCreateExhibition={handleCreateExhibition}
-            onRefresh={handleSetRefreshFunction}
-            refreshToggle={refreshToggle}
-            setRefreshToggle={setRefreshToggle}
-          />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">전시회 관리</h1>
+          <p className="mt-2 text-gray-600">전시회를 등록하고 관리할 수 있습니다</p>
         </div>
 
-        {/* 오른쪽 영역 - 전시회 상세 정보 */}
-        <div className="w-full ">
-          <section className="bg-content2 rounded-lg p-4">
-            {selectedExhibition ? (
-              <ExhibitionDetail
-                key={selectedExhibition.id || 'new'} // key prop 추가로 강제 리렌더링
-                exhibition={selectedExhibition}
-                onUpdate={handleUpdateExhibition}
+        <div className="space-y-6">
+          {/* 전시회 목록 - 상단에 한 줄로 */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">전시회 목록</h2>
+              <p className="text-sm text-gray-500 mt-1">등록된 전시회를 확인하고 선택하세요</p>
+            </div>
+            <div className="p-6">
+              <ExhibitionList
+                onSelectExhibition={handleSelectExhibition}
                 selectedKeys={selectedKeys}
-                setSelectedKeys={setSelectedKeys}
-                onRefresh={() => {
-                  // 전시회 목록 새로고침 함수 호출
-                  if (refreshFunction) {
-                    console.log('부모 컴포넌트: 전시회 목록 새로고침 시도');
-                    refreshFunction();
-                    console.log('부모 컴포넌트: 전시회 목록 새로고침 완료');
-                  } else {
-                    console.log('부모 컴포넌트: refreshFunction 함수가 없습니다');
-                  }
-                }}
+                onSelectionChange={setSelectedKeys}
+                onCreateExhibition={handleCreateExhibition}
+                onRefresh={handleSetRefreshFunction}
                 refreshToggle={refreshToggle}
                 setRefreshToggle={setRefreshToggle}
-                selectedExhibition={selectedExhibition}
-                setSelectedExhibition={setSelectedExhibition}
               />
-            ) : (
-              <div className="text-center text-default-500 py-8">
-                전시회를 선택하면 상세 정보가 표시됩니다.
-              </div>
-            )}
-          </section>
+            </div>
+          </div>
+
+          {/* 전시회 상세 - 하단에 전체 너비로 */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">전시회 상세</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedExhibition ? "선택한 전시회의 정보를 확인하고 편집하세요" : "전시회를 선택하면 상세 정보가 표시됩니다"}
+              </p>
+            </div>
+            <div className="p-6">
+              {selectedExhibition ? (
+                <ExhibitionDetail
+                  key={selectedExhibition.id || 'new'}
+                  exhibition={selectedExhibition}
+                  onUpdate={handleUpdateExhibition}
+                  selectedKeys={selectedKeys}
+                  setSelectedKeys={setSelectedKeys}
+                  onRefresh={() => {
+                    if (refreshFunction) {
+                      console.log('부모 컴포넌트: 전시회 목록 새로고침 시도');
+                      refreshFunction();
+                      console.log('부모 컴포넌트: 전시회 목록 새로고침 완료');
+                    } else {
+                      console.log('부모 컴포넌트: refreshFunction 함수가 없습니다');
+                    }
+                  }}
+                  refreshToggle={refreshToggle}
+                  setRefreshToggle={setRefreshToggle}
+                  selectedExhibition={selectedExhibition}
+                  setSelectedExhibition={setSelectedExhibition}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">전시회를 선택하세요</h3>
+                  <p className="text-gray-500">위 목록에서 전시회를 선택하면 상세 정보가 표시됩니다</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

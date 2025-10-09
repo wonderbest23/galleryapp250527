@@ -321,14 +321,16 @@ export function ExhibitionList({
 
   return (
     <div className="space-y-4 ExhibitionList">
-      <div className="grid grid-cols-4 items-center justify-end gap-4">
+      <div className="grid grid-cols-4 items-stretch justify-end gap-4">
         <button
           onClick={handleUploadClick}
           disabled={uploading}
-          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors col-span-4 md:col-span-1"
+          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors col-span-4 md:col-span-1 min-h-[48px] text-sm"
         >
           <Icon icon="lucide:upload" className="w-4 h-4" />
-          {uploading ? "업로드 중..." : "전시회 엑셀 업로드"}
+          <span className="text-center leading-tight">
+            {uploading ? "업로드 중..." : "전시회 엑셀 업로드"}
+          </span>
         </button>
         <input
           type="file"
@@ -340,17 +342,21 @@ export function ExhibitionList({
         <button
           onClick={handleExcelDownload}
           disabled={uploading}
-          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors col-span-4 md:col-span-1"
+          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors col-span-4 md:col-span-1 min-h-[48px] text-sm"
         >
           <Icon icon="lucide:download" className="w-4 h-4" />
-          {uploading ? "처리 중..." : "전시회 엑셀 다운로드"}
+          <span className="text-center leading-tight">
+            {uploading ? "처리 중..." : "전시회 엑셀 다운로드"}
+          </span>
         </button>
         <button
           onClick={onCreateExhibition}
-          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors col-span-4 md:col-span-1"
+          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition-colors col-span-4 md:col-span-1 min-h-[48px] text-sm"
         >
           <Icon icon="lucide:plus" className="w-4 h-4" />
-          전시회 신규 등록
+          <span className="text-center leading-tight">
+            전시회 신규 등록
+          </span>
         </button>
         <button
           onClick={() => {
@@ -361,10 +367,12 @@ export function ExhibitionList({
             link.click();
             document.body.removeChild(link);
           }}
-          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors col-span-4 md:col-span-1"
+          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition-colors col-span-4 md:col-span-1 min-h-[48px] text-sm"
         >
           <Icon icon="lucide:file-spreadsheet" className="w-4 h-4" />
-          전시회 엑셀 업로드 양식
+          <span className="text-center leading-tight">
+            전시회 엑셀 업로드 양식
+          </span>
         </button>
       </div>
       {progressVisible && (
