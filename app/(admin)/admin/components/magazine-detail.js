@@ -119,42 +119,31 @@ export function MagazineDetail({
         throw error;
       }
       
-      // 2. 썸네일 생성 및 업로드
-      try {
-        // 원본 이미지를 ArrayBuffer로 변환
-        const arrayBuffer = await webpBlob.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        
-        // Sharp로 썸네일 생성 (600x450px, JPEG 85% 품질)
-        const sharp = require('sharp');
-        const thumbnailBuffer = await sharp(buffer)
-          .resize(600, 450)
-          .jpeg({ quality: 85 })
-          .toBuffer();
-        
-        // 썸네일 업로드
-        const thumbnailPath = `thumbnails/${fileName}`;
-        const { error: thumbError } = await supabase.storage
-          .from('magazine')
-          .upload(thumbnailPath, thumbnailBuffer, {
-            contentType: 'image/jpeg',
-            cacheControl: '3600',
-            upsert: true
-          });
-        
-        if (thumbError) {
-          console.warn("매거진 썸네일 생성 실패:", thumbError);
-        } else {
-          console.log("✅ 매거진 썸네일 자동 생성 완료:", thumbnailPath);
-        }
-      } catch (thumbError) {
-        console.warn("매거진 썸네일 생성 중 오류 (메인 이미지는 정상 업로드됨):", thumbError);
-      }
-      
       // 업로드된 이미지의 공개 URL 생성
       const { data: publicUrlData } = supabase.storage
         .from('magazine')
         .getPublicUrl(filePath);
+      
+      // 2. 서버에서 썸네일 생성 (비동기 - 실패해도 메인 업로드는 성공)
+      fetch('/api/upload-magazine-thumbnail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          imageUrl: publicUrlData.publicUrl,
+          fileName: filePath
+        })
+      }).then(res => res.json())
+        .then(result => {
+          if (result.success) {
+            console.log("✅ 매거진 썸네일 자동 생성 완료:", result.thumbnailUrl);
+          } else {
+            console.warn("썸네일 생성 실패 (메인 이미지는 정상):", result.error);
+          }
+        })
+        .catch(err => {
+          console.warn("썸네일 생성 요청 실패 (메인 이미지는 정상):", err);
+        });
+      
       setImageUploading(false);
       return publicUrlData.publicUrl;
     } catch (error) {
