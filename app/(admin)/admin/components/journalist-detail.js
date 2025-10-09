@@ -102,7 +102,8 @@ export function JournalistDetail({
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      // 신청 상태를 반려로 변경
+      const { error: appError } = await supabase
         .from("journalist_applications")
         .update({ 
           status: "rejected",
@@ -111,11 +112,19 @@ export function JournalistDetail({
         })
         .eq("id", editedApplication.id);
 
-      if (error) throw error;
+      if (appError) throw appError;
+
+      // 프로필에 기자단 여부를 false로 업데이트 (기존 기자단도 자격 박탈)
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ is_journalist: false })
+        .eq("id", editedApplication.user_id);
+
+      if (profileError) throw profileError;
 
       addToast({
         title: "반려 완료",
-        description: "기자단 신청이 반려되었습니다.",
+        description: "기자단 신청이 반려되었으며, 기자단 자격이 박탈되었습니다.",
         color: "success",
       });
 
@@ -347,8 +356,8 @@ export function JournalistDetail({
         </div>
 
         {/* 처리 버튼 */}
-        {editedApplication.status === "pending" && (
-          <div className="flex gap-2 pt-4">
+        <div className="flex gap-2 pt-4">
+          {editedApplication.status === "pending" && (
             <Button
               color="success"
               className="flex-1"
@@ -358,6 +367,22 @@ export function JournalistDetail({
             >
               승인
             </Button>
+          )}
+          {editedApplication.status === "approved" && (
+            <div className="flex-1 flex items-center justify-center">
+              <Chip color="success" variant="flat" size="lg">
+                승인 완료
+              </Chip>
+            </div>
+          )}
+          {editedApplication.status === "rejected" && (
+            <div className="flex-1 flex items-center justify-center">
+              <Chip color="danger" variant="flat" size="lg">
+                반려 완료
+              </Chip>
+            </div>
+          )}
+          {(editedApplication.status === "pending" || editedApplication.status === "approved") && (
             <Button
               color="danger"
               className="flex-1"
@@ -365,10 +390,10 @@ export function JournalistDetail({
               isLoading={isSaving}
               startContent={<Icon icon="mdi:close" />}
             >
-              반려
+              {editedApplication.status === "approved" ? "기자단 자격 박탈" : "반려"}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
