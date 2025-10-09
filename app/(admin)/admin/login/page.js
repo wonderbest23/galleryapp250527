@@ -35,11 +35,6 @@ export default function AdminLoginPage({ searchParams }) {
     if (typeof window !== 'undefined' && rememberLogin) {
       localStorage.setItem('admin_login_email', email);
       localStorage.setItem('admin_login_password', password);
-      addToast({
-        title: '저장 완료',
-        description: '아이디/비밀번호가 저장되었습니다.',
-        color: 'success',
-      });
     }
   };
 
@@ -50,15 +45,7 @@ export default function AdminLoginPage({ searchParams }) {
     }
   }, [rememberLogin]);
 
-  useEffect(() => {
-    if (error) {
-      addToast({
-        title: "로그인 실패",
-        description: error,
-        color: 'danger'
-      });
-    }
-  }, [error]);
+  // 에러 표시는 searchParams로 처리됨
 
   return (
     <Form
@@ -68,28 +55,34 @@ export default function AdminLoginPage({ searchParams }) {
     >
       <div className="flex flex-col gap-4 md:max-w-[30%] w-full max-w-[80%]">
         <h1 className="text-2xl font-bold text-center">관리자 로그인</h1>
-        <Input
-          isRequired
-          label="이메일"
-          labelPlacement="outside"
-          name="email"
-          placeholder="이메일을 입력해주세요"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onValueChange={setEmail}
-        />
-        <Input
-          isRequired
-          label="비밀번호"
-          labelPlacement="outside"
-          name="password"
-          placeholder="비밀번호를 입력해주세요"
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onValueChange={setPassword}
-        />
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-gray-700">이메일</label>
+          <Input
+            isRequired
+            name="email"
+            placeholder="이메일을 입력해주세요"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onValueChange={setEmail}
+            variant="bordered"
+            size="lg"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-gray-700">비밀번호</label>
+          <Input
+            isRequired
+            name="password"
+            placeholder="비밀번호를 입력해주세요"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onValueChange={setPassword}
+            variant="bordered"
+            size="lg"
+          />
+        </div>
         <div className="flex gap-4">
           <Button className="w-full" color="primary" type="submit" onClick={handleSaveLogin}>
             로그인
