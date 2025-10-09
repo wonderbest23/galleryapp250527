@@ -20,7 +20,6 @@ import {
 
 export default function NotificationBar({ isOpen, onClose, onRead }) {
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredNotifications, setFilteredNotifications] = useState([]);
   const [filterType, setFilterType] = useState("unread"); // all, unread, announcements, community, rewards, approvals
@@ -80,7 +79,6 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
 
   const fetchAllNotifications = async () => {
     try {
-      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -367,8 +365,6 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       setFilteredNotifications(allNotifications);
     } catch (error) {
       console.log("알림을 가져오는 중 오류 발생:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -687,14 +683,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
 
           {/* 콘텐츠 영역 */}
           <div className="p-6">
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="text-center space-y-3">
-                  <progress />
-                  <p className="text-gray-600">알림을 불러오는 중...</p>
-                </div>
-              </div>
-            ) : (
+            {(
               <div className="space-y-6">
                 {/* 검색 바 */}
                 <div className="relative">
