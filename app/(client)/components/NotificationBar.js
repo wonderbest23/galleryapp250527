@@ -204,7 +204,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
         .select('type, related_id, is_read')
         .eq('user_id', user.id)
         .in('type', ['like_read','comment_read','reward_purchase_read','announcement_read','artist_approved','journalist_approved','point_earned']);
-      const readMap = new Map((readRows || []).map(r => [r.related_id, !!r.is_read]));
+      const readMap = new Map((readRows || []).map(r => [`${r.type}_${r.related_id}`, !!r.is_read]));
 
       // 모든 알림을 통합하여 하나의 배열로 만들기
       const allNotifications = [];
@@ -213,7 +213,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       if (announcementsResult.data) {
         for (const announcement of announcementsResult.data) {
           // 공지사항 읽음 상태 확인
-          const isRead = readMap.get(`announcement_${announcement.id}`) || false;
+          const isRead = readMap.get(`announcement_read_announcement_${announcement.id}`) || false;
 
           allNotifications.push({
             id: `announcement_${announcement.id}`,
@@ -233,7 +233,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       if (communityLikesResult.data) {
         communityLikesResult.data.forEach(like => {
           if (like.post && like.liker) {
-            const isRead = readMap.get(`like_${like.id}`) || false;
+            const isRead = readMap.get(`like_read_like_${like.id}`) || false;
             allNotifications.push({
               id: `like_${like.id}`,
               type: "like",
@@ -251,7 +251,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       if (communityCommentsResult.data) {
         communityCommentsResult.data.forEach(comment => {
           if (comment.post && comment.commenter) {
-            const isRead = readMap.get(`comment_${comment.id}`) || false;
+            const isRead = readMap.get(`comment_read_comment_${comment.id}`) || false;
             allNotifications.push({
               id: `comment_${comment.id}`,
               type: "comment",
@@ -269,7 +269,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       if (rewardPurchasesResult.data) {
         rewardPurchasesResult.data.forEach(purchase => {
           if (purchase.item) {
-            const isRead = readMap.get(`reward_${purchase.id}`) || false;
+            const isRead = readMap.get(`reward_purchase_read_reward_${purchase.id}`) || false;
             allNotifications.push({
               id: `reward_${purchase.id}`,
               type: "reward_purchase",
@@ -552,7 +552,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             title: notification.title,
             message: notification.message,
             is_read: true,
-            related_id: notification.id,
+            related_id: notification.id, // 이미 announcement_123 형태로 저장됨
             created_at: new Date().toISOString()
           }, { onConflict: 'user_id,type,related_id' });
         break;
@@ -567,7 +567,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             title: notification.title,
             message: notification.message,
             is_read: true,
-            related_id: notification.id,
+            related_id: notification.id, // 이미 like_123 형태로 저장됨
             created_at: new Date().toISOString()
           }, { onConflict: 'user_id,type,related_id' });
         break;
@@ -582,7 +582,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             title: notification.title,
             message: notification.message,
             is_read: true,
-            related_id: notification.id,
+            related_id: notification.id, // 이미 comment_123 형태로 저장됨
             created_at: new Date().toISOString()
           }, { onConflict: 'user_id,type,related_id' });
         break;
@@ -597,7 +597,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             title: notification.title,
             message: notification.message,
             is_read: true,
-            related_id: notification.id,
+            related_id: notification.id, // 이미 reward_123 형태로 저장됨
             created_at: new Date().toISOString()
           }, { onConflict: 'user_id,type,related_id' });
         break;

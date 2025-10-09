@@ -629,6 +629,8 @@ function CommunityPageContent() {
         return;
       }
 
+      const currentLiked = targetPost?.user_liked || false;
+
       // UI 즉시 업데이트 (낙관적 업데이트)
       setPosts(prevPosts => prevPosts.map(post => {
         if (post.id === postId) {
@@ -642,21 +644,71 @@ function CommunityPageContent() {
         return post;
       }));
 
-      // 좋아요 토글
-      const { error } = await supabase.rpc('like_post_once', {
-        p_post_id: postId,
-        p_user_id: user.id
-      });
+      if (!currentLiked) {
+        // 좋아요 추가
+        const { error } = await supabase
+          .from('community_likes')
+          .upsert({ post_id: postId, user_id: user.id }, { onConflict: 'post_id,user_id' });
+        
+        if (error) {
+          console.error('좋아요 추가 오류:', error);
+          // 롤백
+          setPosts(prevPosts => prevPosts.map(post => {
+            if (post.id === postId) {
+              return {
+                ...post,
+                user_liked: currentLiked,
+                likes: (post.likes || 0) - 1
+              };
+            }
+            return post;
+          }));
+          return;
+        }
 
-      if (error) {
-        console.error('좋아요 처리 오류:', error);
-        // 오류 시 원래 상태로 되돌리기
-        fetchPosts();
-        return;
+        // 좋아요 수 증가
+        const { error: updateError } = await supabase
+          .from('community_post')
+          .update({ likes: (targetPost?.likes || 0) + 1 })
+          .eq('id', postId);
+
+        if (updateError) {
+          console.error('좋아요 수 업데이트 오류:', updateError);
+        }
+      } else {
+        // 좋아요 취소
+        const { error } = await supabase
+          .from('community_likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+        
+        if (error) {
+          console.error('좋아요 취소 오류:', error);
+          // 롤백
+          setPosts(prevPosts => prevPosts.map(post => {
+            if (post.id === postId) {
+              return {
+                ...post,
+                user_liked: currentLiked,
+                likes: (post.likes || 0) + 1
+              };
+            }
+            return post;
+          }));
+          return;
+        }
+
+        // 좋아요 수 감소
+        const { error: updateError } = await supabase
+          .from('community_post')
+          .update({ likes: Math.max(0, (targetPost?.likes || 0) - 1) })
+          .eq('id', postId);
+
+        if (updateError) {
+          console.error('좋아요 수 업데이트 오류:', updateError);
+        }
       }
-
-      // 성공 시 최신 데이터로 동기화
-      fetchPosts();
     } catch (error) {
       console.error('좋아요 처리 중 오류:', error);
       // 오류 시 원래 상태로 되돌리기

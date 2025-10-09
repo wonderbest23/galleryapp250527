@@ -379,16 +379,28 @@ export default function CommunityPostDetail({ params }) {
         return;
       }
       
+      const currentLiked = liked;
+
       // 낙관적 업데이트
       setLiked(prev => !prev);
       setLikeCount(prev => (liked ? Math.max(0, prev - 1) : prev + 1));
 
-      if (!liked) {
+      if (!currentLiked) {
         // 좋아요 추가 (중복 무시)
         const { error } = await supabase
           .from('community_likes')
           .upsert({ post_id: post.id, user_id: user.id }, { onConflict: 'post_id,user_id' });
         if (error) throw error;
+
+        // 좋아요 수 증가
+        const { error: updateError } = await supabase
+          .from('community_post')
+          .update({ likes: (likeCount || 0) + 1 })
+          .eq('id', post.id);
+        
+        if (updateError) {
+          console.error('좋아요 수 업데이트 오류:', updateError);
+        }
       } else {
         // 좋아요 취소
         const { error } = await supabase
@@ -397,6 +409,16 @@ export default function CommunityPostDetail({ params }) {
           .eq('post_id', post.id)
           .eq('user_id', user.id);
         if (error) throw error;
+
+        // 좋아요 수 감소
+        const { error: updateError } = await supabase
+          .from('community_post')
+          .update({ likes: Math.max(0, (likeCount || 0) - 1) })
+          .eq('id', post.id);
+        
+        if (updateError) {
+          console.error('좋아요 수 업데이트 오류:', updateError);
+        }
       }
     } catch (e) {
       console.log('like error', e);
