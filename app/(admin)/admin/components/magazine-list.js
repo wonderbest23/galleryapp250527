@@ -112,77 +112,127 @@ export function MagazineList({
   useEffect(()=>{ onSelectionChange(new Set()); },[search]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-4 items-center justify-end gap-4">
+    <div className="space-y-6">
+      {/* Search and Create Section */}
+      <div className="space-y-4">
+        <div className="relative">
+          <Input
+            placeholder="매거진 제목, 부제목, 내용으로 검색..."
+            value={search}
+            onValueChange={setSearch}
+            startContent={
+              <Icon icon="lucide:search" className="text-gray-400 w-4 h-4" />
+            }
+            className="w-full"
+            variant="bordered"
+            size="md"
+          />
+        </div>
+        
         <Button
-          className="text-white col-span-4 md:col-span-1 md:col-start-4"
-          color="primary"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
           variant="solid"
           onPress={onCreateMagazine}
+          size="lg"
         >
-          <Icon icon="lucide:plus" className="mr-1" />새 매거진 등록
+          <Icon icon="lucide:plus" className="w-4 h-4 mr-2" />
+          새 매거진 등록
         </Button>
       </div>
-      <div className="flex items-center gap-4 w-full">
-        <Input
-          placeholder="매거진 검색..."
-          value={search}
-          onValueChange={setSearch}
-          startContent={
-            <Icon icon="lucide:search" className="text-default-400" />
-          }
-          className="w-full"
-        />
+
+      {/* Magazine List */}
+      <div className="space-y-3">
+        {magazines.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Icon icon="lucide:book-open" className="w-6 h-6 text-gray-400" />
+            </div>
+            <p className="text-gray-500 text-sm">
+              {search ? "검색 결과가 없습니다" : "등록된 매거진이 없습니다"}
+            </p>
+          </div>
+        ) : (
+          magazines.map((magazine) => {
+            const isSelected = selectedKeys.has(magazine.id.toString());
+            return (
+              <div
+                key={magazine.id}
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                  isSelected 
+                    ? 'border-blue-500 bg-blue-50 shadow-sm' 
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                }`}
+                onClick={() => {
+                  const keySet = new Set([magazine.id]);
+                  onSelectionChange(keySet);
+                  onSelectMagazine({ ...magazine });
+                }}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`font-semibold text-sm truncate ${
+                      isSelected ? 'text-blue-900' : 'text-gray-900'
+                    }`}>
+                      {magazine.title || '제목 없음'}
+                    </h3>
+                    {magazine.subtitle && (
+                      <p className={`text-xs mt-1 truncate ${
+                        isSelected ? 'text-blue-700' : 'text-gray-600'
+                      }`}>
+                        {magazine.subtitle}
+                      </p>
+                    )}
+                    <div className="flex items-center mt-2 space-x-3 text-xs text-gray-500">
+                      <span className="flex items-center">
+                        <Icon icon="lucide:calendar" className="w-3 h-3 mr-1" />
+                        {magazine.created_at ? new Date(magazine.created_at).toLocaleDateString("ko-KR") : "-"}
+                      </span>
+                      <span className="flex items-center">
+                        <Icon icon="lucide:eye" className="w-3 h-3 mr-1" />
+                        조회수 {magazine.view_count || 0}
+                      </span>
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <div className="ml-3 flex-shrink-0">
+                      <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                        <Icon icon="lucide:check" className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {magazine.contents && (
+                  <p className={`text-xs mt-2 line-clamp-2 ${
+                    isSelected ? 'text-blue-700' : 'text-gray-500'
+                  }`}>
+                    {magazine.contents.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                  </p>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
-      <div className="overflow-x-auto w-full">
-      <Table
-        className="min-w-[600px] "
-        classNames={{ wrapper: "p-0" }}
-        shadow="none"
-        variant="bordered"
-        aria-label="매거진 목록"
-        selectionMode="single"
-        selectedKeys={selectedKeys}
-        onSelectionChange={handleSelectionChange}
-      >
-        <TableHeader>
-          <TableColumn className="w-1/4">제목</TableColumn>
-          <TableColumn className="w-1/4">부제목</TableColumn>
-          <TableColumn className="w-1/4">내용</TableColumn>
-          <TableColumn className="w-1/4">작성일</TableColumn>
-        </TableHeader>
-        <TableBody>
-          {magazines.map((magazine) => (
-            <TableRow
-              key={magazine.id}
-              onClick={() => {
-                const keySet = new Set([magazine.id]);
-                onSelectionChange(keySet);
-                onSelectMagazine({ ...magazine });
-              }}
-            >
-              <TableCell>{magazine.title}</TableCell>
-              <TableCell>{magazine.subtitle}</TableCell>
-              <TableCell className="overflow-hidden whitespace-nowrap text-ellipsis max-w-[200px]" title={magazine.content}>
-                {magazine.contents}
-              </TableCell>
-              <TableCell>
-                {magazine.created_at ? new Date(magazine.created_at).toLocaleString("ko-KR") : "-"}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      </div>
-      <div className="flex justify-center w-full">
-        <Pagination 
-          page={page} 
-          total={total} 
-          initialPage={1}
-          onChange={handlePageChange} 
-          showControls
-        />
-      </div>
+
+      {/* Pagination */}
+      {magazines.length > 0 && (
+        <div className="flex justify-center pt-4">
+          <Pagination 
+            page={page} 
+            total={total} 
+            initialPage={1}
+            onChange={handlePageChange} 
+            showControls
+            size="sm"
+            classNames={{
+              wrapper: "gap-0 overflow-visible h-8 rounded border border-divider",
+              item: "w-8 h-8 text-small rounded-none bg-transparent",
+              cursor: "bg-gradient-to-b shadow-lg from-default-500 to-default-800 dark:from-default-500 dark:to-default-600 text-white font-bold",
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

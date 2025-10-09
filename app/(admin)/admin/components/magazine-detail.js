@@ -376,73 +376,131 @@ export function MagazineDetail({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">
-          {isNewMagazine ? "새 매거진 등록" : "매거진 상세 정보"}
-        </h2>
-        <div className="flex gap-2">
-          <Button color="primary" onPress={handleSave}>
-            <Icon icon="lucide:save" className="text-lg mr-1" />
-            {isNewMagazine ? "등록" : "저장"}
+      {/* Header */}
+      <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {isNewMagazine ? "새 매거진 등록" : "매거진 상세 정보"}
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            {isNewMagazine ? "새로운 매거진을 등록하세요" : "매거진 정보를 확인하고 편집하세요"}
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button 
+            color="primary" 
+            onPress={handleSave}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Icon icon="lucide:save" className="w-4 h-4 mr-2" />
+            {isNewMagazine ? "등록하기" : "저장하기"}
           </Button>
           {!isNewMagazine && (
-            <Button color="danger" variant="solid" onPress={handleDelete}>
-              <Icon icon="lucide:trash" className="text-lg mr-1" />
+            <Button 
+              color="danger" 
+              variant="solid" 
+              onPress={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <Icon icon="lucide:trash" className="w-4 h-4 mr-2" />
               삭제
             </Button>
           )}
-
+          <Button 
+            variant="bordered" 
+            onPress={handleCancel}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
+            <Icon icon="lucide:x" className="w-4 h-4 mr-2" />
+            취소
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="제목"
-          value={editedMagazine.title || ''}
-          onValueChange={(value) => setEditedMagazine({...editedMagazine, title: value})}
-          className="md:col-span-2"
-        />
-
-        <Input
-          label="부제목"
-          value={editedMagazine.subtitle || ''}
-          onValueChange={(value) => setEditedMagazine({...editedMagazine, subtitle: value})}
-          className="md:col-span-2"
-        />
-
-        <Input
-          label="작성일"
-          type="datetime-local"
-          value={editedMagazine.created_at ? editedMagazine.created_at.slice(0, 16) : ""}
-          onValueChange={value => setEditedMagazine({ ...editedMagazine, created_at: value })}
-          className="md:col-span-2"
-        />
-
-        <div className="space-y-2 md:col-span-2">
-
+      {/* Basic Information */}
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <Icon icon="lucide:info" className="w-5 h-5 mr-2 text-blue-600" />
+          기본 정보
+        </h3>
+        <div className="grid grid-cols-1 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              제목 <span className="text-red-500">*</span>
+            </label>
+            <Input
+              value={editedMagazine.title || ''}
+              onValueChange={(value) => setEditedMagazine({...editedMagazine, title: value})}
+              placeholder="매거진 제목을 입력하세요"
+              variant="bordered"
+              size="lg"
+              className="w-full"
+            />
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* 대표 섬네일 (세로형) */}
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-              <h3 className="text-center font-medium mb-2">대표 이미지</h3>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              부제목
+            </label>
+            <Input
+              value={editedMagazine.subtitle || ''}
+              onValueChange={(value) => setEditedMagazine({...editedMagazine, subtitle: value})}
+              placeholder="매거진 부제목을 입력하세요"
+              variant="bordered"
+              size="lg"
+              className="w-full"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              작성일
+            </label>
+            <Input
+              type="datetime-local"
+              value={editedMagazine.created_at ? editedMagazine.created_at.slice(0, 16) : ""}
+              onValueChange={value => setEditedMagazine({ ...editedMagazine, created_at: value })}
+              variant="bordered"
+              size="lg"
+              className="w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Images Section */}
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <Icon icon="lucide:image" className="w-5 h-5 mr-2 text-green-600" />
+          이미지 관리
+        </h3>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 대표 이미지 */}
+          <div className="lg:col-span-1">
+            <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-gray-400 transition-colors">
+              <h4 className="text-center font-medium mb-3 text-gray-700">대표 이미지</h4>
               <div className="relative w-full">
                 {editedMagazine.photos && editedMagazine.photos.length > 0 && editedMagazine.photos[0].url ? (
-                  <div className="relative">
+                  <div className="relative group">
                     <img 
                       src={editedMagazine.photos[0].url} 
-                      alt="대표 썸네일" 
-                      className="w-full h-64 object-cover rounded-md mx-auto"
+                      alt="대표 이미지" 
+                      className="w-full h-48 object-cover rounded-md"
                     />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-md flex items-center justify-center">
+                      <Icon icon="lucide:eye" className="text-white text-xl opacity-0 group-hover:opacity-100" />
+                    </div>
                     {isEditing && (
                       <Button
                         isIconOnly
                         color="danger"
-                        variant="flat"
+                        variant="solid"
                         size="sm"
                         className="absolute top-2 right-2"
                         onPress={() => removeImageField(0)}
                       >
-                        <Icon icon="lucide:x" />
+                        <Icon icon="lucide:x" className="w-4 h-4" />
                       </Button>
                     )}
                   </div>
@@ -462,11 +520,14 @@ export function MagazineDetail({
                       htmlFor={isEditing ? "thumbnail-upload" : ''}
                       className={`${isEditing ? 'cursor-pointer' : ''}`}
                     >
-                      <div className="flex flex-col items-center justify-center h-64 bg-gray-100 rounded-md border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors">
-                        <Icon icon="lucide:image" className="text-4xl text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">대표 이미지를 업로드해주세요</p>
+                      <div className="flex flex-col items-center justify-center h-48 bg-gray-100 rounded-md border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors">
+                        <Icon icon="lucide:upload" className="text-3xl text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500 text-center">대표 이미지 업로드</p>
                         {isEditing && imageUploading && (
-                          <p className="text-xs text-blue-500 mt-2">업로드 중...</p>
+                          <div className="mt-2 flex items-center text-xs text-blue-500">
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500 mr-1"></div>
+                            업로드 중...
+                          </div>
                         )}
                       </div>
                     </label>
@@ -474,10 +535,12 @@ export function MagazineDetail({
                 )}
               </div>
             </div>
-            
-            {/* 추가 이미지 갤러리 (가로형) */}
-            <div className="md:col-span-2 border-2 border-dashed border-gray-300 rounded-lg p-4">
-              <h3 className="text-center font-medium mb-2">추가 이미지</h3>
+          </div>
+          
+          {/* 추가 이미지 갤러리 */}
+          <div className="lg:col-span-2">
+            <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-gray-400 transition-colors">
+              <h4 className="text-center font-medium mb-3 text-gray-700">추가 이미지</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {editedMagazine.photos.slice(1).map((photo, index) => (
                   <div key={index + 1} className="relative">
@@ -486,22 +549,22 @@ export function MagazineDetail({
                         <img 
                           src={photo.url} 
                           alt={`매거진 이미지 ${index + 1}`} 
-                          className="w-full h-28 object-cover rounded-md cursor-pointer"
+                          className="w-full h-24 object-cover rounded-md cursor-pointer"
                           onClick={() => window.open(photo.url, '_blank')}
                         />
-                        <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
-                          <Icon icon="lucide:eye" className="text-white text-xl" />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-md flex items-center justify-center">
+                          <Icon icon="lucide:eye" className="text-white text-lg opacity-0 group-hover:opacity-100" />
                         </div>
                         {isEditing && (
                           <Button
                             isIconOnly
                             color="danger"
-                            variant="flat"
+                            variant="solid"
                             size="sm"
                             className="absolute top-1 right-1"
                             onPress={() => removeImageField(index + 1)}
                           >
-                            <Icon icon="lucide:x" />
+                            <Icon icon="lucide:x" className="w-3 h-3" />
                           </Button>
                         )}
                       </div>
@@ -522,12 +585,9 @@ export function MagazineDetail({
                           htmlFor={isEditing ? `photo-upload-${index + 1}` : ''}
                           className="cursor-pointer w-full h-full"
                         >
-                          <div className="flex flex-col items-center justify-center h-28 bg-gray-100 rounded-md border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors">
-                            <Icon icon="lucide:image" className="text-2xl text-gray-400" />
-                            <span className="text-xs text-gray-500 mt-1">이미지 없음</span>
-                            {isEditing && imageUploading && (
-                              <span className="text-xs text-blue-500 mt-1">업로드 중...</span>
-                            )}
+                          <div className="flex flex-col items-center justify-center h-24 bg-gray-100 rounded-md border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors">
+                            <Icon icon="lucide:upload" className="text-xl text-gray-400" />
+                            <span className="text-xs text-gray-500 mt-1">업로드</span>
                           </div>
                         </label>
                       </>
@@ -537,51 +597,58 @@ export function MagazineDetail({
 
                 {/* 이미지 추가 버튼 */}
                 {isEditing && (
-                  <div className="flex items-center justify-center h-28 bg-gray-100 rounded-md cursor-pointer border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors" onClick={addImageField}>
+                  <div 
+                    className="flex items-center justify-center h-24 bg-gray-100 rounded-md cursor-pointer border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors" 
+                    onClick={addImageField}
+                  >
                     <div className="flex flex-col items-center justify-center">
-                      <Icon icon="lucide:plus-circle" className="text-3xl text-gray-400" />
-                      <span className="text-xs text-gray-500 mt-1">이미지 추가</span>
+                      <Icon icon="lucide:plus" className="text-2xl text-gray-400" />
+                      <span className="text-xs text-gray-500 mt-1">추가</span>
                     </div>
                   </div>
                 )}
               </div>
             </div>
           </div>
+        </div>
 
-          {imageUploading && (
-            <div className="mt-2">
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div 
-                  className="bg-blue-600 h-2.5 rounded-full" 
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
-              </div>
-              <p className="text-xs text-center mt-1">{uploadProgress}% 업로드 중</p>
+        {/* 업로드 진행 상태 */}
+        {imageUploading && (
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-blue-900">이미지 업로드 중...</span>
+              <span className="text-sm text-blue-700">{uploadProgress}%</span>
             </div>
-          )}
+            <div className="w-full bg-blue-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Content Editor Section */}
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <Icon icon="lucide:edit" className="w-5 h-5 mr-2 text-purple-600" />
+          콘텐츠 작성
+        </h3>
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="border-b border-gray-200 px-4 py-3 bg-gray-50">
+            <p className="text-sm text-gray-600">
+              매거진의 상세 내용을 작성하세요. 이미지, 링크, 서식 등을 포함할 수 있습니다.
+            </p>
+          </div>
+          <div className="p-4">
+            <Froala 
+              value={content} 
+              onChange={handleEditorChange}
+              bucketName="magazine"
+            />
+          </div>
         </div>
-
-        {/* <Textarea
-          label="내용 (텍스트 에디터)"
-          value={editedMagazine.contents || ''}
-          onValueChange={(value) => setEditedMagazine({...editedMagazine, contents: value})}
-          className="md:col-span-2"
-          minRows={5}
-        /> */}
-        
-        <div className="md:col-span-2">
-          {/* <label className="block text-sm font-medium text-gray-700 mb-2">
-            리치 에디터 (Froala)
-          </label> */}
-          <Froala 
-            value={content} 
-            onChange={handleEditorChange}
-            bucketName="magazine"
-          ></Froala>
-        </div>
-
-
-        
       </div>
     </div>
   );
