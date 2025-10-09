@@ -10,6 +10,21 @@ import { generateSEOMeta, generateStructuredData } from "@/utils/seo";
 
 export default function CommunityPostDetail({ params }) {
   const supabase = createClient();
+  
+  const generateAnonymousName = (userId, postId) => {
+    // postId를 기반으로 각 글마다 다른 익명 번호 생성
+    if (!postId) return '익명의1234';
+    
+    // postId의 해시값을 사용해서 각 글마다 다른 숫자 생성
+    let hash = 0;
+    for (let i = 0; i < postId.length; i++) {
+      const char = postId.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // 32bit integer로 변환
+    }
+    const randomNum = Math.abs(hash) % 99999 + 1000; // 1000-99999 범위
+    return `익명의${randomNum}`;
+  };
   const router = useRouter();
   const [post, setPost] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -650,23 +665,9 @@ export default function CommunityPostDetail({ params }) {
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
-                {post.profiles?.avatar_url ? (
-                  <Image
-                    src={post.profiles.avatar_url}
-                    alt={post.profiles.name}
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                    <span className="text-gray-600 font-medium">
-                      {post.profiles?.name?.charAt(0) || 'U'}
-                    </span>
-                  </div>
-                )}
+                {/* 아이콘 제거 */}
                 <div>
-                  <h3 className="font-medium text-gray-900">{post.profiles?.name || '익명'}</h3>
+                  <h3 className="font-medium text-gray-900">{generateAnonymousName(post.user_id, post.id)}</h3>
                   <p className="text-sm text-gray-500">
                     {new Date(post.created_at).toLocaleDateString('ko-KR')}
                   </p>

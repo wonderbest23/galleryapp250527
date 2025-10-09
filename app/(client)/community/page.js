@@ -17,13 +17,19 @@ function ReviewFeedCards() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const maskName = (name) => {
-    if (!name) return '익명 사용자';
-    if (name.includes('@')) {
-      const e = name.split('@')[0];
-      return e.length > 1 ? e[0] + '**' : e;
+  const generateAnonymousName = (userId, postId) => {
+    // postId를 기반으로 각 글마다 다른 익명 번호 생성
+    if (!postId) return '익명의1234';
+    
+    // postId의 해시값을 사용해서 각 글마다 다른 숫자 생성
+    let hash = 0;
+    for (let i = 0; i < postId.length; i++) {
+      const char = postId.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // 32bit integer로 변환
     }
-    return name.length > 1 ? name[0] + '**' : name;
+    const randomNum = Math.abs(hash) % 99999 + 1000; // 1000-99999 범위
+    return `익명의${randomNum}`;
   };
 
   const cleanContent = (content) => {
@@ -101,12 +107,10 @@ function ReviewFeedCards() {
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center">
-                  <span className="font-semibold text-gray-700">{maskName(rv.name||'U')[0]}</span>
-                </div>
+                {/* 아이콘 제거 */}
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-gray-900">{maskName(rv.name)}</h3>
+                    <h3 className="font-medium text-gray-900">{generateAnonymousName(rv.user_id, rv.id)}</h3>
                     <span className="text-xs text-gray-500">{formatRelative(rv.created_at)}</span>
                   </div>
                 </div>
@@ -294,6 +298,21 @@ function TrendingPostsCarousel({ posts }) {
 
 function CommunityPageContent() {
   const supabase = createClient();
+  
+  const generateAnonymousName = (userId, postId) => {
+    // postId를 기반으로 각 글마다 다른 익명 번호 생성
+    if (!postId) return '익명의1234';
+    
+    // postId의 해시값을 사용해서 각 글마다 다른 숫자 생성
+    let hash = 0;
+    for (let i = 0; i < postId.length; i++) {
+      const char = postId.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // 32bit integer로 변환
+    }
+    const randomNum = Math.abs(hash) % 99999 + 1000; // 1000-99999 범위
+    return `익명의${randomNum}`;
+  };
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -1209,23 +1228,11 @@ function CommunityPageContent() {
                   <div className="p-4 border-b border-gray-100">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        {post.profiles?.avatar_url ? (
-                          <img
-                            src={post.profiles.avatar_url}
-                            alt={post.profiles.full_name || '사용자'}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-500 text-white">
-                            <span className="text-base font-semibold">
-                              {(post.profiles?.full_name || '사용자').charAt(0)}
-                            </span>
-                          </div>
-                        )}
+                        {/* 아이콘 제거 */}
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="font-medium text-gray-900">
-                              {post.profiles?.full_name || '익명 사용자'}
+                              {generateAnonymousName(post.user_id, post.id)}
                             </h3>
                             <span className={`px-2 py-0.5 text-xs rounded-full ${getCategoryBadgeClass(post.category)}`}>
                               {CATEGORY_LABELS[post.category] || post.category}
