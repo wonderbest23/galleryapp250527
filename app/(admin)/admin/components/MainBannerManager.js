@@ -57,11 +57,11 @@ export default function MainBannerManager() {
       setUploadingId(id);
 
       // WebP 변환
-      const webpFile = await compressToWebp(file, {
-        maxWidth: 1920,
-        maxHeight: 1080,
-        quality: 0.8,
-      });
+            const webpFile = await compressToWebp(file, {
+              maxWidth: 1920,
+              maxHeight: 1032,
+              quality: 0.95,
+            });
 
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.webp`;
 
@@ -117,7 +117,7 @@ export default function MainBannerManager() {
     }
   };
 
-  // 크롭된 이미지를 캔버스로 변환하는 함수
+  // 크롭된 이미지를 캔버스로 변환하는 함수 (실제 플랫폼 사이즈로 저장)
   const getCroppedImg = (image, crop, fileName) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -126,16 +126,21 @@ export default function MainBannerManager() {
       throw new Error('No 2d context');
     }
 
+    // 최고화질 유지를 위해 1920px 기준으로 비율 계산
+    const bannerAspectRatio = 358 / 192; // 1.86:1 비율 유지
+    const finalWidth = 1920;
+    const finalHeight = Math.round(1920 / bannerAspectRatio); // 1920 / 1.86 ≈ 1032
+    
+    canvas.width = finalWidth;
+    canvas.height = finalHeight;
+
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
-    const pixelRatio = window.devicePixelRatio;
 
-    canvas.width = crop.width * pixelRatio * scaleX;
-    canvas.height = crop.height * pixelRatio * scaleY;
-
-    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingEnabled = true;
 
+    // 크롭된 영역을 1920×1032로 리사이즈하여 그리기
     ctx.drawImage(
       image,
       crop.x * scaleX,
@@ -144,8 +149,8 @@ export default function MainBannerManager() {
       crop.height * scaleY,
       0,
       0,
-      crop.width * scaleX,
-      crop.height * scaleY,
+      finalWidth,
+      finalHeight,
     );
 
     return new Promise((resolve) => {
@@ -158,30 +163,33 @@ export default function MainBannerManager() {
           resolve(blob);
         },
         'image/jpeg',
-        0.9,
+        1.0,
       );
     });
   };
 
-  // 실시간 미리보기 생성 함수
+  // 실시간 미리보기 생성 함수 (고화질로 생성 후 표시용으로 축소)
   const generatePreview = (image, crop) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
     if (!ctx || !crop.width || !crop.height) return null;
 
-    // 실제 플랫폼 사이즈로 미리보기 생성 (358×192)
-    const previewWidth = 358;
-    const previewHeight = 192;
+    // 최고화질로 생성 (1920px 기준)
+    const bannerAspectRatio = 358 / 192;
+    const highResWidth = 1920;
+    const highResHeight = Math.round(1920 / bannerAspectRatio);
     
-    canvas.width = previewWidth;
-    canvas.height = previewHeight;
+    canvas.width = highResWidth;
+    canvas.height = highResHeight;
 
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
     ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingEnabled = true;
 
+    // 최고화질로 크롭된 영역 그리기
     ctx.drawImage(
       image,
       crop.x * scaleX,
@@ -190,11 +198,21 @@ export default function MainBannerManager() {
       crop.height * scaleY,
       0,
       0,
-      previewWidth,
-      previewHeight,
+      highResWidth,
+      highResHeight,
     );
 
-    return canvas.toDataURL('image/jpeg', 0.8);
+    // 미리보기 표시용으로 358×192로 다시 렌더링
+    const previewCanvas = document.createElement('canvas');
+    const previewCtx = previewCanvas.getContext('2d');
+    previewCanvas.width = 358;
+    previewCanvas.height = 192;
+    
+    previewCtx.imageSmoothingQuality = 'high';
+    previewCtx.imageSmoothingEnabled = true;
+    previewCtx.drawImage(canvas, 0, 0, 358, 192);
+
+    return previewCanvas.toDataURL('image/jpeg', 1.0);
   };
 
   // 크롭 완료 후 기존 업로드 로직 사용
@@ -215,11 +233,11 @@ export default function MainBannerManager() {
         });
 
         // 기존 handleBannerUpload 로직 재사용
-        // WebP 변환
+        // WebP 변환 (최고화질 유지)
         const webpFile = await compressToWebp(file, {
           maxWidth: 1920,
-          maxHeight: 1080,
-          quality: 0.8,
+          maxHeight: 1032,
+          quality: 0.95,
         });
 
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.webp`;
@@ -373,14 +391,14 @@ export default function MainBannerManager() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* 크롭 영역 */}
               <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">
-                    <strong>실제 플랫폼 사이즈:</strong> 358×192 픽셀 (비율 1.86:1)
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    원하는 영역을 드래그하여 선택하세요. 가로형 비율이 자동으로 고정됩니다.
-                  </p>
-                </div>
+                       <div>
+                         <p className="text-sm text-gray-600 mb-2">
+                           <strong>플랫폼 비율:</strong> 358×192 (1.86:1) → <strong>최고화질 저장:</strong> 1920×1032
+                         </p>
+                         <p className="text-xs text-gray-500">
+                           원하는 영역을 드래그하여 선택하세요. 가로형 비율이 자동으로 고정됩니다.
+                         </p>
+                       </div>
                 <ReactCrop
                   crop={crop}
                   onChange={onCropChange}
@@ -439,18 +457,19 @@ export default function MainBannerManager() {
                   </div>
                 )}
                 
-                {/* 크롭 가이드라인 */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <h5 className="text-sm font-semibold text-blue-900 mb-2">
-                    💡 크롭 가이드라인
-                  </h5>
-                  <ul className="text-xs text-blue-800 space-y-1">
-                    <li>• 가로형 이미지가 배너에 최적화됩니다</li>
-                    <li>• 중요한 텍스트나 로고는 중앙에 배치하세요</li>
-                    <li>• 상단과 하단에 여백을 두면 더 깔끔합니다</li>
-                    <li>• 실시간 미리보기를 참고하여 조정하세요</li>
-                  </ul>
-                </div>
+                       {/* 크롭 가이드라인 */}
+                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                         <h5 className="text-sm font-semibold text-blue-900 mb-2">
+                           💡 크롭 가이드라인
+                         </h5>
+                         <ul className="text-xs text-blue-800 space-y-1">
+                           <li>• 가로형 이미지가 배너에 최적화됩니다</li>
+                           <li>• 중요한 텍스트나 로고는 중앙에 배치하세요</li>
+                           <li>• 상단과 하단에 여백을 두면 더 깔끔합니다</li>
+                           <li>• <strong>최고화질 1920×1032로 저장</strong>되어 매우 선명합니다</li>
+                           <li>• 실시간 미리보기를 참고하여 조정하세요</li>
+                         </ul>
+                       </div>
               </div>
             </div>
             
