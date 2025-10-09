@@ -23,6 +23,7 @@ export function JournalistList({
 }) {
   const [search, setSearch] = useState("");
   const [applications, setApplications] = useState([]);
+  const [userProfiles, setUserProfiles] = useState({});
   const itemsPerPage = 10;
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(1);
@@ -35,7 +36,7 @@ export function JournalistList({
 
     let query = supabase
       .from("journalist_applications")
-      .select("*, profiles(full_name, email)", {
+      .select("*", {
         count: "exact",
       })
       .order("created_at", { ascending: false })
@@ -63,6 +64,21 @@ export function JournalistList({
     setApplications(data || []);
     setTotalCount(count || 0);
     setTotal(Math.ceil((count || 0) / itemsPerPage));
+
+    // 사용자 프로필 정보 별도 조회
+    if (data && data.length > 0) {
+      const userIds = data.map(app => app.user_id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      
+      const profileMap = {};
+      profiles?.forEach(profile => {
+        profileMap[profile.id] = profile;
+      });
+      setUserProfiles(profileMap);
+    }
   };
 
   // 컴포넌트 마운트 시 초기 데이터 로드
@@ -170,10 +186,10 @@ export function JournalistList({
               <TableCell>
                 <div>
                   <div className="font-medium">
-                    {application.profiles?.full_name || "이름 없음"}
+                    {userProfiles[application.user_id]?.full_name || "이름 없음"}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {application.profiles?.email}
+                    {userProfiles[application.user_id]?.email || application.user_id?.slice(0, 8) + "..."}
                   </div>
                 </div>
               </TableCell>

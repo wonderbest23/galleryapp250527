@@ -8,7 +8,7 @@ import { useUserStore } from "@/stores/userStore";
 import { motion } from "framer-motion";
 import { PenTool, X } from "lucide-react";
 
-export default function JournalistApplicationPopup({ isOpen, onClose }) {
+export default function JournalistApplicationPopup({ isOpen, onClose, onApplicationSubmitted }) {
   const router = useRouter();
   const user = useUserStore((state) => state.user);
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,8 @@ export default function JournalistApplicationPopup({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
     phone: "",
     introduction: "",
+    experience: "",
+    available_time: "",
     interests: [],
     visit_frequency: ""
   });
@@ -116,7 +118,7 @@ export default function JournalistApplicationPopup({ isOpen, onClose }) {
       return;
     }
 
-    if (!formData.phone || !formData.introduction || formData.interests.length === 0 || !formData.visit_frequency) {
+    if (!formData.phone || !formData.introduction || !formData.experience || !formData.available_time || formData.interests.length === 0 || !formData.visit_frequency) {
       alert('모든 필수 항목을 입력해주세요.');
       return;
     }
@@ -128,6 +130,8 @@ export default function JournalistApplicationPopup({ isOpen, onClose }) {
         user_id: user.id,
         phone: formData.phone,
         introduction: formData.introduction,
+        experience: formData.experience,
+        available_time: formData.available_time,
         interests: formData.interests,
         visit_frequency: formData.visit_frequency,
         status: 'pending',
@@ -143,6 +147,11 @@ export default function JournalistApplicationPopup({ isOpen, onClose }) {
 
         if (error) throw error;
         alert('기자단 신청이 수정되었습니다.');
+        
+        // 부모 컴포넌트에 신청 완료 알림
+        if (onApplicationSubmitted) {
+          onApplicationSubmitted();
+        }
       } else {
         // 새 신청 생성
         const { error } = await supabase
@@ -152,6 +161,11 @@ export default function JournalistApplicationPopup({ isOpen, onClose }) {
         if (error) throw error;
         setHasApplied(true);
         alert('기자단 신청이 완료되었습니다.');
+        
+        // 부모 컴포넌트에 신청 완료 알림
+        if (onApplicationSubmitted) {
+          onApplicationSubmitted();
+        }
       }
     } catch (error) {
       console.error('기자단 신청 오류:', error);
@@ -244,6 +258,7 @@ export default function JournalistApplicationPopup({ isOpen, onClose }) {
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
                       required
+                      placeholder="연락 가능한 전화번호를 입력해주세요"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
                       style={{ textAlign: 'left' }}
                     />
@@ -253,13 +268,48 @@ export default function JournalistApplicationPopup({ isOpen, onClose }) {
                   <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                       <FaUserEdit className="text-green-600" />
-                      자기소개
+                      자기소개 및 지원동기
                     </h3>
                     <textarea
                       value={formData.introduction}
                       onChange={(e) => handleInputChange('introduction', e.target.value)}
                       required
+                      placeholder="자기소개와 기자단 지원 동기를 작성해주세요"
                       rows={6}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      style={{ textAlign: 'left' }}
+                    />
+                  </div>
+
+                  {/* 경력 및 경험 */}
+                  <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <FaPenFancy className="text-blue-600" />
+                      경력 및 경험
+                    </h3>
+                    <textarea
+                      value={formData.experience}
+                      onChange={(e) => handleInputChange('experience', e.target.value)}
+                      required
+                      placeholder="예술 분야 관련 경력, 활동 경험, 전문성 등을 작성해주세요"
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      style={{ textAlign: 'left' }}
+                    />
+                  </div>
+
+                  {/* 활동 가능 시간 */}
+                  <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <FaCalendarAlt className="text-indigo-600" />
+                      활동 가능 시간
+                    </h3>
+                    <textarea
+                      value={formData.available_time}
+                      onChange={(e) => handleInputChange('available_time', e.target.value)}
+                      required
+                      placeholder="기자단 활동에 참여할 수 있는 시간대나 요일을 작성해주세요 (예: 주말 오후, 평일 저녁 등)"
+                      rows={3}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                       style={{ textAlign: 'left' }}
                     />

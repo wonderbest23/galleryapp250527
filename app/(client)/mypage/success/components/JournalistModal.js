@@ -2,23 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { 
-  Modal, 
-  ModalContent, 
-  ModalHeader, 
-  ModalBody, 
-  ModalFooter,
-  Button,
-  Card,
-  CardBody,
-  Tabs,
-  Tab,
-  Input,
-  Textarea,
-  Image,
-  Spinner,
-  Chip
-} from "@heroui/react";
-import { 
   X, 
   Calendar, 
   MapPin, 
@@ -49,6 +32,23 @@ export default function JournalistModal({ isOpen, onClose }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const supabase = createClient();
+
+  // 팝업이 열릴 때 body 스크롤 방지
+  useEffect(() => {
+    if (isOpen) {
+      // 모바일에서는 body 스크롤을 막지 않음
+      if (window.innerWidth > 768) {
+        document.body.style.overflow = 'hidden';
+      }
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    // 컴포넌트 언마운트 시 스크롤 복원
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -152,416 +152,455 @@ export default function JournalistModal({ isOpen, onClose }) {
         price_info: "",
         additional_notes: ""
       });
-      fetchData();
+      fetchData(); // 데이터 새로고침
     } catch (error) {
-      console.error('체험 신청 처리 중 오류:', error);
-      alert("체험 신청 처리 중 오류가 발생했습니다.");
+      console.error('체험 신청 오류:', error);
+      alert("체험 신청에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('ko-KR');
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
-      case "pending":
-        return "warning";
-      case "approved":
-        return "success";
-      case "rejected":
-        return "danger";
-      default:
-        return "default";
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
-      case "pending":
-        return "검토 중";
-      case "approved":
-        return "승인됨";
-      case "rejected":
-        return "거절됨";
-      default:
-        return "알 수 없음";
+      case 'approved': return '승인됨';
+      case 'rejected': return '반려됨';
+      case 'pending': return '대기중';
+      default: return '알 수 없음';
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('ko-KR');
-  };
+  if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="4xl" scrollBehavior="inside">
-      <ModalContent>
-        <ModalHeader className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <PenTool className="w-5 h-5 text-purple-600" />
-            <span>기자단 전용 페이지</span>
+    <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+      {/* 배경 오버레이 */}
+      <div className="absolute inset-0 bg-black/20" onClick={onClose}></div>
+      
+      {/* 팝업 컨텐츠 */}
+      <div className="relative w-full max-w-4xl bg-white/80 backdrop-blur-sm rounded-2xl max-h-[85vh] sm:max-h-[75vh] overflow-hidden shadow-2xl">
+        <div className="flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-10 border-b border-gray-200 p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center">
+              <PenTool className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">기자단 체험단</h2>
+              <p className="text-sm text-gray-600">전시회 체험 및 기사 작성 활동</p>
+            </div>
           </div>
-          <Button
-            isIconOnly
-            variant="light"
-            onPress={onClose}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </ModalHeader>
-        <ModalBody>
-          <Tabs 
-            selectedKey={activeTab} 
-            onSelectionChange={setActiveTab}
-            color="secondary"
-            variant="underlined"
-          >
-            <Tab key="exhibitions" title="체험단 전시 목록">
+          
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-2xl font-bold text-purple-600">{exhibitions.length}</div>
+                <div className="text-xs text-gray-500">체험단</div>
+              </div>
+              <div className="w-px h-8 bg-gray-300"></div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-emerald-600">{applications.length}</div>
+                <div className="text-xs text-gray-500">신청</div>
+              </div>
+            </div>
+            
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+        
+        <div className="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
+          {/* 탭 네비게이션 */}
+          <div className="flex border-b border-gray-200 mb-6">
+            <button
+              onClick={() => setActiveTab("exhibitions")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "exhibitions"
+                  ? "border-purple-500 text-purple-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              체험단 전시 ({exhibitions.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("applications")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "applications"
+                  ? "border-purple-500 text-purple-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              체험 신청 내역 ({applications.length})
+            </button>
+          </div>
+
+          {/* 체험단 전시 탭 */}
+          {activeTab === "exhibitions" && (
+            <div>
               {loading ? (
-                <div className="flex justify-center items-center py-8">
-                  <Spinner size="lg" />
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                 </div>
               ) : exhibitions.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>진행 중인 체험단 전시가 없습니다.</p>
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">체험단 전시가 없습니다</h3>
+                  <p className="text-gray-500">새로운 체험단 전시가 추가되면 알려드리겠습니다.</p>
+                </div>
+              ) : (
+                <div className="grid gap-6">
+                  {exhibitions.map((exhibition) => (
+                    <div key={exhibition.id} className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex gap-4">
+                        {exhibition.image_url && (
+                          <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                            <img
+                              src={exhibition.image_url}
+                              alt={exhibition.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-lg font-semibold text-gray-900">{exhibition.title}</h3>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              모집중
+                            </span>
+                          </div>
+                          
+                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                            {exhibition.description}
+                          </p>
+                          
+                          <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                            {exhibition.location && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-4 h-4" />
+                                {exhibition.location}
+                              </div>
+                            )}
+                            {exhibition.start_date && exhibition.end_date && (
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                {formatDate(exhibition.start_date)} - {formatDate(exhibition.end_date)}
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1">
+                              <Users className="w-4 h-4" />
+                              {exhibition.current_participants || 0}/{exhibition.max_participants}명
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setSelectedExhibition(exhibition)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                            >
+                              <Eye className="w-4 h-4" />
+                              상세보기
+                            </button>
+                            <button
+                              onClick={() => {
+                                setApplicationData(prev => ({ ...prev, exhibition_id: exhibition.id }));
+                                setShowApplicationForm(true);
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors"
+                            >
+                              <Plus className="w-4 h-4" />
+                              체험 신청
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 체험 신청 내역 탭 */}
+          {activeTab === "applications" && (
+            <div>
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                </div>
+              ) : applications.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">체험 신청 내역이 없습니다</h3>
+                  <p className="text-gray-500">체험단 전시에 신청해보세요.</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  {exhibitions.map((exhibition) => (
-                    <Card key={exhibition.id} className="hover:shadow-md transition-shadow">
-                      <CardBody className="p-4">
-                        <div className="flex gap-4">
-                          {exhibition.image_url && (
-                            <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                              <Image
-                                src={exhibition.image_url}
-                                alt={exhibition.title}
-                                width={96}
-                                height={96}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          )}
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between mb-2">
-                              <h3 className="font-semibold text-lg">{exhibition.title}</h3>
-                              <div className="flex items-center gap-2 text-sm text-gray-500">
-                                <Users className="w-4 h-4" />
-                                <span>{exhibition.current_participants}/{exhibition.max_participants}</span>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-4 h-4" />
-                                <span>{exhibition.location}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-4 h-4" />
-                                <span>{formatDate(exhibition.start_date)} - {formatDate(exhibition.end_date)}</span>
-                              </div>
-                            </div>
-
-                            <p className="text-gray-700 text-sm mb-3 line-clamp-2">
-                              {exhibition.description}
-                            </p>
-
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="flat"
-                                startContent={<Eye className="w-4 h-4" />}
-                                onPress={() => setSelectedExhibition(exhibition)}
-                              >
-                                상세보기
-                              </Button>
-                              <Button
-                                size="sm"
-                                color="primary"
-                                startContent={<Plus className="w-4 h-4" />}
-                                onPress={() => {
-                                  setApplicationData(prev => ({ ...prev, exhibition_id: exhibition.id }));
-                                  setShowApplicationForm(true);
-                                }}
-                              >
-                                체험 신청
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </Tab>
-
-            <Tab key="applications" title="체험 신청 내역">
-              {loading ? (
-                <div className="flex justify-center items-center py-8">
-                  <Spinner size="lg" />
-                </div>
-              ) : applications.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <PenTool className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>체험 신청 내역이 없습니다.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
                   {applications.map((application) => (
-                    <Card key={application.id}>
-                      <CardBody className="p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-semibold text-lg">
-                            {application.exhibition?.title || "전시회 정보 없음"}
+                    <div key={application.id} className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="font-semibold text-gray-900 mb-1">
+                            {application.exhibition?.title || '전시회 정보 없음'}
                           </h3>
-                          <Chip 
-                            color={getStatusColor(application.status)} 
-                            size="sm"
-                          >
-                            {getStatusText(application.status)}
-                          </Chip>
+                          <p className="text-sm text-gray-600">
+                            신청일: {formatDate(application.created_at)}
+                          </p>
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                          <div>
-                            <p className="text-sm text-gray-600 mb-1">
-                              <strong>신청 유형:</strong> {
-                                application.application_type === "exhibition_link" ? "전시회 링크" : "전시회 정보/가격"
-                              }
-                            </p>
-                            {application.application_type === "exhibition_link" && application.exhibition_link && (
-                              <p className="text-sm text-gray-600 mb-1">
-                                <strong>링크:</strong> 
-                                <a href={application.exhibition_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline ml-1">
-                                  {application.exhibition_link}
-                                </a>
-                              </p>
-                            )}
-                            {application.exhibition_info && (
-                              <p className="text-sm text-gray-600 mb-1">
-                                <strong>전시회 정보:</strong> {application.exhibition_info}
-                              </p>
-                            )}
-                            {application.price_info && (
-                              <p className="text-sm text-gray-600 mb-1">
-                                <strong>가격 정보:</strong> {application.price_info}
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600 mb-1">
-                              <strong>신청일:</strong> {formatDate(application.created_at)}
-                            </p>
-                            {application.processed_at && (
-                              <p className="text-sm text-gray-600 mb-1">
-                                <strong>처리일:</strong> {formatDate(application.processed_at)}
-                              </p>
-                            )}
-                          </div>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
+                          {getStatusText(application.status)}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm text-gray-600">
+                        <div>
+                          <span className="font-medium">신청 유형:</span> {
+                            application.application_type === 'exhibition_link' ? '전시회 링크' : '전시회 정보 및 가격'
+                          }
                         </div>
-
+                        
+                        {application.application_type === 'exhibition_link' && application.exhibition_link && (
+                          <div>
+                            <span className="font-medium">전시회 링크:</span>
+                            <a href={application.exhibition_link} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline ml-2">
+                              링크 보기
+                            </a>
+                          </div>
+                        )}
+                        
+                        {application.application_type === 'exhibition_info_price' && application.exhibition_info && (
+                          <div>
+                            <span className="font-medium">전시회 정보:</span>
+                            <p className="mt-1 p-2 bg-gray-50 rounded text-xs">{application.exhibition_info}</p>
+                          </div>
+                        )}
+                        
                         {application.additional_notes && (
-                          <div className="bg-gray-50 p-3 rounded-lg mb-3">
-                            <p className="text-sm text-gray-700">
-                              <strong>추가 메모:</strong> {application.additional_notes}
-                            </p>
+                          <div>
+                            <span className="font-medium">추가 메모:</span>
+                            <p className="mt-1 p-2 bg-gray-50 rounded text-xs">{application.additional_notes}</p>
                           </div>
                         )}
-
+                        
                         {application.admin_response && (
-                          <div className="bg-blue-50 p-3 rounded-lg mb-3">
-                            <p className="text-sm text-blue-700">
-                              <strong>관리자 응답:</strong> {application.admin_response}
-                            </p>
-                            {application.admin_response_image && (
-                              <div className="mt-2">
-                                <Image
-                                  src={application.admin_response_image}
-                                  alt="관리자 응답 이미지"
-                                  width={200}
-                                  height={150}
-                                  className="rounded-lg"
-                                />
-                              </div>
-                            )}
+                          <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                            <span className="font-medium text-blue-900">관리자 응답:</span>
+                            <p className="mt-1 text-blue-800 text-xs">{application.admin_response}</p>
                           </div>
                         )}
-                      </CardBody>
-                    </Card>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
-            </Tab>
-          </Tabs>
-        </ModalBody>
-      </ModalContent>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* 전시회 상세보기 모달 */}
-      <Modal isOpen={selectedExhibition !== null} onClose={() => setSelectedExhibition(null)} size="2xl">
-        <ModalContent>
-          <ModalHeader>
-            <h3 className="text-lg font-semibold">{selectedExhibition?.title}</h3>
-          </ModalHeader>
-          <ModalBody>
-            {selectedExhibition && (
-              <div className="space-y-4">
-                {selectedExhibition.image_url && (
-                  <div className="w-full h-48 rounded-lg overflow-hidden">
-                    <Image
-                      src={selectedExhibition.image_url}
-                      alt={selectedExhibition.title}
-                      width={400}
-                      height={200}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>장소:</strong> {selectedExhibition.location}
-                    </p>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>기간:</strong> {formatDate(selectedExhibition.start_date)} - {formatDate(selectedExhibition.end_date)}
-                    </p>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>참가자:</strong> {selectedExhibition.current_participants}/{selectedExhibition.max_participants}명
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">전시회 설명</h4>
-                  <p className="text-gray-700 whitespace-pre-wrap">{selectedExhibition.description}</p>
-                </div>
-
-                {selectedExhibition.exhibition_info && (
-                  <div>
-                    <h4 className="font-medium mb-2">전시회 상세 정보</h4>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-gray-700 whitespace-pre-wrap">{selectedExhibition.exhibition_info}</p>
-                    </div>
-                  </div>
-                )}
-
-                {selectedExhibition.ticket_info && (
-                  <div>
-                    <h4 className="font-medium mb-2">티켓 정보</h4>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-gray-700 whitespace-pre-wrap">{selectedExhibition.ticket_info}</p>
-                    </div>
-                  </div>
-                )}
+      {selectedExhibition && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedExhibition(null)}></div>
+          <div className="relative w-full max-w-2xl bg-white rounded-xl p-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">전시회 상세 정보</h3>
+              <button
+                onClick={() => setSelectedExhibition(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {selectedExhibition.image_url && (
+              <div className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden mb-4">
+                <img
+                  src={selectedExhibition.image_url}
+                  alt={selectedExhibition.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
             )}
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="light" onPress={() => setSelectedExhibition(null)}>
-              닫기
-            </Button>
-            <Button 
-              color="primary" 
-              onPress={() => {
-                setApplicationData(prev => ({ ...prev, exhibition_id: selectedExhibition.id }));
-                setSelectedExhibition(null);
-                setShowApplicationForm(true);
-              }}
-            >
-              체험 신청
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+            
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">{selectedExhibition.title}</h4>
+                <p className="text-gray-600 text-sm">{selectedExhibition.description}</p>
+              </div>
+              
+              {selectedExhibition.exhibition_info && (
+                <div>
+                  <h5 className="font-medium text-gray-900 mb-2">전시회 정보</h5>
+                  <p className="text-gray-600 text-sm whitespace-pre-wrap">{selectedExhibition.exhibition_info}</p>
+                </div>
+              )}
+              
+              {selectedExhibition.ticket_info && (
+                <div>
+                  <h5 className="font-medium text-gray-900 mb-2">티켓 정보</h5>
+                  <p className="text-gray-600 text-sm whitespace-pre-wrap">{selectedExhibition.ticket_info}</p>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                {selectedExhibition.location && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-600">{selectedExhibition.location}</span>
+                  </div>
+                )}
+                {selectedExhibition.start_date && selectedExhibition.end_date && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-600">
+                      {formatDate(selectedExhibition.start_date)} - {formatDate(selectedExhibition.end_date)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">
+                    {selectedExhibition.current_participants || 0}/{selectedExhibition.max_participants}명
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 체험 신청 폼 모달 */}
-      <Modal isOpen={showApplicationForm} onClose={() => setShowApplicationForm(false)} size="2xl">
-        <ModalContent>
-          <ModalHeader>
-            <h3 className="text-lg font-semibold">기자단 체험 신청</h3>
-          </ModalHeader>
-          <ModalBody>
+      {showApplicationForm && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowApplicationForm(false)}></div>
+          <div className="relative w-full max-w-lg bg-white rounded-xl p-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">체험 신청</h3>
+              <button
+                onClick={() => setShowApplicationForm(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">신청 유형</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="exhibition_link"
-                      checked={applicationData.application_type === "exhibition_link"}
-                      onChange={(e) => setApplicationData(prev => ({ ...prev, application_type: e.target.value }))}
-                      className="mr-2"
-                    />
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setApplicationData(prev => ({ ...prev, application_type: 'exhibition_link' }))}
+                    className={`p-3 text-sm rounded-lg border-2 transition-colors ${
+                      applicationData.application_type === 'exhibition_link'
+                        ? 'border-purple-500 bg-purple-50 text-purple-700'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
                     전시회 링크
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="exhibition_info_price"
-                      checked={applicationData.application_type === "exhibition_info_price"}
-                      onChange={(e) => setApplicationData(prev => ({ ...prev, application_type: e.target.value }))}
-                      className="mr-2"
-                    />
-                    전시회 정보/가격
-                  </label>
+                  </button>
+                  <button
+                    onClick={() => setApplicationData(prev => ({ ...prev, application_type: 'exhibition_info_price' }))}
+                    className={`p-3 text-sm rounded-lg border-2 transition-colors ${
+                      applicationData.application_type === 'exhibition_info_price'
+                        ? 'border-purple-500 bg-purple-50 text-purple-700'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    전시회 정보
+                  </button>
                 </div>
               </div>
-
-              {applicationData.application_type === "exhibition_link" && (
-                <Input
-                  label="전시회 링크"
-                  placeholder="전시회 링크를 입력해주세요"
-                  value={applicationData.exhibition_link}
-                  onChange={(e) => setApplicationData(prev => ({ ...prev, exhibition_link: e.target.value }))}
-                  required
-                />
+              
+              {applicationData.application_type === 'exhibition_link' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">전시회 링크</label>
+                  <input
+                    type="url"
+                    value={applicationData.exhibition_link}
+                    onChange={(e) => setApplicationData(prev => ({ ...prev, exhibition_link: e.target.value }))}
+                    placeholder="https://example.com"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
               )}
-
-              {applicationData.application_type === "exhibition_info_price" && (
+              
+              {applicationData.application_type === 'exhibition_info_price' && (
                 <>
-                  <Textarea
-                    label="전시회 정보"
-                    placeholder="전시회 정보를 입력해주세요"
-                    value={applicationData.exhibition_info}
-                    onChange={(e) => setApplicationData(prev => ({ ...prev, exhibition_info: e.target.value }))}
-                    minRows={3}
-                    required
-                  />
-                  <Input
-                    label="가격 정보"
-                    placeholder="가격 정보를 입력해주세요"
-                    value={applicationData.price_info}
-                    onChange={(e) => setApplicationData(prev => ({ ...prev, price_info: e.target.value }))}
-                    required
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">전시회 정보</label>
+                    <textarea
+                      value={applicationData.exhibition_info}
+                      onChange={(e) => setApplicationData(prev => ({ ...prev, exhibition_info: e.target.value }))}
+                      placeholder="전시회에 대한 상세 정보를 입력해주세요"
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">가격 정보</label>
+                    <textarea
+                      value={applicationData.price_info}
+                      onChange={(e) => setApplicationData(prev => ({ ...prev, price_info: e.target.value }))}
+                      placeholder="티켓 가격, 할인 정보 등을 입력해주세요"
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
                 </>
               )}
-
-              <Textarea
-                label="추가 메모 (선택사항)"
-                placeholder="추가로 전달하고 싶은 내용이 있으시면 입력해주세요"
-                value={applicationData.additional_notes}
-                onChange={(e) => setApplicationData(prev => ({ ...prev, additional_notes: e.target.value }))}
-                minRows={2}
-              />
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">추가 메모 (선택)</label>
+                <textarea
+                  value={applicationData.additional_notes}
+                  onChange={(e) => setApplicationData(prev => ({ ...prev, additional_notes: e.target.value }))}
+                  placeholder="추가로 전달하고 싶은 내용이 있다면 입력해주세요"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowApplicationForm(false)}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleApplicationSubmit}
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                >
+                  {submitting ? '신청 중...' : '신청하기'}
+                </button>
+              </div>
             </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="light" onPress={() => setShowApplicationForm(false)}>
-              취소
-            </Button>
-            <Button 
-              color="primary" 
-              onPress={handleApplicationSubmit}
-              isLoading={submitting}
-            >
-              신청하기
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </Modal>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
-

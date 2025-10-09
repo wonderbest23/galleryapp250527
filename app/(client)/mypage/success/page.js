@@ -94,6 +94,9 @@ const Success = () => {
   const [isAnnouncementsOpen, setIsAnnouncementsOpen] = useState(false);
   const [userPoints, setUserPoints] = useState(0);
   const [postCount, setPostCount] = useState(0);
+  
+  // 기자단 신청 상태
+  const [journalistApplicationStatus, setJournalistApplicationStatus] = useState(null);
 
   // 포인트 상태 조회
   const [pointStatus, setPointStatus] = useState({
@@ -118,6 +121,59 @@ const Success = () => {
 
       setPolicy(policyData);
       setCustomerService(csData);
+    }
+  };
+
+  // 기자단 신청 상태 확인
+  const checkJournalistApplicationStatus = async () => {
+    if (!user) return;
+    
+    const supabase = createClient();
+    
+    // profiles 테이블에서 is_journalist 상태 확인
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('is_journalist')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError) {
+      console.error('프로필 조회 오류:', profileError);
+    }
+
+    // 이미 기자단으로 승인된 경우
+    if (profileData?.is_journalist) {
+      setJournalistApplicationStatus('approved');
+      return;
+    }
+
+    // 기자단 신청 상태 확인
+    const { data, error } = await supabase
+      .from('journalist_applications')
+      .select('status')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116은 데이터가 없을 때 오류
+      console.error('기자단 신청 상태 확인 오류:', error);
+      return;
+    }
+
+    // 데이터가 없으면 신청 가능 상태
+    if (!data) {
+      setJournalistApplicationStatus(null);
+      return;
+    }
+
+    // 승인된 경우 신청 불가, 대기중/반려된 경우 신청 가능
+    if (data.status === 'approved') {
+      setJournalistApplicationStatus('approved');
+    } else if (data.status === 'rejected') {
+      setJournalistApplicationStatus('rejected');
+    } else if (data.status === 'pending') {
+      setJournalistApplicationStatus('pending');
     }
   };
 
@@ -181,6 +237,13 @@ const Success = () => {
 
     fetchUser();
   }, [router, setUser]);
+
+  // 사용자 정보가 로드된 후 기자단 신청 상태 확인
+  useEffect(() => {
+    if (user) {
+      checkJournalistApplicationStatus();
+    }
+  }, [user]);
 
   // 사용 가능한 티켓이 있으면 자동으로 주문내역 탭으로 이동
   useEffect(() => {
@@ -896,19 +959,42 @@ const Success = () => {
           <h3 className="text-lg font-bold text-gray-900 mb-4">특별 활동</h3>
           <div className="grid grid-cols-2 gap-4 justify-items-start -ml-2">
             
-            {/* 기자단 신청 */}
-            <button 
-              onClick={() => setIsJournalistOpen(true)}
-              className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-all duration-200 hover:-translate-y-1 justify-start"
-            >
-              <div className="icon-48 w-12 h-12 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <PenTool className="w-7 h-7 text-white" />
-              </div>
-              <div className="text-left">
-                <div className="text-gray-900 font-semibold whitespace-nowrap">기자단 신청</div>
-                <div className="text-xs text-gray-500 whitespace-nowrap">아트 기자단 활동</div>
-              </div>
-            </button>
+            {/* 기자단 신청 - 승인된 경우에만 숨김 */}
+            {journalistApplicationStatus !== 'approved' && (
+              <button 
+                onClick={() => setIsJournalistOpen(true)}
+                className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-all duration-200 hover:-translate-y-1 justify-start"
+              >
+                <div className="icon-48 w-12 h-12 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <PenTool className="w-7 h-7 text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="text-gray-900 font-semibold whitespace-nowrap">
+                    {journalistApplicationStatus === 'pending' ? '기자단 신청 대기중' : '기자단 신청'}
+                  </div>
+                  <div className="text-xs text-gray-500 whitespace-nowrap">
+                    {journalistApplicationStatus === 'pending' ? '심사 중입니다' : 
+                     journalistApplicationStatus === 'rejected' ? '재신청 가능' : '아트 기자단 활동'}
+                  </div>
+                </div>
+              </button>
+            )}
+
+            {/* 기자단 전용 - 승인된 경우에만 표시 */}
+            {journalistApplicationStatus === 'approved' && (
+              <button 
+                onClick={() => setShowJournalistModal(true)}
+                className="w-full flex items-center gap-4 pl-3 pr-4 py-4 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-all duration-200 hover:-translate-y-1 justify-start"
+              >
+                <div className="icon-48 w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl flex items-center justify-center shadow-lg">
+                  <PenTool className="w-7 h-7 text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="text-gray-900 font-semibold whitespace-nowrap">기자단 전용</div>
+                  <div className="text-xs text-gray-500 whitespace-nowrap">기자단 체험단 활동</div>
+                </div>
+              </button>
+            )}
             
             {/* 나의 작품 (인증 작가만) */}
             {isArtist && profile?.isArtistApproval && (
@@ -1195,6 +1281,7 @@ const Success = () => {
       <JournalistApplicationPopup 
         isOpen={isJournalistOpen} 
         onClose={() => setIsJournalistOpen(false)}
+        onApplicationSubmitted={checkJournalistApplicationStatus}
       />
 
       {/* 공지사항 팝업 */}

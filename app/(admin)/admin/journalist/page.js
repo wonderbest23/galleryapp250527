@@ -1,8 +1,9 @@
 'use client'
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HiUsers, HiClock, HiCheckCircle, HiXCircle } from "react-icons/hi";
 import { JournalistList } from "../components/journalist-list";
 import { JournalistDetail } from "../components/journalist-detail";
+import { createClient } from "@/utils/supabase/client";
 
 // 통계 카드 컴포넌트
 const StatCard = ({ title, value, icon, color }) => (
@@ -16,7 +17,7 @@ const StatCard = ({ title, value, icon, color }) => (
 );
 
 export default function JournalistAdminPage() {
-  const stats = [
+  const [stats, setStats] = useState([
     {
       title: "총 신청 건수",
       value: "0",
@@ -41,11 +42,64 @@ export default function JournalistAdminPage() {
       icon: <HiXCircle className="w-6 h-6 text-white" />,
       color: "bg-red-500",
     },
-  ];
+  ]);
 
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [selectedKeys, setSelectedKeys] = useState(new Set([]));
   const [refreshToggle, setRefreshToggle] = useState(1);
+  const supabase = createClient();
+
+  // 통계 데이터 로드
+  const loadStats = async () => {
+    try {
+      const { data: allApplications, error } = await supabase
+        .from('journalist_applications')
+        .select('status');
+
+      if (error) {
+        console.error('통계 데이터 로드 오류:', error);
+        return;
+      }
+
+      const totalCount = allApplications?.length || 0;
+      const pendingCount = allApplications?.filter(app => app.status === 'pending').length || 0;
+      const approvedCount = allApplications?.filter(app => app.status === 'approved').length || 0;
+      const rejectedCount = allApplications?.filter(app => app.status === 'rejected').length || 0;
+
+      setStats([
+        {
+          title: "총 신청 건수",
+          value: totalCount.toString(),
+          icon: <HiUsers className="w-6 h-6 text-white" />,
+          color: "bg-blue-500",
+        },
+        {
+          title: "대기 중",
+          value: pendingCount.toString(),
+          icon: <HiClock className="w-6 h-6 text-white" />,
+          color: "bg-yellow-500",
+        },
+        {
+          title: "승인",
+          value: approvedCount.toString(),
+          icon: <HiCheckCircle className="w-6 h-6 text-white" />,
+          color: "bg-green-500",
+        },
+        {
+          title: "반려",
+          value: rejectedCount.toString(),
+          icon: <HiXCircle className="w-6 h-6 text-white" />,
+          color: "bg-red-500",
+        },
+      ]);
+    } catch (error) {
+      console.error('통계 로드 중 오류:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadStats();
+  }, [refreshToggle]);
 
   return (
     <div className="w-full h-full flex flex-col gap-4 py-20">
