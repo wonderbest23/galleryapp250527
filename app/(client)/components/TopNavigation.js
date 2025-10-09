@@ -608,11 +608,97 @@ export default function TopNavigation({ search, setSearch, exhibitions, setExhib
       {/* 새로운 알림바 */}
   <NotificationBar 
         isOpen={notificationBarOpen} 
-        onClose={() => setNotificationBarOpen(false)} 
-        onRead={(n)=>{
+        onClose={() => {
+          setNotificationBarOpen(false);
+        }} 
+        onRead={async (n)=>{
           // 읽음 처리 후 배지/상태 갱신
-          setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, is_read: true } : x));
-          setUnreadCount(prev => Math.max(0, prev - (n.is_read ? 0 : 1)));
+          if (n.id === '__all__' && n.type === 'all_read') {
+            // 전체 읽음 처리
+            setNotifications(prev => prev.map(notification => ({ ...notification, is_read: true })));
+            setUnreadCount(0);
+          } else {
+            // 개별 읽음 처리
+            setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, is_read: true } : x));
+            setUnreadCount(prev => Math.max(0, prev - (n.is_read ? 0 : 1)));
+          }
+          
+          // 알림 상태를 다시 계산하여 정확성 보장
+          setTimeout(async () => {
+            try {
+              const { data: readRows } = await supabase
+                .from('user_notifications')
+                .select('type, related_id, is_read')
+                .eq('user_id', currentUser.id)
+                .in('type', ['like_read','comment_read','reward_purchase_read','announcement_read','artist_approved','journalist_approved','point_earned']);
+              const readMap = new Map((readRows || []).map(r => [`${r.type}_${r.related_id}`, !!r.is_read]));
+
+              let newUnreadCount = 0;
+              
+              // 공지사항 읽지 않은 개수
+              const { data: announcements } = await supabase
+                .from("gallery_notification")
+                .select("id")
+                .order("created_at", { ascending: false })
+                .limit(20);
+              
+              if (announcements) {
+                announcements.forEach(announcement => {
+                  const isRead = readMap.get(`announcement_read_announcement_${announcement.id}`) || false;
+                  if (!isRead) newUnreadCount++;
+                });
+              }
+
+              // 커뮤니티 좋아요 읽지 않은 개수
+              const { data: likes } = await supabase
+                .from("community_likes")
+                .select("id")
+                .neq("user_id", currentUser.id)
+                .order("created_at", { ascending: false })
+                .limit(10);
+              
+              if (likes) {
+                likes.forEach(like => {
+                  const isRead = readMap.get(`like_read_like_${like.id}`) || false;
+                  if (!isRead) newUnreadCount++;
+                });
+              }
+
+              // 커뮤니티 댓글 읽지 않은 개수
+              const { data: comments } = await supabase
+                .from("community_comments")
+                .select("id")
+                .neq("user_id", currentUser.id)
+                .order("created_at", { ascending: false })
+                .limit(10);
+              
+              if (comments) {
+                comments.forEach(comment => {
+                  const isRead = readMap.get(`comment_read_comment_${comment.id}`) || false;
+                  if (!isRead) newUnreadCount++;
+                });
+              }
+
+              // 포인트 알림 읽지 않은 개수
+              const { data: pointNotifications } = await supabase
+                .from("user_notifications")
+                .select("is_read")
+                .eq("user_id", currentUser.id)
+                .in("type", ["point_approved", "point_rejected", "point_re_review"])
+                .order("created_at", { ascending: false })
+                .limit(20);
+              
+              if (pointNotifications) {
+                pointNotifications.forEach(notification => {
+                  if (!notification.is_read) newUnreadCount++;
+                });
+              }
+
+              setUnreadCount(newUnreadCount);
+            } catch (error) {
+              console.error('알림 상태 재계산 오류:', error);
+            }
+          }, 500);
         }}
       />
     </>
