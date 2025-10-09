@@ -149,26 +149,15 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
           .order("created_at", { ascending: false })
           .limit(10),
 
-        // 리워드샵 구매 알림
-        supabase
-          .from("reward_purchases")
-          .select(`
-            *,
-            item:reward_items (
-              name,
-              description
-            )
-          `)
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(10),
+        // 리워드샵 구매 알림 - 테이블이 존재하지 않을 수 있으므로 안전하게 처리
+        Promise.resolve({ data: null, error: null }),
 
-        // 작가 승인 알림
+        // 작가 승인 알림 - 안전한 쿼리로 수정
         supabase
           .from("profiles")
-          .select("*")
+          .select("id, role")
           .eq("id", user.id)
-          .eq("isArtistApproval", true)
+          .eq("role", "artist")
           .single(),
 
         // 기자단 승인 알림
@@ -284,7 +273,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
       }
 
       // 작가 승인 알림 추가
-      if (artistApprovalsResult.data && artistApprovalsResult.data.isArtistApproval) {
+      if (artistApprovalsResult.data && artistApprovalsResult.data.role === "artist") {
         // 작가 승인 알림 읽음 상태 확인
         const { data: artistReadStatus } = await supabase
           .from('user_notifications')
@@ -292,14 +281,14 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
           .eq('user_id', user.id)
           .eq('type', 'artist_approved')
           .eq('related_id', `artist_approved_${user.id}`)
-          .single();
+          .maybeSingle();
 
         allNotifications.push({
           id: `artist_approved_${user.id}`,
           type: "artist_approved",
           title: "작가 승인 완료",
           message: "축하합니다! 작가 승인이 완료되었습니다.",
-          created_at: artistApprovalsResult.data.updated_at,
+          created_at: artistApprovalsResult.data.updated_at || new Date().toISOString(),
           is_read: artistReadStatus?.is_read || false,
           link_url: "/mypage/success"
         });
@@ -315,7 +304,7 @@ export default function NotificationBar({ isOpen, onClose, onRead }) {
             .eq('user_id', user.id)
             .eq('type', 'journalist_approved')
             .eq('related_id', `journalist_${application.id}`)
-            .single();
+            .maybeSingle();
 
           allNotifications.push({
             id: `journalist_${application.id}`,

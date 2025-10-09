@@ -83,20 +83,15 @@ export default function TopNavigation({ search, setSearch, exhibitions, setExhib
             .order("created_at", { ascending: false })
             .limit(10),
 
-          // 리워드샵 구매 알림
-          supabase
-            .from("reward_purchases")
-            .select("*")
-            .eq("user_id", currentUser.id)
-            .order("created_at", { ascending: false })
-            .limit(10),
+          // 리워드샵 구매 알림 - 테이블이 존재하지 않을 수 있으므로 안전하게 처리
+          Promise.resolve({ data: null, error: null }),
 
-          // 작가 승인 알림
+          // 작가 승인 알림 - 안전한 쿼리로 수정
           supabase
             .from("profiles")
-            .select("*")
+            .select("id, role")
             .eq("id", currentUser.id)
-            .eq("isArtistApproval", true)
+            .eq("role", "artist")
             .single(),
 
           // 기자단 승인 알림
@@ -216,7 +211,7 @@ export default function TopNavigation({ search, setSearch, exhibitions, setExhib
         }
 
         // 작가 승인 알림 추가
-        if (artistApprovalsResult.data && artistApprovalsResult.data.isArtistApproval) {
+        if (artistApprovalsResult.data && artistApprovalsResult.data.role === "artist") {
           const { data: artistReadStatus } = await supabase
             .from('user_notifications')
             .select('is_read')
