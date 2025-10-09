@@ -13,9 +13,8 @@ export default function MainBannerManager() {
   const [uploadingId, setUploadingId] = useState(null);
   
   // 크롭 관련 상태
-  // 실제 플랫폼 배너 사이즈: 358×192 (비율 1.86:1)
-  const bannerAspectRatio = 358 / 192; // 약 1.86:1
-  const [crop, setCrop] = useState({ unit: '%', width: 100, height: 53.6 }); // 100% × 53.6% = 1.86:1 비율
+  const bannerAspectRatio = 358 / 192; // 실제 플랫폼 비율
+  const [crop, setCrop] = useState({ unit: '%', width: 100, height: 53.6, x: 0, y: 0 });
   const [completedCrop, setCompletedCrop] = useState(null);
   const [imgSrc, setImgSrc] = useState('');
   const [showCrop, setShowCrop] = useState(false);
@@ -49,10 +48,66 @@ export default function MainBannerManager() {
     fetchBanners();
   }, []);
 
+  // 파일 업로드 핸들러
+  const handleBannerUpload = async (e, id) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingId(id);
+
+      // WebP 변환
+      const webpFile = await compressToWebp(file, {
+        maxWidth: 1920,
+        maxHeight: 1080,
+        quality: 0.8,
+      });
+
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.webp`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("exhibition")
+        .upload(fileName, webpFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.log("배너 이미지 업로드 오류:", uploadError);
+        alert("배너 이미지를 업로드하는 중 오류가 발생했습니다.");
+        return;
+      }
+
+      // public URL 가져오기
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("exhibition").getPublicUrl(fileName);
+
+      // 상태 업데이트
+      setBanners(
+        banners.map((banner) =>
+          banner.id === id ? { ...banner, url: publicUrl } : banner
+        )
+      );
+
+      alert("배너 이미지가 성공적으로 업로드되었습니다.");
+    } catch (err) {
+      console.log("배너 이미지 업로드 예외:", err);
+      alert("배너 이미지를 업로드하는 중 오류가 발생했습니다.");
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
   // 파일 선택 핸들러 (크롭 모드로 전환)
-  const onSelectFile = (e, id) => {
+  const onSelectFileForCrop = (e, id) => {
     if (e.target.files && e.target.files.length > 0) {
       setCurrentBannerId(id);
+      // 크롭 상태 초기화
+      setCrop({ unit: '%', width: 100, height: 53.6, x: 0, y: 0 });
+      setCompletedCrop(null);
+      setCropPreview(null);
+      
       const reader = new FileReader();
       reader.addEventListener('load', () => {
         setImgSrc(reader.result?.toString() || '');
@@ -142,7 +197,7 @@ export default function MainBannerManager() {
     return canvas.toDataURL('image/jpeg', 0.8);
   };
 
-  // 크롭된 이미지 업로드
+  // 크롭 완료 후 기존 업로드 로직 사용
   const onImageLoad = useCallback(async () => {
     if (completedCrop?.width && completedCrop?.height && imgRef.current && currentBannerId) {
       try {
@@ -154,8 +209,14 @@ export default function MainBannerManager() {
           `cropped_banner_${currentBannerId}.jpg`
         );
 
+        // 크롭된 이미지를 File 객체로 변환 (기존 로직과 호환)
+        const file = new File([croppedImageBlob], `banner_${currentBannerId}.jpg`, {
+          type: 'image/jpeg'
+        });
+
+        // 기존 handleBannerUpload 로직 재사용
         // WebP 변환
-        const webpFile = await compressToWebp(croppedImageBlob, {
+        const webpFile = await compressToWebp(file, {
           maxWidth: 1920,
           maxHeight: 1080,
           quality: 0.8,
@@ -194,6 +255,7 @@ export default function MainBannerManager() {
         setShowCrop(false);
         setImgSrc('');
         setCurrentBannerId(null);
+        setCropPreview(null);
         
       } catch (err) {
         console.log("배너 이미지 업로드 예외:", err);
@@ -206,22 +268,38 @@ export default function MainBannerManager() {
 
   // 크롭 변경 핸들러
   const onCropChange = (newCrop) => {
-    setCrop(newCrop);
+    const validCrop = {
+      ...newCrop,
+      x: newCrop.x || 0,
+      y: newCrop.y || 0,
+      width: newCrop.width || 100,
+      height: newCrop.height || 53.6
+    };
+    
+    setCrop(validCrop);
     
     // 실시간 미리보기 생성
-    if (imgRef.current && newCrop.width && newCrop.height) {
-      const preview = generatePreview(imgRef.current, newCrop);
+    if (imgRef.current && validCrop.width && validCrop.height && validCrop.x !== undefined && validCrop.y !== undefined) {
+      const preview = generatePreview(imgRef.current, validCrop);
       setCropPreview(preview);
     }
   };
 
   // 크롭 완료 핸들러
   const onCropComplete = (newCrop) => {
-    setCompletedCrop(newCrop);
+    const validCrop = {
+      ...newCrop,
+      x: newCrop.x || 0,
+      y: newCrop.y || 0,
+      width: newCrop.width || 100,
+      height: newCrop.height || 53.6
+    };
+    
+    setCompletedCrop(validCrop);
     
     // 최종 미리보기 생성
-    if (imgRef.current && newCrop.width && newCrop.height) {
-      const preview = generatePreview(imgRef.current, newCrop);
+    if (imgRef.current && validCrop.width && validCrop.height && validCrop.x !== undefined && validCrop.y !== undefined) {
+      const preview = generatePreview(imgRef.current, validCrop);
       setCropPreview(preview);
     }
   };
@@ -400,7 +478,7 @@ export default function MainBannerManager() {
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">메인 배너 관리</h2>
           <p className="text-sm text-gray-500 mt-1">
-            메인 화면에 표시될 배너를 관리합니다 (크롭 기능 포함)
+            메인 화면에 표시될 배너를 관리합니다
           </p>
         </div>
 
@@ -422,23 +500,46 @@ export default function MainBannerManager() {
                   </div>
                   
                   {/* 파일 업로드 인풋 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      배너 이미지 업로드 (실제 사이즈 맞춤)
+                  <div className="space-y-4">
+                    <label className="block text-sm font-medium text-gray-700">
+                      배너 이미지 업로드
                     </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => onSelectFile(e, banner.id)}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-gray-300 rounded-md"
-                    />
-                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-xs text-blue-800">
-                        <strong>📱 실제 플랫폼 사이즈:</strong> 358×192 픽셀 (1.86:1 비율)
+                    
+                    {/* 일반 업로드 */}
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-2">
+                        일반 업로드 (기존 방식)
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleBannerUpload(e, banner.id)}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer border border-gray-300 rounded-md"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        기존 방식으로 바로 업로드합니다.
                       </p>
-                      <p className="text-xs text-blue-600 mt-1">
-                        이미지 선택 시 크롭 모드로 전환되어 실제 노출 크기에 맞게 조정할 수 있습니다.
-                      </p>
+                    </div>
+                    
+                    {/* 크롭 업로드 */}
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-2">
+                        크롭 업로드 (실제 사이즈 맞춤)
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => onSelectFileForCrop(e, banner.id)}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-gray-300 rounded-md"
+                      />
+                      <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-xs text-blue-800">
+                          <strong>📱 실제 플랫폼 사이즈:</strong> 358×192 픽셀 (1.86:1 비율)
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          이미지 선택 시 크롭 모드로 전환되어 실제 노출 크기에 맞게 조정할 수 있습니다.
+                        </p>
+                      </div>
                     </div>
                   </div>
 

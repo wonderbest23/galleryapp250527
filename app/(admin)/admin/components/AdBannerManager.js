@@ -25,9 +25,9 @@ export default function AdBannerManager() {
   const fetchBanners = async () => {
     try {
       const { data, error } = await supabase
-        .from("ad_banners")
+        .from("banner")
         .select("*")
-        .order("display_order", { ascending: true });
+        .order("id", { ascending: true });
 
       if (error) {
         console.error("Error fetching banners:", error);
@@ -46,9 +46,9 @@ export default function AdBannerManager() {
       if (editingBanner) {
         // 수정
         const { error } = await supabase
-          .from("ad_banners")
+          .from("banner")
           .update({
-            ...formData,
+            url: formData.image_url,
             updated_at: new Date().toISOString()
           })
           .eq("id", editingBanner.id);
@@ -57,8 +57,10 @@ export default function AdBannerManager() {
       } else {
         // 생성
         const { error } = await supabase
-          .from("ad_banners")
-          .insert([formData]);
+          .from("banner")
+          .insert([{
+            url: formData.image_url
+          }]);
 
         if (error) throw error;
       }
@@ -75,12 +77,12 @@ export default function AdBannerManager() {
   const handleEdit = (banner) => {
     setEditingBanner(banner);
     setFormData({
-      title: banner.title,
-      subtitle: banner.subtitle,
-      image_url: banner.image_url || "",
+      title: banner.title || "",
+      subtitle: banner.subtitle || "",
+      image_url: banner.url || "",
       link_url: banner.link_url || "",
-      is_active: banner.is_active,
-      display_order: banner.display_order
+      is_active: banner.is_active || true,
+      display_order: banner.display_order || 0
     });
     setIsOpen(true);
   };
@@ -90,7 +92,7 @@ export default function AdBannerManager() {
 
     try {
       const { error } = await supabase
-        .from("ad_banners")
+        .from("banner")
         .delete()
         .eq("id", id);
 
@@ -164,13 +166,13 @@ export default function AdBannerManager() {
             ) : (
               banners.map((banner) => (
                 <tr key={banner.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{banner.title}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{banner.subtitle}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{banner.title || `배너 ${banner.id}`}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{banner.subtitle || "-"}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {banner.image_url ? (
+                    {banner.url ? (
                       <img
-                        src={banner.image_url}
-                        alt={banner.title}
+                        src={banner.url}
+                        alt={`배너 ${banner.id}`}
                         className="w-12 h-12 object-cover rounded border border-gray-200"
                       />
                     ) : (
@@ -195,14 +197,14 @@ export default function AdBannerManager() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      banner.is_active 
+                      banner.is_active !== false
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {banner.is_active ? '활성' : '비활성'}
+                      {banner.is_active !== false ? '활성' : '비활성'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{banner.display_order}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{banner.display_order || banner.id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex gap-2">
                       <button
