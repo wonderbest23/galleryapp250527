@@ -26,7 +26,16 @@ const Review = React.forwardRef(
 
         <div className="flex flex-row items-center  gap-2 mb-2">
           <Image
-            src={review?.exhibition_id?.photo}
+            src={(() => {
+              if (!review?.exhibition_id?.photo || review.exhibition_id.photo.startsWith('data:')) {
+                return "/images/noimage.jpg";
+              }
+              
+              // 전시회 이미지 URL에서 썸네일 경로로 변환
+              return review.exhibition_id.photo.includes('/thumbnails/')
+                ? review.exhibition_id.photo
+                : review.exhibition_id.photo.replace('/exhibition/exhibition/', '/exhibition/thumbnails/');
+            })()}
             alt={user.name}
             width={50}
             height={50}

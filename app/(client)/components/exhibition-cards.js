@@ -60,8 +60,17 @@ const ExhibitionCard = ({ exhibition, index, isBookmarked, toggleBookmark }) => 
           {/* 전시회 이미지 */}
           <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
             <SafeImage
-              src={exhibition.photo || "/images/noimage.jpg"}
-              alt={exhibition.name}
+              src={(() => {
+                if (!exhibition.photo || exhibition.photo.startsWith('data:')) {
+                  return "/images/noimage.jpg";
+                }
+                
+                // 전시회 이미지 URL에서 썸네일 경로로 변환
+                return exhibition.photo.includes('/thumbnails/')
+                  ? exhibition.photo
+                  : exhibition.photo.replace('/exhibition/exhibition/', '/exhibition/thumbnails/');
+              })()}
+              alt={exhibition.contents || exhibition.name}
               width={64}
               height={64}
               className="w-full h-full object-cover"

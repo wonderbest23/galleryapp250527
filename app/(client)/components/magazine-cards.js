@@ -53,15 +53,19 @@ export function MagazineCards() {
           ]);
         } else {
           // 실제 데이터를 매핑하여 표시
-          const mappedData = (data || []).map((magazine, index) => ({
-            id: magazine.id,
-            title: magazine.title || "제목 없음",
-            category: magazine.category || "전시리뷰", // 기본 카테고리를 전시리뷰로 설정
-            subtitle: magazine.subtitle || "작성자 없음",
-            photo: magazine.photo,
-            created_at: magazine.created_at,
-            is_featured: index === 0 // 첫 번째 매거진을 대표로 설정
-          }));
+          console.log('매거진 원본 데이터:', data);
+          const mappedData = (data || []).map((magazine, index) => {
+            console.log(`매거진 ${index} photo 구조:`, magazine.photo);
+            return {
+              id: magazine.id,
+              title: magazine.title || "제목 없음",
+              category: magazine.category || "전시리뷰", // 기본 카테고리를 전시리뷰로 설정
+              subtitle: magazine.subtitle || "작성자 없음",
+              photo: magazine.photo,
+              created_at: magazine.created_at,
+              is_featured: index === 0 // 첫 번째 매거진을 대표로 설정
+            };
+          });
           setMagazines(mappedData);
         }
       } catch (error) {
@@ -148,15 +152,36 @@ export function MagazineCards() {
         <Link href={`/magazine/${featuredMagazine.id}`} className="block">
           <div className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100">
             <div className="relative h-48">
-              {featuredMagazine.photo?.[0]?.url ? (
-                <img 
-                  src={featuredMagazine.photo[0].url} 
-                  alt={featuredMagazine.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className={`w-full h-full ${getGradientClass(0)}`}></div>
-              )}
+              {(() => {
+                // photo 데이터 구조 확인 및 안전한 처리
+                let imageUrl = null;
+                
+                if (featuredMagazine.photo) {
+                  if (Array.isArray(featuredMagazine.photo) && featuredMagazine.photo[0]?.url) {
+                    imageUrl = featuredMagazine.photo[0].url;
+                  } else if (typeof featuredMagazine.photo === 'string') {
+                    imageUrl = featuredMagazine.photo;
+                  }
+                }
+                
+                return imageUrl ? (
+                  <img 
+                    src={
+                      imageUrl.includes('/thumbnails/')
+                        ? imageUrl
+                        : imageUrl.replace('/magazine/magazine/', '/magazine/thumbnails/')
+                    }
+                    alt={featuredMagazine.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.log('이미지 로드 실패:', imageUrl);
+                      e.target.style.display = 'none';
+                      e.target.nextElementSibling.style.display = 'block';
+                    }}
+                  />
+                ) : null;
+              })()}
+              <div className={`w-full h-full ${getGradientClass(0)} hidden`}></div>
               <div className="absolute inset-0 bg-black bg-opacity-40"></div>
               <div className="absolute bottom-4 left-4 right-4">
                 <h3 className="text-white text-lg font-bold mb-2">
@@ -182,15 +207,36 @@ export function MagazineCards() {
           <Link key={magazine.id} href={`/magazine/${magazine.id}`} className="block">
             <div className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100">
               <div className="h-32">
-                {magazine.photo?.[0]?.url ? (
-                  <img 
-                    src={magazine.photo[0].url} 
-                    alt={magazine.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className={`w-full h-full ${getGradientClass(index + 1)}`}></div>
-                )}
+                {(() => {
+                  // photo 데이터 구조 확인 및 안전한 처리
+                  let imageUrl = null;
+                  
+                  if (magazine.photo) {
+                    if (Array.isArray(magazine.photo) && magazine.photo[0]?.url) {
+                      imageUrl = magazine.photo[0].url;
+                    } else if (typeof magazine.photo === 'string') {
+                      imageUrl = magazine.photo;
+                    }
+                  }
+                  
+                  return imageUrl ? (
+                    <img 
+                      src={
+                        imageUrl.includes('/thumbnails/')
+                          ? imageUrl
+                          : imageUrl.replace('/magazine/magazine/', '/magazine/thumbnails/')
+                      }
+                      alt={magazine.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.log('이미지 로드 실패:', imageUrl);
+                        e.target.style.display = 'none';
+                        e.target.nextElementSibling.style.display = 'block';
+                      }}
+                    />
+                  ) : null;
+                })()}
+                <div className={`w-full h-full ${getGradientClass(index + 1)} hidden`}></div>
               </div>
               <div className="p-3">
                 <h3 className="text-sm font-bold text-gray-900 mb-2">

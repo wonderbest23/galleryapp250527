@@ -245,7 +245,16 @@ export function ReviewCards() {
               <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden mb-2">
                 {review.proof_image ? (
                   <SafeImage
-                    src={review.proof_image}
+                    src={(() => {
+                      if (!review.proof_image || review.proof_image.startsWith('data:')) {
+                        return "/images/noimage.jpg";
+                      }
+                      
+                      // 리뷰 이미지 URL에서 썸네일 경로로 변환
+                      return review.proof_image.includes('/thumbnails/')
+                        ? review.proof_image
+                        : review.proof_image.replace('/reviews/reviews/', '/reviews/thumbnails/');
+                    })()}
                     alt="리뷰 증빙 사진"
                     width={80}
                     height={80}
@@ -254,7 +263,16 @@ export function ReviewCards() {
                   />
                 ) : review.exhibition?.photo ? (
                   <SafeImage
-                    src={review.exhibition.photo}
+                    src={(() => {
+                      if (!review.exhibition.photo || review.exhibition.photo.startsWith('data:')) {
+                        return "/images/noimage.jpg";
+                      }
+                      
+                      // 전시회 이미지 URL에서 썸네일 경로로 변환
+                      return review.exhibition.photo.includes('/thumbnails/')
+                        ? review.exhibition.photo
+                        : review.exhibition.photo.replace('/exhibition/exhibition/', '/exhibition/thumbnails/');
+                    })()}
                     alt={review.exhibition.contents || "전시회 이미지"}
                     width={80}
                     height={80}

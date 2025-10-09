@@ -136,15 +136,35 @@ export function MagazineCarousel() {
                           className="relative w-full h-[520px]"
                         >
                           <Image
-                            src={
-                              magazine?.photo[0]?.url ||
-                              `/images/noimage.jpg`
-                            }
-                            alt={magazine?.title}
+                            src={(() => {
+                              // photo 데이터 구조 확인 및 안전한 처리
+                              let imageUrl = `/images/noimage.jpg`;
+                              
+                              if (magazine?.photo) {
+                                if (Array.isArray(magazine.photo) && magazine.photo[0]?.url) {
+                                  imageUrl = magazine.photo[0].url;
+                                } else if (typeof magazine.photo === 'string') {
+                                  imageUrl = magazine.photo;
+                                }
+                              }
+                              
+                              // 썸네일 경로 변환
+                              if (imageUrl !== `/images/noimage.jpg`) {
+                                return imageUrl.includes('/thumbnails/')
+                                  ? imageUrl
+                                  : imageUrl.replace('/magazine/magazine/', '/magazine/thumbnails/');
+                              }
+                              
+                              return imageUrl;
+                            })()}
+                            alt={magazine?.title || '매거진'}
                             fill
                             sizes="100vw"
                             style={{ objectFit: "cover" }}
                             priority={index === 0}
+                            onError={(e) => {
+                              console.log('이미지 로드 실패:', e.target.src);
+                            }}
                           />
                           <div 
                             className="absolute inset-0 flex items-center justify-center"

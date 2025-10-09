@@ -163,9 +163,11 @@ export function ExhibitionDetail({
       setIsUploading(true);
       const fileName = `${uuidv4()}.webp`;
       const filePath = `exhibition/${fileName}`;
+      
       // WebP 변환
       const webpBlob = await fileToWebP(imageFile);
-      // Supabase Storage에 업로드
+      
+      // 1. 메인 이미지 업로드
       const { data, error } = await supabase.storage
         .from("exhibition")
         .upload(filePath, webpBlob, {
@@ -174,6 +176,39 @@ export function ExhibitionDetail({
           upsert: false
         });
       if (error) throw error;
+      
+      // 2. 썸네일 생성 및 업로드
+      try {
+        // 원본 이미지를 ArrayBuffer로 변환
+        const arrayBuffer = await webpBlob.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        
+        // Sharp로 썸네일 생성 (300x225px, JPEG 80% 품질)
+        const sharp = require('sharp');
+        const thumbnailBuffer = await sharp(buffer)
+          .resize(300, 225)
+          .jpeg({ quality: 80 })
+          .toBuffer();
+        
+        // 썸네일 업로드
+        const thumbnailPath = `thumbnails/${fileName}`;
+        const { error: thumbError } = await supabase.storage
+          .from("exhibition")
+          .upload(thumbnailPath, thumbnailBuffer, {
+            contentType: 'image/jpeg',
+            cacheControl: '3600',
+            upsert: true
+          });
+        
+        if (thumbError) {
+          console.warn("썸네일 생성 실패:", thumbError);
+        } else {
+          console.log("✅ 썸네일 자동 생성 완료:", thumbnailPath);
+        }
+      } catch (thumbError) {
+        console.warn("썸네일 생성 중 오류 (메인 이미지는 정상 업로드됨):", thumbError);
+      }
+      
       // 공개 URL 가져오기
       const { data: { publicUrl } } = supabase.storage
         .from("exhibition")

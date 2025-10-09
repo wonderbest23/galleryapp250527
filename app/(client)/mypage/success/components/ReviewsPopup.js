@@ -122,7 +122,16 @@ export default function ReviewsPopup({ isOpen, onClose, user }) {
                         {/* 이미지 영역 */}
                         <div className="relative h-32 bg-gradient-to-br from-blue-50 to-indigo-50">
                           <img
-                            src={review.exhibition_id.photo || "/noimage.jpg"}
+                            src={(() => {
+                              if (!review.exhibition_id.photo || review.exhibition_id.photo.startsWith('data:')) {
+                                return "/noimage.jpg";
+                              }
+                              
+                              // 전시회 이미지 URL에서 썸네일 경로로 변환
+                              return review.exhibition_id.photo.includes('/thumbnails/')
+                                ? review.exhibition_id.photo
+                                : review.exhibition_id.photo.replace('/exhibition/exhibition/', '/exhibition/thumbnails/');
+                            })()}
                             alt={review.exhibition_id.contents || "전시회 이미지"}
                             className="w-full h-full object-cover"
                             onError={(e) => {

@@ -85,6 +85,10 @@ export function ExhibitionCards({
                         width={64}
                         height={64}
                         className="w-full h-full object-cover"
+                        priority={false}
+                        placeholder="blur"
+                        blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4="
+                        sizes="64px"
                       />
                     </div>
 

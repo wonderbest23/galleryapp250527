@@ -141,9 +141,13 @@ export function LatestWorks() {
                 <Image
                   src={product.image[0]}
                   alt={product.name}
-                  width={192}
-                  height={128}
+                  width={128}
+                  height={96}
                   className="w-full h-full object-cover rounded-t-lg"
+                  priority={false}
+                  placeholder="blur"
+                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4="
+                  sizes="128px"
                 />
               ) : (
                 <div className="text-white text-2xl">🎨</div>

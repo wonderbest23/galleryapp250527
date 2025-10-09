@@ -375,10 +375,16 @@ export default function ExhibitionLayout({ exhibitions, user, bookmarks, toggleB
     
     return (
       <div className="w-full relative">
-        <img
+        <Image
           src={imageUrl}
           alt={altText}
+          width={335}
+          height={148}
           className="w-full aspect-[335/148] object-contain bg-white rounded-xl"
+          priority={false}
+          placeholder="blur"
+          blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4="
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       </div>
     );

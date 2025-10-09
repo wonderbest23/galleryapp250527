@@ -47,14 +47,6 @@ const nextConfig = {
     return config;
   },
   images: {
-    domains: [
-      'picsum.photos', 
-      'teaelrzxuigiocnukwha.supabase.co',
-      'teaelrzxuigiocnukwha.supabase.in',
-      'search.pstatic.net',
-      'k.kakaocdn.net',
-      'img1.kakaocdn.net'
-    ],
     remotePatterns: [
       { protocol: 'https', hostname: 'k.kakaocdn.net', pathname: '/**' },
       { protocol: 'http', hostname: 'k.kakaocdn.net', pathname: '/**' },
@@ -67,8 +59,15 @@ const nextConfig = {
       { protocol: 'https', hostname: 'teaelrzxuigiocnukwha.supabase.co', pathname: '/**' },
       { protocol: 'https', hostname: 'teaelrzxuigiocnukwha.supabase.in', pathname: '/**' },
       { protocol: 'https', hostname: 'search.pstatic.net', pathname: '/**' },
+      { protocol: 'https', hostname: 'picsum.photos', pathname: '/**' },
     ],
-    unoptimized: false,
+    // 이미지 최적화 설정 - 더 작은 크기로 제한
+    deviceSizes: [360, 414, 640, 768],
+    imageSizes: [16, 24, 32, 48, 64, 96, 128],
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60,
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   productionBrowserSourceMaps: true,
 };
