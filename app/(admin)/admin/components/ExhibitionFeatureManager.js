@@ -517,56 +517,54 @@ export default function ExhibitionFeatureManager() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-sm font-semibold">추가 정보</label>
-                  <Textarea
-                    value={selectedExhibition.add_info || ''}
-                    onChange={(e) => handleFieldChange('add_info', e.target.value)}
-                    className="w-full mt-1"
-                    rows={3}
-                  />
-                </div>
+                <Textarea
+                  label="추가 정보"
+                  value={selectedExhibition.add_info || ''}
+                  onValueChange={(value) => handleFieldChange('add_info', value)}
+                  className="w-full"
+                  variant="bordered"
+                  size="lg"
+                  minRows={3}
+                />
 
-                <div>
-                  <label className="text-sm font-semibold">홈페이지 URL</label>
-                  <Input
-                    value={selectedExhibition.homepage_url || ''}
-                    onChange={(e) => handleFieldChange('homepage_url', e.target.value)}
-                    className="w-full mt-1"
-                  />
-                </div>
+                <Input
+                  label="홈페이지 URL"
+                  value={selectedExhibition.homepage_url || ''}
+                  onValueChange={(value) => handleFieldChange('homepage_url', value)}
+                  className="w-full"
+                  variant="bordered"
+                  size="lg"
+                />
 
-                <div>
-                  <label className="text-sm font-semibold">네이버 갤러리 URL</label>
-                  <Input
-                    value={selectedExhibition.naver_gallery_url || ''}
-                    onChange={(e) => handleFieldChange('naver_gallery_url', e.target.value)}
-                    className="w-full mt-1"
-                  />
-                </div>
+                <Input
+                  label="네이버 갤러리 URL"
+                  value={selectedExhibition.naver_gallery_url || ''}
+                  onValueChange={(value) => handleFieldChange('naver_gallery_url', value)}
+                  className="w-full"
+                  variant="bordered"
+                  size="lg"
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-semibold">리뷰 수</label>
-                    <Input
-                      type="number"
-                      value={selectedExhibition.review_count || 0}
-                      onChange={(e) => handleFieldChange('review_count', parseInt(e.target.value) || 0)}
-                      className="w-full mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold">평균 별점</label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="5"
-                      value={selectedExhibition.review_average || 0}
-                      onChange={(e) => handleFieldChange('review_average', parseFloat(e.target.value) || 0)}
-                      className="w-full mt-1"
-                    />
-                  </div>
+                  <Input
+                    label="리뷰 수"
+                    type="number"
+                    value={selectedExhibition.review_count || 0}
+                    onValueChange={(value) => handleFieldChange('review_count', parseInt(value) || 0)}
+                    variant="bordered"
+                    size="lg"
+                  />
+                  <Input
+                    label="평균 별점"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="5"
+                    value={selectedExhibition.review_average || 0}
+                    onValueChange={(value) => handleFieldChange('review_average', parseFloat(value) || 0)}
+                    variant="bordered"
+                    size="lg"
+                  />
                 </div>
               </div>
             )}

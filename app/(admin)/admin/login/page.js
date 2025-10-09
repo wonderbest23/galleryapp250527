@@ -56,31 +56,27 @@ export default function AdminLoginPage({ searchParams }) {
       <div className="flex flex-col gap-4 md:max-w-[30%] w-full max-w-[80%]">
         <h1 className="text-2xl font-bold text-center">관리자 로그인</h1>
         <div className="space-y-1">
-          <label className="text-sm font-medium text-gray-700">이메일</label>
-          <Input
-            isRequired
+          <label className="block text-sm font-medium text-gray-700">이메일</label>
+          <input
             name="email"
-            placeholder="이메일을 입력해주세요"
             type="email"
             autoComplete="email"
             value={email}
-            onValueChange={setEmail}
-            variant="bordered"
-            size="lg"
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            required
           />
         </div>
         <div className="space-y-1">
-          <label className="text-sm font-medium text-gray-700">비밀번호</label>
-          <Input
-            isRequired
+          <label className="block text-sm font-medium text-gray-700">비밀번호</label>
+          <input
             name="password"
-            placeholder="비밀번호를 입력해주세요"
             type="password"
             autoComplete="current-password"
             value={password}
-            onValueChange={setPassword}
-            variant="bordered"
-            size="lg"
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            required
           />
         </div>
         <div className="flex gap-4">

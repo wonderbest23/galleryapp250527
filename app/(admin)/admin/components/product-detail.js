@@ -417,9 +417,10 @@ export function ProductDetail({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 기본 정보 섹션 */}
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">작품명</label>
-            <Input
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">작품명</label>
+            <input
+              type="text"
               value={editedProduct.name || ""}
               onChange={(e) =>
                 setEditedProduct({
@@ -427,33 +428,34 @@ export function ProductDetail({
                   name: e.target.value,
                 })
               }
-              placeholder="작품명을 입력하세요"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">가격</label>
-            <Input
-              type="number"
-              value={editedProduct.price || ""}
-              onChange={(e) =>
-                setEditedProduct({
-                  ...editedProduct,
-                  price: e.target.value,
-                })
-              }
-              placeholder="가격을 입력하세요"
-              startContent={
-                <div className="pointer-events-none flex items-center">
-                  <span className="text-default-400 text-small">₩</span>
-                </div>
-              }
-            />
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">가격</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="text-gray-500 text-sm">₩</span>
+              </div>
+              <input
+                type="number"
+                value={editedProduct.price || ""}
+                onChange={(e) =>
+                  setEditedProduct({
+                    ...editedProduct,
+                    price: e.target.value,
+                  })
+                }
+                className="w-full pl-8 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">크기</label>
-            <Input
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">크기</label>
+            <input
+              type="text"
               value={editedProduct.size || ""}
               onChange={(e) =>
                 setEditedProduct({
@@ -461,13 +463,13 @@ export function ProductDetail({
                   size: e.target.value,
                 })
               }
-              placeholder="크기를 입력하세요 (예: 100x100cm)"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">장르</label>
-            <Input
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">장르</label>
+            <select
               value={editedProduct.genre === 'null' ? '' : (editedProduct.genre || '')}
               onChange={(e) =>
                 setEditedProduct({
@@ -475,13 +477,23 @@ export function ProductDetail({
                   genre: e.target.value || 'null',
                 })
               }
-              placeholder="장르를 입력하세요"
-            />
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+            >
+              <option value="">장르를 선택하세요</option>
+              <option value="회화">회화</option>
+              <option value="조각">조각</option>
+              <option value="사진">사진</option>
+              <option value="일러스트">일러스트</option>
+              <option value="디지털아트">디지털아트</option>
+              <option value="혼합매체">혼합매체</option>
+              <option value="기타">기타</option>
+            </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">제작일</label>
-            <Input
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">제작일</label>
+            <input
+              type="date"
               value={editedProduct.make_date === 'null' ? '' : (editedProduct.make_date || '')}
               onChange={(e) =>
                 setEditedProduct({
@@ -489,7 +501,7 @@ export function ProductDetail({
                   make_date: e.target.value || 'null',
                 })
               }
-              placeholder="제작일을 입력하세요"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </div>
 
@@ -498,9 +510,10 @@ export function ProductDetail({
 
         {/* 추가 정보 섹션 */}
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">제작 방법</label>
-            <Input
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">제작 방법</label>
+            <input
+              type="text"
               value={editedProduct.make_method || ""}
               onChange={(e) =>
                 setEditedProduct({
@@ -508,13 +521,14 @@ export function ProductDetail({
                   make_method: e.target.value,
                 })
               }
-              placeholder="제작 방법을 입력하세요"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">재료</label>
-            <Input
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">재료</label>
+            <input
+              type="text"
               value={editedProduct.make_material || ""}
               onChange={(e) =>
                 setEditedProduct({
@@ -522,13 +536,14 @@ export function ProductDetail({
                   make_material: e.target.value,
                 })
               }
-              placeholder="재료를 입력하세요"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">프레임</label>
-            <Input
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">프레임</label>
+            <input
+              type="text"
               value={editedProduct.make_frame || ""}
               onChange={(e) =>
                 setEditedProduct({
@@ -536,7 +551,7 @@ export function ProductDetail({
                   make_frame: e.target.value,
                 })
               }
-              placeholder="프레임 정보를 입력하세요"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </div>
 

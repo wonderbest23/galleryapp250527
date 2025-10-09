@@ -437,7 +437,6 @@ export function ArtistDetail({
         <Input
           label="생년월일"
           name="artist_birth"
-          placeholder="YYYY-MM-DD"
           value={editedArtist.artist_birth || ""}
           onChange={handleInputChange}
           className="col-span-2 md:col-span-1"

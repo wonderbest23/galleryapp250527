@@ -431,7 +431,6 @@ export function MagazineDetail({
             <Input
               value={editedMagazine.title || ''}
               onValueChange={(value) => setEditedMagazine({...editedMagazine, title: value})}
-              placeholder="매거진 제목을 입력하세요"
               variant="bordered"
               size="lg"
               className="w-full"
@@ -445,7 +444,6 @@ export function MagazineDetail({
             <Input
               value={editedMagazine.subtitle || ''}
               onValueChange={(value) => setEditedMagazine({...editedMagazine, subtitle: value})}
-              placeholder="매거진 부제목을 입력하세요"
               variant="bordered"
               size="lg"
               className="w-full"
