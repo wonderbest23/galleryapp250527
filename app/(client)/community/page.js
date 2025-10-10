@@ -1111,154 +1111,7 @@ function CommunityPageContent() {
 
         {/* 게시글 목록 - 인스타그램 피드 스타일 */}
         <div className="max-w-2xl mx-auto px-4 py-6">
-          {activeTab === 'journalist' ? (
-            /* 기자단 전용 섹션 - 이미지 디자인 */
-            <div className="space-y-8">
-              {/* 아트앤브릿지 기자단 배너 (좌측 정렬, 클릭 시 숨김) */}
-              {!hideJournalBanner && (
-                <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-4 sm:p-6 text-white">
-                  {/* 닫기 버튼 */}
-                  <button
-                    aria-label="배너 닫기"
-                    onClick={() => setHideJournalBanner(true)}
-                    className="absolute top-3 right-3 text-white/80 hover:text-white transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
-                  </button>
-                  <div className="max-w-xl">
-                    <h1 className="text-[22px] sm:text-[28px] font-extrabold leading-snug">아트앤브릿지 기자단</h1>
-                    <p className="mt-2 text-blue-100 text-sm sm:text-base">전시회의 생생한 감동을 전하고 특별한 혜택을 누리세요!</p>
-                    <button
-                      onClick={() => { setShowJournalistApplication(true); setHideJournalBanner(true); }}
-                      className="mt-4 inline-flex items-center gap-2 bg-white text-blue-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors"
-                    >
-                      기자단 신청하기
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* 명예의 전당 */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <div className="flex items-center gap-2 mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">명예의 전당</h2>
-                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                </div>
-                <div className="grid grid-cols-3 gap-4 items-start">
-                  {/* 김민준 */}
-                  <div className="text-center">
-                    <div className="relative w-14 h-14 mx-auto mb-2">
-                      <div className="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-600">김</span>
-                      </div>
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-white">1</span>
-                      </div>
-                    </div>
-                    <h3 className="font-bold text-gray-900 text-sm">김민준</h3>
-                    <p className="text-xs text-gray-600">전시 해설가</p>
-                  </div>
-                  
-                  {/* 이서연 */}
-                  <div className="text-center">
-                    <div className="relative w-14 h-14 mx-auto mb-2">
-                      <div className="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-600">이</span>
-                      </div>
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-400 rounded-full flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-white">2</span>
-                      </div>
-                    </div>
-                    <h3 className="font-bold text-gray-900 text-sm">이서연</h3>
-                    <p className="text-xs text-gray-600">아트 칼럼니스트</p>
-                  </div>
-                  
-                  {/* 박지훈 */}
-                  <div className="text-center">
-                    <div className="relative w-14 h-14 mx-auto mb-2">
-                      <div className="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-600">박</span>
-                      </div>
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-white">3</span>
-                      </div>
-                    </div>
-                    <h3 className="font-bold text-gray-900 text-sm">박지훈</h3>
-                    <p className="text-xs text-gray-600">사진 전문 기자</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* 최신 기사 */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <h2 className="text-xl font-bold text-gray-900 mb-6">최신 기사</h2>
-                <div className="space-y-4">
-                  {/* 임시 기자단 기사들 → 실제 기자단 게시글이 있으면 해당 상세로 이동 */}
-                  {(() => {
-                    const journalistPosts = posts.filter(p => p.category === 'journalist');
-                    const articles = [
-                    {
-                      id: 'journalist-1',
-                      title: 'AI가 그린 초상, 현대미술의 새로운 지평을 엿보다',
-                      content: '최근 개막한 \'AI: 새로운 시선\' 전시는 인공지능이 창작의 주체가 될 수 있는지를 묻는 도발적인 질문을 던집니다. 작가와 AI의 협업으로 탄생한 작품들은 관람객들에게 새로운 미적 경험을 선사하고 있습니다.',
-                      author: '이서연',
-                      likes: 98,
-                      image: '/images/ai-art.jpg'
-                    },
-                    {
-                      id: 'journalist-2', 
-                      title: '젊은 작가들의 도전, 전통과 현대의 조화',
-                      content: '신진 작가들이 전통 기법과 현대적 감각을 결합한 작품들을 선보이며 주목받고 있습니다. 이들의 실험적 시도는 미술계에 새로운 바람을 불러일으키고 있습니다.',
-                      author: '김민준',
-                      likes: 76,
-                      image: '/images/young-artists.jpg'
-                    },
-                    {
-                      id: 'journalist-3',
-                      title: '환경을 생각하는 예술, 지속가능한 미래를 향해',
-                      content: '환경 문제에 대한 예술가들의 관심이 높아지면서, 재활용 소재를 활용한 작품들이 주목받고 있습니다. 예술을 통한 환경 메시지 전달이 새로운 트렌드로 자리잡고 있습니다.',
-                      author: '박지훈', 
-                      likes: 124,
-                      image: '/images/eco-art.jpg'
-                    }
-                    ];
-                    return articles.map((article, idx) => {
-                      const targetId = journalistPosts[idx]?.id;
-                      const href = targetId ? `/community/${targetId}` : '/community?tab=journalist';
-                      return (
-                        <Link href={href} key={article.id} className="flex gap-4 p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors">
-                      <div className="w-28 h-28 bg-gray-200 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        <span className="text-gray-500 text-sm">이미지</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                            <span className="text-xs font-bold text-gray-600">{article.author.charAt(0)}</span>
-                          </div>
-                          <span className="text-sm text-gray-600">{article.author}</span>
-                        </div>
-                        <h3 className="font-extrabold text-gray-900 mb-2 line-clamp-2 text-[18px] leading-snug">{article.title}</h3>
-                        <p className="text-gray-600 text-sm line-clamp-2 mb-3">{article.content}</p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                            </svg>
-                            {article.likes}
-                          </span>
-                        </div>
-                      </div>
-                        </Link>
-                      );
-                    });
-                  })()}
-                </div>
-              </div>
-            </div>
-          ) : activeTab === 'review' ? (
+          {activeTab === 'review' ? (
             <div className="max-w-2xl mx-auto w-full px-4 pt-4 pb-6">
               <ReviewFeedCards />
             </div>
@@ -1284,7 +1137,9 @@ function CommunityPageContent() {
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="font-medium text-gray-900">
-                              {generateAnonymousName(post.user_id, post.id)}
+                              {post.category === 'journalist' && post.profiles?.full_name
+                                ? post.profiles.full_name
+                                : generateAnonymousName(post.user_id, post.id)}
                             </h3>
                             <span className={`px-2 py-0.5 text-xs rounded-full ${getCategoryBadgeClass(post.category)}`}>
                               {CATEGORY_LABELS[post.category] || post.category}
